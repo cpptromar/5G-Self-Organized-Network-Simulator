@@ -1,0 +1,74 @@
+label#title {
+	color: #1e4d2b;
+	background-color: #d8d8d8;
+	font-family: "Times New Roman", Times, serif;
+	font-weight: bold;
+	font-size: 20px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+	border-width: 5px;
+}
+
+window#drawingWindow {
+	background-color: #A0A0A0;
+}
+
+window {
+	background-color: #F0F0F0;
+}
+
+#popupWindow {
+	background-color: #F0F0F0;
+}
+
+label {
+	color: #000000;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 16px;
+}
+
+button {
+	color: #0000a0;
+	background-color: #D0D0D0;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 20px;
+	font-weight: bold;
+	border-width: 3px;
+	border-radius: 20px;
+	box-shadow: 10px 10px 5px grey;
+}
+
+button#subBtn {
+	color: #000000;
+	background-color: #D0D0D0;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 20px;
+	font-weight: bold;
+	border-width: 3px;
+	border-radius: 20px;
+	box-shadow: 10px 10px 5px grey;
+}
+
+entry {
+	color: #000000;
+	background-color: #FFFFFF;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 16px;
+	padding-top: 10px;
+	padding-right: 10px;
+	padding-left: 10px;
+	padding-bottom: 10px;
+}
+
+label#displayLabel {
+	color: #FF8600;
+	background-color: #FFFFFF;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 20px;
+	font-weight: bold;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	border: 1px solid black;
+}
