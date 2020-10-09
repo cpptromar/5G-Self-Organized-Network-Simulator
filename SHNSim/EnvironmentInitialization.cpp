@@ -11,6 +11,17 @@
 
 //Gets the normal amount of users
 	//Creates the UE records for BS in normal condition
+// Yea i can see it, it looks like its a session based thing that we need to start up. so if i close it should kick you 
+// Im thinking ill make another discord channel and for anyone whos currently working on a part they open a live session and maybe communicate with who ever else is also trying to work on code to start a session together and make a post on discord with a link to the live share as well as when they close the link.. yeah that sounds like a good plan to me. 
+// try making a push to the git, im curious to see if it would just count all these changes to you
+// secondary branch if you can
+// can you not push directly?
+
+
+
+//I added something... - SJ 2020-10-9-1230 okay good. 
+// okay ill try that. i'll save it on my local pc then first, then push up'
+//right, and i have a button that says "leave live share session"
 bool EnvironmentInitialization::setDefaultUsers()
 {
 	for (auto& bs : Simulator::getBSList_m())
