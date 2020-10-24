@@ -19,7 +19,7 @@ float EnvironmentController::averageUEStateContribution = float{ 0.0f };
 bool EnvironmentController::ECInitialization(std::vector<BSFailureParams>& ctrlInfo)
 {
 	EnvironmentController::BSRegionControlInfo = std::move(ctrlInfo);
-
+	// hello world
 	//if (!EnvironmentController::checkBSFPValidity())
 	//	return ErrorTracer::error("\ncheckBSFPValidity() failed in EnvironmentController::ECInitialization()");
 
