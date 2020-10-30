@@ -436,7 +436,7 @@ bool Simulator::runSimulation()
 
 		std::cout << "\nStarting Time: " << std::string(numSize, ' ') << envClock;	//outputs the starting time and current time
 		std::cout << "\nCurrent  Time: " << std::string(numSize, ' ') << envClock;	//the string with the spaces aligns the numbers 
-																								//and provides padding for when it counts up to the final time
+																					//and provides padding for when it counts up to the final time
 		//the following four variables all relate to the clock being displayed to user
 		auto curPwrOfTen = uint32_t{ 1 };
 		auto curNumSize = size_t{ 0 };

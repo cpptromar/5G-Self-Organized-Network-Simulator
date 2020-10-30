@@ -22,8 +22,9 @@ struct
 {
 	GtkWidget* DrawingWindow;
 	GtkWidget* SimParamWindow;
+	GtkWidget* PostMenuScreen;
 	GtkWidget* DiagnosticsWindow;
-
+	
 } WINDOWS;
 
 struct
@@ -31,7 +32,7 @@ struct
 	GtkWidget* endStatusLabel, * startTimeLabel, * riseTimeLabel, * endStateLabel;	// Labels
 	GtkWidget* startTimeEntry, * riseTimeEntry, * endStateEntry;	// Text Boxes
 	GtkWidget* endStatusDisplayLbl;									// Display label
-	
+	GtkWidget* load1;
 } realTime;
 
 // define structure to hold window dimensions
@@ -54,11 +55,13 @@ struct
 void setUpDrawingWindow();
 void setUpSimParamWindow();
 void setUpDiagnosticsWindow();
+void setUpPostMenuScreen();
 
 // navigation function prototypes - used to change windows
 void goToSimParams();
 void runSim();
 void backToDrawingStage();
+void exitProg();
 
 // functions used in drawing window
 static void getScreenHeight();

@@ -1,4 +1,5 @@
 #include "GUIMain.h"
+#define M_PI  3.14159265358979323846264338327950288
 
 using namespace std;
 
@@ -19,6 +20,7 @@ int main(int argc, char** argv)
 	// set up all windows
 	setUpDrawingWindow();
 	setUpSimParamWindow();
+	setUpPostMenuScreen();
 
 	// initialize the system by making the first window visible
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
@@ -394,10 +396,66 @@ void setUpSimParamWindow()
 	}
 }
 
+void setUpPostMenuScreen()
+{
+	// create stage 2 window and configure window properties
+	GtkWidget* PostMenuWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_title(GTK_WINDOW(PostMenuWindow), "Self-Healing Simulator");
+	gtk_window_set_default_size(GTK_WINDOW(PostMenuWindow), SCREEN.WIDTH - 60, SCREEN.HEIGHT - 58);
+	g_signal_connect(PostMenuWindow, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
+	gtk_window_set_position(GTK_WINDOW(PostMenuWindow), GTK_WIN_POS_CENTER);
+
+	// copy window into struct objcet for global use across functions
+	WINDOWS.PostMenuScreen = PostMenuWindow;
+
+	// create quit button and to analysis button
+	GtkWidget* quitProg, * toAnalysis;
+	// instantiate buttons
+	quitProg = gtk_button_new_with_label("Quit");
+	toAnalysis = gtk_button_new_with_label("To Anaysis");
+
+	// Set tooltips for buttons
+	gtk_widget_set_tooltip_text(quitProg, "Exit Program");
+	gtk_widget_set_tooltip_text(toAnalysis, "Exit Program"); // also edit this later
+
+	// connect button signals
+	g_signal_connect(quitProg, "clicked", G_CALLBACK(exitProg), NULL);
+	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+
+	// instantiate button container
+	GtkWidget* btnContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+
+	// instantiate main container
+	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+	// pack buttons into button container
+	gtk_box_pack_start(GTK_BOX(btnContainer), quitProg, 1, 1, 10);
+	gtk_box_pack_end(GTK_BOX(btnContainer), toAnalysis, 1, 1, 10);
+
+	// pack main containers into final master container
+	gtk_box_pack_end(GTK_BOX(mainContainer), btnContainer, 1, 1, 10);
+
+	// add main container to the window
+	gtk_container_add(GTK_CONTAINER(PostMenuWindow), mainContainer);
+
+	GtkCssProvider* guiProvider = gtk_css_provider_new();
+	if (gtk_css_provider_load_from_path(guiProvider, cssPath.c_str(), NULL))
+	{
+		// Window
+		gtk_style_context_add_provider(gtk_widget_get_style_context(PostMenuWindow), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+		// buttons		
+		gtk_style_context_add_provider(gtk_widget_get_style_context(quitProg), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(toAnalysis), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+	}
+}
+
 void setUpDiagnosticsWindow()
 {
 	// TODO - Will contain information about the system during runtime.
 }
+
+
 
 void goToSimParams()
 {
@@ -422,11 +480,15 @@ void runSim()
 	if(!valid)
 		return;
 
+	gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 
 	Setup::GUIentryPoint();
 	ErrorTracer::programExit();
-	
+}
+
+void exitProg()
+{
 	gtk_main_quit();
 }
 

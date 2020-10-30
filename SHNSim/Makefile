@@ -45,7 +45,7 @@ Setup.o: Setup.cpp Setup.h
 	g++ -g -c Setup.cpp
 	
 Simulator.o: Simulator.cpp Simulator.h
-	g++ -g -c Simulator.cpp
+	g++ -g -c Simulator.cpp 
 
 Transceivers.o: Transceivers.cpp Transceivers.h
 	g++ -g -c Transceivers.cpp
