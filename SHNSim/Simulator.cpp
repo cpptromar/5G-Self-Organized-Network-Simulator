@@ -2,6 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <cmath>
+#include <gtk/gtk.h>
 
 #include "Simulator.h"
 #include "Transceivers.h"
@@ -13,6 +14,7 @@
 #include "EnvironmentController.h"
 #include "EnvironmentInitialization.h"
 #include "ErrorTracer.h"
+#include "GUIMain.h"
 
 const float Simulator::PI = 3.14159265F;
 const uint32_t Simulator::AP_userTriesPerInput = 5;
@@ -443,6 +445,8 @@ bool Simulator::runSimulation()
 		auto formatPadding = std::string(numSize - curNumSize, ' ');
 		const auto backspaceContainer = std::string(numSize, '\b');
 		
+
+		double progFrac = 0; //fraction to fill up the progress bar
 		//simulation takes place in environment tick, it stops
 		while (Simulator::simulationLength > Simulator::envClock)
 		{
@@ -452,6 +456,12 @@ bool Simulator::runSimulation()
 			//adds to log
 			if (!FileIO::appendLog(sim))
 				return ErrorTracer::error("\nFileIO::appendLog failed in Simulator::runSimulation()");
+
+			progFrac = (double)envClock / (double)simulationLength;
+
+			GUIMain::doProgressBar(progFrac); //update the progress bar with the new fraction
+
+
 
 			//clock is incremented
 			Simulator::envClock++;

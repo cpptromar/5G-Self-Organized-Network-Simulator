@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 	setUpDrawingWindow();
 	setUpSimParamWindow();
 	setUpPostMenuScreen();
+	setUpSimProgressWindow();
 
 	// initialize the system by making the first window visible
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
@@ -150,7 +151,7 @@ void setUpDrawingWindow()
 	
 	// load color settings for the GUI from CSS file
 	GtkCssProvider* guiProvider = gtk_css_provider_new();
-	if (gtk_css_provider_load_from_path(guiProvider, cssPath.c_str(), NULL))
+	if (gtk_css_provider_load_from_path(guiProvider, StyleSheets.cssPath.c_str(), NULL))
 	{
 		// Window
 		gtk_style_context_add_provider(gtk_widget_get_style_context(window), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -355,7 +356,7 @@ void setUpSimParamWindow()
 
 	// load color settings for the GUI from CSS file
 	GtkCssProvider* guiProvider = gtk_css_provider_new();
-	if (gtk_css_provider_load_from_path(guiProvider, cssPath.c_str(), NULL))
+	if (gtk_css_provider_load_from_path(guiProvider, StyleSheets.cssPath.c_str(), NULL))
 	{
 		// Window
 		gtk_style_context_add_provider(gtk_widget_get_style_context(s2Window), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -439,7 +440,7 @@ void setUpPostMenuScreen()
 	gtk_container_add(GTK_CONTAINER(PostMenuWindow), mainContainer);
 
 	GtkCssProvider* guiProvider = gtk_css_provider_new();
-	if (gtk_css_provider_load_from_path(guiProvider, cssPath.c_str(), NULL))
+	if (gtk_css_provider_load_from_path(guiProvider, StyleSheets.cssPath.c_str(), NULL))
 	{
 		// Window
 		gtk_style_context_add_provider(gtk_widget_get_style_context(PostMenuWindow), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -455,6 +456,24 @@ void setUpDiagnosticsWindow()
 	// TODO - Will contain information about the system during runtime.
 }
 
+void setUpSimProgressWindow()
+{
+
+	GtkBuilder* builder = gtk_builder_new_from_file("GUI_ProgressWindow.glade");
+	GtkWidget* window;
+	GtkWidget* prog1;
+	GtkWidget* buttonQuit;
+
+	window = GTK_WIDGET(gtk_builder_get_object(builder, "windowProgress"));
+	g_signal_connect(window, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
+
+	buttonQuit = GTK_WIDGET(gtk_builder_get_object(builder, "buttonQuit"));
+	g_signal_connect(buttonQuit, "clicked", G_CALLBACK(gtk_main_quit), NULL); //instead of gtk_main_quit, go to a closing function (future work)
+
+	prog1 = GTK_WIDGET(gtk_builder_get_object(builder, "prog1"));
+	WINDOWS.ProgressWindow = window;
+	MiscWidgets.progressBar = prog1;
+}
 
 
 void goToSimParams()
@@ -482,6 +501,11 @@ void runSim()
 
 	gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
+	gtk_widget_show_all(WINDOWS.ProgressWindow);
+
+	//update UI changes (the opening and closing of the windows)
+	while (gtk_events_pending()) gtk_main_iteration();
+
 
 	Setup::GUIentryPoint();
 	ErrorTracer::programExit();
@@ -490,6 +514,16 @@ void runSim()
 void exitProg()
 {
 	gtk_main_quit();
+}
+
+void GUIMain::doProgressBar(double frac) //updates the progressbar
+{
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(MiscWidgets.progressBar), (gdouble)frac);
+
+	//without this line, the gtk UI widgets do not refresh.
+	//gtk widgets normally refresh upon returning to the main function!!
+	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
+
 }
 
 void backToDrawingStage()
@@ -1269,7 +1303,7 @@ void getDimensions()
 	
 	// Use the modified CSS file if the screen is lower resolution
 	if(SCREEN.WIDTH < 1920)
-		cssPath = "SHNSim_SmallScreen.css";
+		StyleSheets.cssPath = "SHNSim_SmallScreen.css";
 }
 
 GtkWidget* UserMessage(GtkWindow* window, string message)
@@ -1306,7 +1340,7 @@ GtkWidget* UserMessage(GtkWindow* window, string message)
 	gtk_widget_set_name(confirmation, "popupWindow");
 	
 	GtkCssProvider* provider = gtk_css_provider_new();
-	if(gtk_css_provider_load_from_path(provider, cssPath.c_str(), NULL))
+	if(gtk_css_provider_load_from_path(provider, StyleSheets.cssPath.c_str(), NULL))
 	{	
 		// window background
 		gtk_style_context_add_provider(gtk_widget_get_style_context(confirmation), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);

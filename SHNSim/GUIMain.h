@@ -14,8 +14,26 @@
 
 using namespace std;
 
+class GUIMain
+{
+public:
+	static void doProgressBar(double frac); //updates progressbar
+};
+
 // String to hold the proper sized CSS file to import
-string cssPath = "SHNSim.css";
+//string cssPath = "SHNSim.css"; //I converted this to struct so that there wasn't more than one declaration of 
+								// the same global variable (this header file shows up more than once) LOTS OF ERRORS! -SJ
+struct
+{
+	string cssPath = "SHNSim.css";
+} StyleSheets;
+
+struct
+{
+	GtkWidget* progressBar; //must be in struct rather than static variable in GTKMain class above
+							//because we had issues with "undefined reference to progressBar"
+} MiscWidgets;
+
 
 // define structure to hold windows used for project
 struct
@@ -24,6 +42,8 @@ struct
 	GtkWidget* SimParamWindow;
 	GtkWidget* PostMenuScreen;
 	GtkWidget* DiagnosticsWindow;
+	GtkWidget* ProgressWindow;
+
 	
 } WINDOWS;
 
@@ -56,6 +76,9 @@ void setUpDrawingWindow();
 void setUpSimParamWindow();
 void setUpDiagnosticsWindow();
 void setUpPostMenuScreen();
+void setUpSimProgressWindow();
+
+
 
 // navigation function prototypes - used to change windows
 void goToSimParams();
