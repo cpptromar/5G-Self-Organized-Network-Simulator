@@ -468,7 +468,6 @@ void setUpSimProgressWindow()
 	GtkWidget* window;
 	GtkWidget* prog1;
 	GtkWidget* buttonQuit;
-
 	window = GTK_WIDGET(gtk_builder_get_object(builder, "windowProgress"));
 	g_signal_connect(window, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 
@@ -549,7 +548,7 @@ void runSim()
 		return;
 
 	//gtk_widget_show_all(WINDOWS.PostMenuScreen);
-	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
+	//gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 	gtk_widget_show_all(WINDOWS.ProgressWindow);
 
 	//update UI changes (the opening and closing of the windows)
@@ -580,6 +579,7 @@ void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
 
 	if (fin) //this is test for Steven...
 	{
+		gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 		gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
 		gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
 	}

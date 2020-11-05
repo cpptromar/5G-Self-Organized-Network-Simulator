@@ -1,6 +1,6 @@
 label#title {
 	color: #1e4d2b;
-	background-color: #d8d8d8;
+	background-color: #A0A0A0;
 	font-family: "Times New Roman", Times, serif;
 	font-weight: bold;
 	font-size: 20px;
@@ -16,11 +16,11 @@ window#drawingWindow {
 }
 
 window {
-	background-color: #F0F0F0;
+	background-color: #C0C0C0;
 }
 
 #popupWindow {
-	background-color: #F0F0F0;
+	background-color: #C0C0C0;
 }
 
 label {
@@ -31,7 +31,7 @@ label {
 
 button {
 	color: #0000a0;
-	background-color: #D0D0D0;
+	background-color: #A0A0A0;
 	font-family: "Times New Roman", Times, serif;
 	font-size: 20px;
 	font-weight: bold;
@@ -42,7 +42,7 @@ button {
 
 button#subBtn {
 	color: #000000;
-	background-color: #D0D0D0;
+	background-color: #A0A0A0;
 	font-family: "Times New Roman", Times, serif;
 	font-size: 20px;
 	font-weight: bold;
