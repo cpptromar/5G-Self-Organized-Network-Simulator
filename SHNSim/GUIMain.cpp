@@ -602,7 +602,7 @@ void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
 	{
 		gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 		gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
-		gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
+		gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	}
 
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
