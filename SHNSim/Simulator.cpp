@@ -445,7 +445,6 @@ bool Simulator::runSimulation()
 		auto formatPadding = std::string(numSize - curNumSize, ' ');
 		const auto backspaceContainer = std::string(numSize, '\b');
 		
-
 		double progFrac = 0; //fraction to fill up the progress bar
 		//simulation takes place in environment tick, it stops
 		while (Simulator::simulationLength > Simulator::envClock)
@@ -458,18 +457,23 @@ bool Simulator::runSimulation()
 				return ErrorTracer::error("\nFileIO::appendLog failed in Simulator::runSimulation()");
 
 			progFrac = (double)envClock / (double)simulationLength;
-
-			GUIMain::doProgressBar(progFrac); //update the progress bar with the new fraction
-
+			double progFracfin = (double)simulationLength / (double)simulationLength;
 
 
 			//clock is incremented
 			Simulator::envClock++;
 
+			if (envClock%10==0)
+			{
+				GUIMain::doProgressBar(progFrac, false); //update the progress bar with the new fraction]
+			}
+
 			//the following is a conscise way of updating the clock shown to user
 			if (Simulator::envClock % curPwrOfTen == 0) { curPwrOfTen *= 10; curNumSize++; formatPadding = std::string(numSize - curNumSize, ' '); }
 			std::cout << backspaceContainer << formatPadding << Simulator::envClock;
 		}
+
+		GUIMain::doProgressBar(progFrac, true);
 
 		//saves the simulation end state
 		const auto addendum = '.' + std::to_string(sim) + ".save";

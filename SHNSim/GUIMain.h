@@ -17,7 +17,7 @@ using namespace std;
 class GUIMain
 {
 public:
-	static void doProgressBar(double frac); //updates progressbar
+	static void doProgressBar(double frac, bool fin); //updates progressbar
 };
 
 // String to hold the proper sized CSS file to import

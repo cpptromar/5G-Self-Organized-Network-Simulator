@@ -499,7 +499,7 @@ void runSim()
 	if(!valid)
 		return;
 
-	gtk_widget_show_all(WINDOWS.PostMenuScreen);
+	//gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 	gtk_widget_show_all(WINDOWS.ProgressWindow);
 
@@ -516,14 +516,20 @@ void exitProg()
 	gtk_main_quit();
 }
 
-void GUIMain::doProgressBar(double frac) //updates the progressbar
+void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
 {
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(MiscWidgets.progressBar), (gdouble)frac);
 
 	//without this line, the gtk UI widgets do not refresh.
 	//gtk widgets normally refresh upon returning to the main function!!
-	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
+	
+	if (fin)
+	{
+		gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
+		gtk_widget_show_all(WINDOWS.PostMenuScreen);
+	}
 
+	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
 }
 
 void backToDrawingStage()
