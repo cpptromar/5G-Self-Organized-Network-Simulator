@@ -10,7 +10,7 @@ struct GUIDataContainer
 	static int argc; 
 	static char** argv;
 
-	static int count, selectedTile, highlightedSide;
+	static int count, selectedTile, highlightedSide, dotCount;
 	static double sideLength, screenWidth, screenHeight, mouseX, mouseY;
  	static std::vector<std::pair<int, int>> neighbors[1000];
  	static std::vector<std::vector<double>> coords;
@@ -19,6 +19,7 @@ struct GUIDataContainer
 	static std::vector<int> startTime;
 	static std::vector<int> riseTime;
 	static std::vector<int> endState;	
+
  	
 	// stage 2 parameters
 	static int bsLen;

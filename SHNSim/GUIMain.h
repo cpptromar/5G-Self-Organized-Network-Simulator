@@ -97,6 +97,8 @@ static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
 static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); //-SJ
 static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_data);
+static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data);//-SJ
+
 static float distance(double x1, double y1, double x2, double y2);
 static int side(double x1, double y1, double x2, double y2);
 static bool deletionValid(int tile);

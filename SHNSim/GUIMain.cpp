@@ -26,9 +26,10 @@ int main(int argc, char** argv)
 	setUpPostMenuScreen();
 	setUpSimProgressWindow();
 	setUpDiagnosticsWindow1();
+	
 
 	// initialize the system by making the first window visible
-	//gtk_widget_show_all(WINDOWS.DrawingWindow);
+	gtk_widget_show_all(WINDOWS.DrawingWindow);
 	gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
 
 	gtk_main();
@@ -482,6 +483,7 @@ void setUpSimProgressWindow()
 void setUpDiagnosticsWindow1()
 {
 	GtkWidget* window, * darea;
+	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -491,7 +493,7 @@ void setUpDiagnosticsWindow1()
 
 	//=====================================================================================//
 
-	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(drawDot), NULL);
+	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event_test), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_test), NULL);
 	g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
@@ -571,17 +573,11 @@ void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
 	//without this line, the gtk UI widgets do not refresh.
 	//gtk widgets normally refresh upon returning to the main function!!
 	
-	//if (fin)
-	//{
-	//	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
-	//	gtk_widget_show_all(WINDOWS.PostMenuScreen);
-	//}
-
-	if (fin) //this is test for Steven...
+	if (fin)
 	{
 		gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 		gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
-		gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
+		gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	}
 
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
@@ -595,9 +591,9 @@ void backToDrawingStage()
 
 static void drawDot(cairo_t* cr)
 {
-	if (GUIDataContainer::count == 0)
+	if (GUIDataContainer::dotCount == 0)
 	{
-		/*vector<double> test;
+		vector<double> test;
 		test.push_back(GUIDataContainer::screenWidth * 0.95 / 2.0);
 		test.push_back(GUIDataContainer::screenHeight * 0.95 / 2.0);
 		GUIDataContainer::coords.erase(GUIDataContainer::coords.begin(), GUIDataContainer::coords.end());
@@ -617,7 +613,7 @@ static void drawDot(cairo_t* cr)
 
 		GUIDataContainer::path.erase(GUIDataContainer::path.begin(), GUIDataContainer::path.end());
 		GUIDataContainer::path.push_back(7);
-		GUIDataContainer::count = 1;*/
+		GUIDataContainer::dotCount = 1;
 	}
 	cairo_set_source_rgb(cr, 1, 1, 1);
 	cairo_line_to(cr, 0, 0);
@@ -633,150 +629,15 @@ static void drawDot(cairo_t* cr)
 	double mouseparam = mousedY / mousedX;
 	double mouseslope = atan(mouseparam) * 180.0 / M_PI;
 	double mousedist = sqrt(mousedY * mousedY + mousedX * mousedX);
-	if (abs(mouseslope) >= 60)
-	{
-		if (mousedY < 0)
-		{
-			GUIDataContainer::highlightedSide = 0; // Bottom
-		}
-		else
-		{
-			GUIDataContainer::highlightedSide = 3; // Top
-		}
-	}
-	else
-	{
-		if (mousedY < 0)
-		{
-			if (mousedX > 0)
-			{
-				GUIDataContainer::highlightedSide = 1;	// Bottom Right
-			}
-			else
-			{
-				GUIDataContainer::highlightedSide = 5;	// Bottom Left
-			}
-		}
-		else
-		{
-			if (mousedX > 0)
-			{
-				GUIDataContainer::highlightedSide = 2;	// Top Right
-			}
-			else
-			{
-				GUIDataContainer::highlightedSide = 4;	// Top Left
-			}
-		}
-	}
-	cairo_set_source_rgb(cr, 0, 1, 0);
-	cairo_set_line_width(cr, 2.0);
-	for (int i = 0; i < GUIDataContainer::count; i++)	// Fill
-	{
-		if (i == GUIDataContainer::selectedTile)
-		{
-			switch (GUIDataContainer::status[i])
-			{
-			case 0:	// Healthy
-				cairo_set_source_rgb(cr, 0, 100.0 / 255.0, 0);
-				break;
-			case 1:	// Congest 1
-				cairo_set_source_rgb(cr, 150.0 / 255.0, 150.0 / 255.0, 0);
-				break;
-			case 2:	// Congest 2
-				cairo_set_source_rgb(cr, 150.0 / 255.0, 75.0 / 255.0, 0);
-				break;
-			case 3:	// Fail
-				cairo_set_source_rgb(cr, 150.0 / 255.0, 0, 0);
-				break;
-			default:
-				cairo_set_source_rgb(cr, 1, 1, 1);
-			}
-		}
-		else
-		{
-			switch (GUIDataContainer::status[i])
-			{
-			case 0:	// Healthy
-				cairo_set_source_rgb(cr, 0, 200.0 / 255.0, 0);
-				break;
-			case 1:	// Congest 1
-				cairo_set_source_rgb(cr, 200.0 / 255.0, 200.0 / 255.0, 0);
-				break;
-			case 2:	// Congest 2
-				cairo_set_source_rgb(cr, 200.0 / 255.0, 100.0 / 255.0, 0);
-				break;
-			case 3:	// Fail
-				cairo_set_source_rgb(cr, 200.0 / 255.0, 0, 0);
-				break;
-			default:
-				cairo_set_source_rgb(cr, 1, 1, 1);
-			}
-		}
-		cairo_line_to(cr, GUIDataContainer::coords[i][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + 5)), GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + 5)));
-
-		for (int j = 0; j <= 5; j++)
-		{
-			cairo_line_to(cr, GUIDataContainer::coords[i][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + j)), GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + j)));
-		}
-		cairo_fill(cr);
-	}
-	for (int i = 0; i < GUIDataContainer::count; i++)	// Border
-	{
-		cairo_line_to(cr, GUIDataContainer::coords[i][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + 5)), GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + 5)));
-		for (int k = 0; k <= 5; k++)
-		{
-			cairo_set_source_rgb(cr, 0, 0, 0);
-			cairo_set_line_width(cr, 2.0);
-			if (i == GUIDataContainer::selectedTile && k == GUIDataContainer::highlightedSide)
-			{
-				cairo_set_source_rgb(cr, 1, 0, 0);
-				cairo_set_line_width(cr, 4.0);
-			}
-			cairo_line_to(cr, GUIDataContainer::coords[i][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + k)), GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + k)));
-			cairo_stroke(cr);
-			if (k < 5)
-			{
-				cairo_line_to(cr, GUIDataContainer::coords[i][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + k)), GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + k)));
-			}
-		}
-	}
-	cairo_line_to(cr, GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + 5)), GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + 5)));
-	for (int k = 0; k <= 5; k++)
-	{
-		cairo_set_source_rgb(cr, 0, 0, 0);
-		cairo_set_line_width(cr, 2.0);
-		if (k == GUIDataContainer::highlightedSide)
-		{
-			cairo_set_source_rgb(cr, 1, 0, 0);
-			cairo_set_line_width(cr, 4.0);
-		}
-		cairo_line_to(cr, GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + k)), GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + k)));
-		cairo_stroke(cr);
-		if (k < 5)
-		{
-			cairo_line_to(cr, GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * sin(2 * M_PI / 6 * (0.5 + k)), GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * cos(2 * M_PI / 6 * (0.5 + k)));
-		}
-	}
-	for (int i = 0; i < GUIDataContainer::count; i++)	// Numbers
-	{
-		cairo_set_font_size(cr, GUIDataContainer::sideLength / 2.0);
-
-		string result, result2, result3;
-		stringstream convert, convert2, convert3;
-		convert << i;
-		result = convert.str();
-		const char* c = result.c_str();
-
-		
-		cairo_set_source_rgb(cr, 0, 0, 1);
-
-		cairo_move_to(cr, GUIDataContainer::coords[i][0] - GUIDataContainer::sideLength / 2.0 / 3.0, GUIDataContainer::coords[i][1] + GUIDataContainer::sideLength / 2.0 / 2.5);
-
-		cairo_show_text(cr, c);
 
 
-	}
+	int r = 25;
+	//This is the key to drawing a dot... http://gtk.10911.n7.nabble.com/How-to-draw-a-simply-dot-in-cairo-td45377.html
+	cairo_set_source_rgb(cr, 0.33, 0.64, 0.44);
+	cairo_move_to(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY);
+	cairo_arc(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY, r, 0, 2 * M_PI);
+	cairo_fill(cr);
+	
 
 }
 
@@ -1037,6 +898,9 @@ static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_
 		GdkEventMotion* e = (GdkEventMotion*)event;
 		GUIDataContainer::mouseX = (guint32)e->x;
 		GUIDataContainer::mouseY = (guint32)e->y;
+		/*cout << "MouseX = " << GUIDataContainer::mouseX << endl;
+		cout << "MouseY = " << GUIDataContainer::mouseY << endl << endl;*/
+
 		gtk_widget_queue_draw(widget);
 	}
 }
@@ -1381,142 +1245,141 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 {
 
 	bool changeScale = false;
-	if (event->button == 1) //Left Mouse Click
-	{
-		double dY = (GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - event->y);
-		double dX = (event->x - GUIDataContainer::coords[GUIDataContainer::selectedTile][0]);
+	//if (event->button == 1) //Left Mouse Click
+	//{
+	//	double dY = (GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - event->y);
+	//	double dX = (event->x - GUIDataContainer::coords[GUIDataContainer::selectedTile][0]);
 
-		double param = dY / dX;
-		double slope = atan(param) * 180.0 / M_PI;
-		double setX, setY;
-		int setPath;
-		double dist = sqrt(dY * dY + dX * dX);
+	//	double param = dY / dX;
+	//	double slope = atan(param) * 180.0 / M_PI;
+	//	double setX, setY;
+	//	int setPath;
+	//	double dist = sqrt(dY * dY + dX * dX);
 
-		bool changedTile = false;
-		double distance = sqrt(dY * dY + dX * dX);
-		double newdY, newdX, newDistance;
-		for (int i = 0; i < GUIDataContainer::count; i++)
-		{
-			newdY = (GUIDataContainer::coords[i][1] - event->y);
-			newdX = (event->x - GUIDataContainer::coords[i][0]);
+	//	bool changedTile = false;
+	//	double distance = sqrt(dY * dY + dX * dX);
+	//	double newdY, newdX, newDistance;
+	//	for (int i = 0; i < GUIDataContainer::count; i++)
+	//	{
+	//		newdY = (GUIDataContainer::coords[i][1] - event->y);
+	//		newdX = (event->x - GUIDataContainer::coords[i][0]);
 
-			newDistance = sqrt(newdY * newdY + newdX * newdX);
-			if (distance > newDistance)
-			{
-				distance = newDistance;
-				if (distance < GUIDataContainer::sideLength * sqrt(3) / 2)	// If click is inside hex
-				{
-					GUIDataContainer::selectedTile = i;
-					changedTile = true;
-				}
-			}
-		}
-		if (!changedTile)
-		{
-			if (dist > GUIDataContainer::sideLength * sqrt(3) / 2)
-			{
-				if (abs(slope) >= 60)
-				{
-					if (dY < 0)	// Bottom
-					{
-						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
-						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3);
-						setPath = 0;
-					}
-					else  // Top
-					{
-						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
-						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3);
-						setPath = 3;
-					}
-				}
-				else
-				{
-					if (dY < 0)
-					{
-						if (dX > 0)	// Bottom Right
-						{
-							setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
-							setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
-							setPath = 5;
-						}
-						else	// Bottom Left
-						{
-							setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
-							setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
-							setPath = 1;
-						}
-					}
-					else
-					{
-						if (dX > 0)	// Top Right
-						{
-							setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
-							setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
-							setPath = 4;
-						}
-						else	// Top Left
-						{
-							setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
-							setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
-							setPath = 2;
-						}
-					}
-				}
-				bool pointExists = false;
-				for (int i = 0; i < GUIDataContainer::count; i++)
-				{
-					if (round(GUIDataContainer::coords[i][0]) == round(setX) && round(GUIDataContainer::coords[i][1]) == round(setY))
-					{
-						pointExists = true;
-						break;
-					}
-				}
-				if (!pointExists)
-				{
-					vector<double> test;
-					test.push_back(setX);
-					test.push_back(setY);
-					GUIDataContainer::coords.push_back(test);
+	//		newDistance = sqrt(newdY * newdY + newdX * newdX);
+	//		if (distance > newDistance)
+	//		{
+	//			distance = newDistance;
+	//			if (distance < GUIDataContainer::sideLength * sqrt(3) / 2)	// If click is inside hex
+	//			{
+	//				GUIDataContainer::selectedTile = i;
+	//				changedTile = true;
+	//			}
+	//		}
+	//	}
+	//	if (!changedTile)
+	//	{
+	//		if (dist > GUIDataContainer::sideLength * sqrt(3) / 2)
+	//		{
+	//			if (abs(slope) >= 60)
+	//			{
+	//				if (dY < 0)	// Bottom
+	//				{
+	//					setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
+	//					setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3);
+	//					setPath = 0;
+	//				}
+	//				else  // Top
+	//				{
+	//					setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
+	//					setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3);
+	//					setPath = 3;
+	//				}
+	//			}
+	//			else
+	//			{
+	//				if (dY < 0)
+	//				{
+	//					if (dX > 0)	// Bottom Right
+	//					{
+	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
+	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
+	//						setPath = 5;
+	//					}
+	//					else	// Bottom Left
+	//					{
+	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
+	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
+	//						setPath = 1;
+	//					}
+	//				}
+	//				else
+	//				{
+	//					if (dX > 0)	// Top Right
+	//					{
+	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
+	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
+	//						setPath = 4;
+	//					}
+	//					else	// Top Left
+	//					{
+	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
+	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
+	//						setPath = 2;
+	//					}
+	//				}
+	//			}
+	//			bool pointExists = false;
+	//			for (int i = 0; i < GUIDataContainer::count; i++)
+	//			{
+	//				if (round(GUIDataContainer::coords[i][0]) == round(setX) && round(GUIDataContainer::coords[i][1]) == round(setY))
+	//				{
+	//					pointExists = true;
+	//					break;
+	//				}
+	//			}
+	//			if (!pointExists)
+	//			{
+	//				vector<double> test;
+	//				test.push_back(setX);
+	//				test.push_back(setY);
+	//				GUIDataContainer::coords.push_back(test);
 
-					GUIDataContainer::status.push_back((int)0);
-					GUIDataContainer::endState.push_back((int)50);
-					GUIDataContainer::startTime.push_back((int)0);
-					GUIDataContainer::riseTime.push_back((int)1);
+	//				GUIDataContainer::status.push_back((int)0);
+	//				GUIDataContainer::endState.push_back((int)50);
+	//				GUIDataContainer::startTime.push_back((int)0);
+	//				GUIDataContainer::riseTime.push_back((int)1);
 
 
-					GUIDataContainer::path[GUIDataContainer::count - 1] = setPath;
+	//				GUIDataContainer::path[GUIDataContainer::count - 1] = setPath;
 
-					GUIDataContainer::selectedTile = GUIDataContainer::count;
-					GUIDataContainer::count += 1;
-					changeScale = true;
-				}
-			}
-			else	// If inside the hexagon, cycle states
-			{
-				GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
-				// rotate from healthy -> user congested -> demand congested -> failing
-				if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 1)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 2)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
-				}
+	//				GUIDataContainer::selectedTile = GUIDataContainer::count;
+	//				GUIDataContainer::count += 1;
+	//				changeScale = true;
+	//			}
+	//		}
+	//		else	// If inside the hexagon, cycle states
+	//		{
+	//			GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
+	//			// rotate from healthy -> user congested -> demand congested -> failing
+	//			if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
+	//			{
+	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
+	//			}
+	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 1)
+	//			{
+	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
+	//			}
+	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 2)
+	//			{
+	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
+	//			}
+	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
+	//			{
+	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	//			}
 
-			}
-		}
-	}
-
+	//		}
+	//	}
+	//}
 	gtk_widget_queue_draw(widget);
 	return TRUE;
 }
@@ -1525,6 +1388,12 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_data)
 {
 	drawHex(cr);
+	return FALSE;
+}
+
+static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data)
+{
+	drawDot(cr);
 	return FALSE;
 }
 

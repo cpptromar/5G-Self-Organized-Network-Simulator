@@ -3,7 +3,7 @@
 int GUIDataContainer::argc; 
 char** GUIDataContainer::argv;
 
-int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide;
+int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide, GUIDataContainer::dotCount;
 double GUIDataContainer::sideLength, GUIDataContainer::screenWidth, GUIDataContainer::screenHeight, GUIDataContainer::mouseX, GUIDataContainer::mouseY;
 std::vector<std::pair<int, int>> GUIDataContainer::neighbors[1000];
 std::vector<std::vector<double>> GUIDataContainer::coords;
@@ -12,6 +12,7 @@ std::vector<int> GUIDataContainer::path;
 std::vector<int> GUIDataContainer::startTime;
 std::vector<int> GUIDataContainer::riseTime;
 std::vector<int> GUIDataContainer::endState;	
+
 	
 // stage 2 parameters
 int GUIDataContainer::bsLen = 5;
