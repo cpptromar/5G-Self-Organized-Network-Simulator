@@ -416,28 +416,44 @@ void setUpPostMenuScreen()
 	WINDOWS.PostMenuScreen = PostMenuWindow;
 
 	// create quit button and to analysis button
-	GtkWidget* quitProg, * toAnalysis;
+	GtkWidget* quitProg, * toAnalysis, * toScatter, * toLineGraph, * toData, * exportToCsv;
 	// instantiate buttons
 	quitProg = gtk_button_new_with_label("Quit");
-	toAnalysis = gtk_button_new_with_label("To Anaysis");
+	toAnalysis = gtk_button_new_with_label("Analysis");
+	toScatter = gtk_button_new_with_label("Scatter Plot");
+	toLineGraph = gtk_button_new_with_label("Congestion Level Graph");
+	toData = gtk_button_new_with_label("View Tabulated Data");
+	exportToCsv = gtk_button_new_with_label("Export to Excel");
 
 	// Set tooltips for buttons
 	gtk_widget_set_tooltip_text(quitProg, "Exit Program");
 	gtk_widget_set_tooltip_text(toAnalysis, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(toScatter, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(toLineGraph, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(toData, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(exportToCsv, "Exit Program"); // also edit this later
 
 	// connect button signals
 	g_signal_connect(quitProg, "clicked", G_CALLBACK(exitProg), NULL);
 	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(toScatter, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(toLineGraph, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(toData, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(exportToCsv, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 
 	// instantiate button container
-	GtkWidget* btnContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	GtkWidget* btnContainer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
 
 	// instantiate main container
 	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
 	// pack buttons into button container
-	gtk_box_pack_start(GTK_BOX(btnContainer), quitProg, 1, 1, 10);
-	gtk_box_pack_end(GTK_BOX(btnContainer), toAnalysis, 1, 1, 10);
+	gtk_box_pack_start(GTK_BOX(btnContainer), toAnalysis, 1, 1, 10);
+	gtk_box_pack_start(GTK_BOX(btnContainer), toData, 1, 1, 10);
+	gtk_box_pack_start(GTK_BOX(btnContainer), toScatter, 1, 1, 10);
+	gtk_box_pack_start(GTK_BOX(btnContainer), toLineGraph, 1, 1, 10);
+	gtk_box_pack_start(GTK_BOX(btnContainer), exportToCsv, 1, 1, 10);
+	gtk_box_pack_end(GTK_BOX(btnContainer), quitProg, 1, 1, 10);
 
 	// pack main containers into final master container
 	gtk_box_pack_end(GTK_BOX(mainContainer), btnContainer, 1, 1, 10);
@@ -452,8 +468,13 @@ void setUpPostMenuScreen()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(PostMenuWindow), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 		// buttons		
-		gtk_style_context_add_provider(gtk_widget_get_style_context(quitProg), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		
 		gtk_style_context_add_provider(gtk_widget_get_style_context(toAnalysis), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(toData), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(toScatter), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(toLineGraph), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(exportToCsv), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(quitProg), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 	}
 }
 

@@ -53,7 +53,6 @@ struct
 	GtkWidget* endStatusLabel, * startTimeLabel, * riseTimeLabel, * endStateLabel;	// Labels
 	GtkWidget* startTimeEntry, * riseTimeEntry, * endStateEntry;	// Text Boxes
 	GtkWidget* endStatusDisplayLbl;									// Display label
-	GtkWidget* load1;
 } realTime;
 
 // define structure to hold window dimensions
