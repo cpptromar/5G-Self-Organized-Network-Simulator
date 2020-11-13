@@ -14,7 +14,7 @@
 
 using namespace std;
 
-class GUIMain
+class GUIMain //class to hold functions that can be used in the simulator code so that it can interact with GUI code
 {
 public:
 	static void doProgressBar(double frac, bool fin); //updates progressbar
@@ -107,6 +107,7 @@ static void getNeighbors();
 void getDimensions();
 GtkWidget* UserMessage(GtkWindow* window, string message);
 void displayInformation(GtkWidget* widget, GtkWindow* window);
+void debug();
 
 // function to add parameters to param struct; used to pass params to run the simulation
 bool addParams();

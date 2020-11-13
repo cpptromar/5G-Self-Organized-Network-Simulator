@@ -507,7 +507,8 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	if (Simulator::getIRPManager().getBuffer().size() < 1)
 		return ErrorTracer::error("Network Manager buffer empty when attempting to access log.");
 
-	for (const auto& ue : Simulator::getIRPManager().getBuffer().getLastTick())
+	// This is a ForEach loop (C++11 added foreach loop capabilities) 
+	for (const auto& ue : Simulator::getIRPManager().getBuffer().getLastTick()) 
 	{
 		log << ue.TIME << ','
 			<< ue.BS_ID << ','

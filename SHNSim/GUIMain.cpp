@@ -1,4 +1,5 @@
 #include "GUIMain.h"
+#include <fstream>
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
@@ -507,7 +508,7 @@ void setUpDiagnosticsWindow1()
 	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-
+	
 	WINDOWS.DiagnosticsWindow1 = window;
 
 	darea = gtk_drawing_area_new();
@@ -522,19 +523,28 @@ void setUpDiagnosticsWindow1()
 	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_set_events(window, GDK_POINTER_MOTION_MASK);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth, GUIDataContainer::screenHeight);
+	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth-200, GUIDataContainer::screenHeight-150);
 	gtk_window_set_title(GTK_WINDOW(window), "5G Simulator");
 
 	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+	// Creating button for general debug purposes
+	GtkWidget* debugBtn = gtk_button_new_with_label("       Debug       ");
+	gtk_widget_set_name(debugBtn, "debugBtn");
+	g_signal_connect(debugBtn, "clicked", G_CALLBACK(debug), GTK_WINDOW(window));
+	gtk_box_pack_start(GTK_BOX(buttonBox), debugBtn, 0, 0, 5);
 
 	// Pack drawing area and parameters into container
 	gtk_box_pack_start(GTK_BOX(mainContainer), darea, 1, 1, 5);
+	gtk_box_pack_start(GTK_BOX(mainContainer), buttonBox, 0, 1, 20);
+
 
 	// set main container to scroll
 	GtkWidget* scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
 	gtk_container_add(GTK_CONTAINER(scrolledWindow), mainContainer);
 	gtk_container_add(GTK_CONTAINER(window), scrolledWindow);
-
+	
 
 	// load color settings for the GUI from CSS file
 	GtkCssProvider* guiProvider = gtk_css_provider_new();
@@ -542,6 +552,9 @@ void setUpDiagnosticsWindow1()
 	{
 		// Window
 		gtk_style_context_add_provider(gtk_widget_get_style_context(window), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		
+		// Button
+		gtk_style_context_add_provider(gtk_widget_get_style_context(debugBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 	}
 }
@@ -1707,4 +1720,33 @@ void updateBsParams()
 		UserMessage(GTK_WINDOW(WINDOWS.DrawingWindow), "Make sure all entered parameters are integers");
 		return;
 	}		
+}
+
+
+void debug()
+{
+	
+	cout << "I am in debug()!!!" << endl;
+	
+	const string filepath = "D:\\_Documents\\_CPP\\CPP-5G-Network-Sim\\SHNSim\\TEST_SIM_0.csv";
+
+
+	//https://en.cppreference.com/w/cpp/io/basic_ifstream
+	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+	ifstream log;
+	
+	log.open(filepath);
+	string line;
+
+	if (log)
+	{
+		getline(log,line);
+		stringstream ss(line);
+		
+		cout << line << endl;
+
+	}
+	else
+		throw runtime_error("Could not open file");
+
 }
