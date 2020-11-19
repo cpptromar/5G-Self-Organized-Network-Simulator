@@ -404,6 +404,13 @@ void setUpSimParamWindow()
 	}
 }
 
+/*===========================================================================================================
+												NEW WINDOWS
+		This section below is where all the new windows setup code is located
+
+=============================================================================================================*/
+
+
 void setUpPostMenuScreen()
 {
 	// create stage 2 window and configure window properties
@@ -559,22 +566,44 @@ void setUpDiagnosticsWindow1()
 	}
 }
 
+/*===========================================================================================================
+												FUNCTIONS
+		This section below is where all the code for functions is. 
+		Function that will take you between windows and provide certain functionality 
+		like exiting the program or running the sim
 
+=============================================================================================================*/
+
+////////////////////////////////////////////////////////////////////////
+// here is the code that provides the transitory function of the buttons, 
+// these will navigate the menus
+////////////////////////////////////////////////////////////////////////
+// Also needs to be added to h file
+void goToDebug()
+{
+	gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
+	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
+}
 void goToSimParams()
 {
-	/* print out selected bs params for diagnostic purposes
-	cout << "Environment Controller Parameters:" << endl;
-	cout << "   Status, Start Time, Rise Time, End State" << endl;
-	for(int i = 0; i < GUIDataContainer::startTime.size(); i++)
-	{	
-		cout << "      " << GUIDataContainer::status[i] << "       " << GUIDataContainer::startTime[i] << "           " << GUIDataContainer::riseTime[i] << "          " << GUIDataContainer::endState[i] << endl;
-	}*/
-	
 	gtk_widget_show_all(WINDOWS.SimParamWindow);
 	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
 }
 
-// NOTE: does NOT open another window after running simulation, diagnostics page could be added if needed
+////////////////////////////////////////////////////////////////////////
+// These are any return function that will bring you back to other menus
+////////////////////////////////////////////////////////////////////////
+void backToDrawingStage()
+{
+	gtk_widget_show_all(WINDOWS.DrawingWindow);
+	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
+}
+
+////////////////////////////////////////////////////////////////////////
+//Here is the code that provides the functionality of the GUI
+////////////////////////////////////////////////////////////////////////
+
+// Initiates the simulation and once the progress bar has finished it move to a post menu screen for diagnostics
 void runSim()
 {
 	// call a function to add values from entry boxes to parameter struct
@@ -595,12 +624,8 @@ void runSim()
 	ErrorTracer::programExit();
 }
 
-void exitProg()
-{
-	gtk_main_quit();
-}
-
-void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
+//Holds the logic for how the progress bar is updated and what to do when finished
+void GUIMain::doProgressBar(double frac, bool fin) 
 {
 	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(MiscWidgets.progressBar), (gdouble)frac);
 
@@ -617,12 +642,28 @@ void GUIMain::doProgressBar(double frac, bool fin) //updates the progressbar
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
 }
 
-void backToDrawingStage()
+//Closes all windows *use this for any of the transitions between windows*  NOOOOTTTEEEEE: needs to be implemented and tested but im sure it'll work // needs to be added to h file
+void closeWindows()
 {
-	gtk_widget_show_all(WINDOWS.DrawingWindow);
+	gtk_widget_hide_on_delete(WINDOWS.PostMenuScreen);
+	gtk_widget_hide_on_delete(WINDOWS.DiagnosticsWindow1);
+	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
+	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 }
 
+// Exits the gui and at this point the whole program
+void exitProg()
+{
+	gtk_main_quit();
+}
+
+/*===========================================================================================================
+									AUXILLIARY GUI FUNCTIONALITY
+		This section below is where all the code for Button click handling and window drawing, 
+		as well as populating those draw windows and entry boxes goes here 
+
+=============================================================================================================*/
 static void drawDot(cairo_t* cr)
 {
 	if (GUIDataContainer::dotCount == 0)
