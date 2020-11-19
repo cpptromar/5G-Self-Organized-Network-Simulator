@@ -107,7 +107,7 @@ static void getNeighbors();
 void getDimensions();
 GtkWidget* UserMessage(GtkWindow* window, string message);
 void displayInformation(GtkWidget* widget, GtkWindow* window);
-void debug();
+bool debug();
 
 // function to add parameters to param struct; used to pass params to run the simulation
 bool addParams();

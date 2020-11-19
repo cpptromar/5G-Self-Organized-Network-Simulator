@@ -1,5 +1,6 @@
 #include "GUIMain.h"
 #include <fstream>
+#include "ErrorTracer.h"
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
@@ -1764,30 +1765,106 @@ void updateBsParams()
 }
 
 
-void debug()
+bool debug()
 {
-	
 	cout << "I am in debug()!!!" << endl;
-	
-	const string filepath = "D:\\_Documents\\_CPP\\CPP-5G-Network-Sim\\SHNSim\\TEST_SIM_0.csv";
-
+	const string filepath = "StevensTest_SIM_0.csv";
 
 	//https://en.cppreference.com/w/cpp/io/basic_ifstream
 	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+
 	ifstream log;
-	
-	log.open(filepath);
 	string line;
 
-	if (log)
+	log.open(filepath, ios::in); //open the file for readonly (ios::in)
+
+	if (!log.is_open())
 	{
-		getline(log,line);
-		stringstream ss(line);
+		cout << "I could not open the log!!" << endl;
+		cout << "filepath = " << filepath << endl;
+		log.close();
+		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+	}
+
+	getline(log, line); //get the first line
+	istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+	string var;
+	
+	int varCount = 0;
+
+	while (getline(iss, var, ',')) //get individual variable "cells" and store in var (could also replace with "iss>>var" as done below)
+	{
+		varCount++;//count how many different variables there are to create array
+	}
+
+	string* varNames = new string[varCount]; //this is the only way I was able to create a dynamically sized array..
+	//cout << "The number of variables is: \"" << to_string(varCount) << "\"" << endl;
+	
+	int counter = 0;
+
+	istringstream iss2(line);//re-copy the line 
+	while (getline(iss2, var, ',')) //store names into array TODO: I want to figure out how to return to the beginning of the iss stream
+	{
+		//cout << "var = " << var << " and counter = " << to_string(counter) << endl;
+		varNames[counter] = var;
+		counter++;
+	}
+	
+	//==============================================================================PRINTING
+	//print the variable names in one line
+	for (int i = 0; i < varCount; i++)
+	{
 		
-		cout << line << endl;
+		cout << varNames[i];
+		if (i != varCount - 1)  //(don't put comma for last variable name)
+			cout << ",";
+	}
+	cout << endl;
+	//==============================================================================
+
+
+	while (getline(log,line)) //for all remaining lines...
+	{
+		float* varData = new float[varCount];
+		string buf;
+		istringstream iss(line); 
+		counter = 0;
+		//while (getline(iss, var, ','))
+		while (getline(iss, buf, ',')) //this inputs all the separated variables into the varData array
+		{
+			varData[counter] = stof(buf); //stof() converts string to float
+			counter++;
+		}
+
+		//==============================================================================PRINTING
+		//print the variables for that line
+		for (int i = 0; i < varCount; i++)
+		{
+			if (varData[i] < 0.0001 && varData[i]>0)
+				printf("%.4e", varData[i]);
+			else
+				printf("%.4f", (double)varData[i]);
+			if (i != varCount - 1)  //(don't put comma for last variable name)
+				cout << ",";
+		}
+		cout << endl;
+		//==============================================================================
 
 	}
-	else
-		throw runtime_error("Could not open file");
 
+
+	/*for (int i = 0; i < 5; i++)
+	{
+		getline(log, line);
+		istringstream iss(line);
+		getline(iss, lineStream);
+		cout << "using iss not in the loops, we get lineStream = " << lineStream << endl;
+	}*/
+	
+
+	//else
+	//	throw runtime_error("Could not open file");
+
+	
+	return true;
 }
