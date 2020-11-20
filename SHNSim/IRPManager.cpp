@@ -89,6 +89,8 @@ void IRPManager::IRPManagerUpdate()
 	{
 		IRPManager::dataAnalysis();
 
+		IRPManager::mobileuser(); //Simulates users moving around from one base station to another
+
 		// Self-Healing functions
 		IRPManager::checkStatus();
 		IRPManager::offloadUser();
@@ -126,6 +128,7 @@ void IRPManager::IRPDataCollection()
 						tr.getLoc().y,
 						tr.getTheta(),
 						ueTrPair.first,
+						usr.getMobilityID(),
 						usr.getLoc().x,
 						usr.getLoc().y,
 						usr.getMaxDr(),
@@ -216,6 +219,99 @@ void IRPManager::offloadUser()
 			return lhs.second < rhs.second;
 			});
 
+		//should prevent while loop from running indefinitely
+		auto prevAmountToRemove = amountToRemove;
+		auto removalAttemptFailed = uint32_t{ 0 };
+		while (amountToRemove > 0 && removalAttemptFailed < Simulator::AP_IRPMaxRemovalFailures)
+		{
+			// get the location and id of the first user within the User Equipment DataBase (UEDB) of the unhealthy eNodeB
+			if (disabledBsRecords.size() < 1)
+			{
+				removalAttemptFailed++;
+				continue;
+			}
+			const auto usrID = userDemands.back().first;			//usr to remove from eNodeB
+			const auto userDemand = userDemands.back().second;		//usr demand
+			const auto offloadUserLoc = (*(disabledBsRecords.look_up(usrID))).loc;					//usr location
+			userDemands.pop_back();
+
+			// variables for determining the closest eNodeB to the UE to be removed
+			auto minDistBetweenUEandBS = float{ 100000 };				// set it to arbitrarily large number
+			auto distBetweenUEandBS = float{};							// dist holder
+			auto closestBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
+
+			// iterate through the list of helper eNodeBs and compare their distance to the user to be removed
+			// to determine the closest BS to offload to
+			for (const auto& hbs : this->helperBSs)
+			{
+				// Location of current eNodeB
+				const auto& helperBSLoc = Simulator::getBS(hbs).getLoc();
+
+				// Determine the distance between the UE to be removed and the current helper eNodeB			
+				distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y)) + ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
+
+				// Search for the closest eNodeB within 3x the side length of the eNodeB
+				if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+				{
+					closestBS_ID = hbs; // store closest BS ID to offload user too
+					minDistBetweenUEandBS = distBetweenUEandBS;
+				}
+
+			}
+
+			// Add the user to the to the closest BS and remove it from the original BS where it is at
+			if (closestBS_ID < Simulator::getNumOfBSs() && Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0))
+			{
+				amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();
+			}
+
+			if (amountToRemove == prevAmountToRemove)
+			{
+				removalAttemptFailed++;
+				ErrorTracer::error("Error transferring UE to new eNodeB");
+			}
+		}
+	}
+}
+
+void IRPManager::mobileuser()
+{
+	// calculate max distance to search for
+	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();
+
+	//Clear the base station vector
+	this->combinedBSs.clear();
+
+	// for each eNodeB
+	for (const auto& bss : IRPManager::networkStatuses)
+	{
+		this->combinedBSs.push_back(bss.bsID);											//make a vector called combinedBSs of all the base stations
+	}
+
+	// for every base station
+	for (const auto& BaseStations : combinedBSs)
+	{
+
+		// get the list of users stored within a disabled eNodeB
+		const auto& combinedRecords = Simulator::getBS(BaseStations).getUEDB();
+
+		//Create temporary vector to hold information about UE mobility
+		auto userMobilities = std::vector<std::pair<size_t, size_t>>();
+		userMobilities.reserve(combinedRecords.size());
+		for (const auto& ue : combinedRecords.readDB())
+			userMobilities.push_back(std::make_pair((*ue).userID, (*ue).mobilityID));
+
+
+		// If the user has mobility type 1 or 2 (walking or driving), then move them
+		const auto usrID = userMobilities.back().first;											//usr to remove from eNodeB
+		const auto userMobility = userMobilities.back().second;									//usr mobility
+		const auto offloadUserLoc = (*(combinedRecords.look_up(usrID))).loc;					//usr location
+		userMobilities.pop_back();
+
+		//-------------------------------------------------------------WE STOPPED HERE-------------------------------------------------------------------------------------------
+		//if (userMobilities == IRP_BSStatus::normal)
+		//	std::cout << "normal";
+		
 		//should prevent while loop from running indefinitely
 		auto prevAmountToRemove = amountToRemove;
 		auto removalAttemptFailed = uint32_t{ 0 };

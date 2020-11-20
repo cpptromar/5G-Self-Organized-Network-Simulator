@@ -8,6 +8,7 @@
 #include "ErrorTracer.h"
 
 enum class IRP_BSStatus { normal = 0, congestion, failure };
+enum class IRP_UEMobility { stationary = 0, walking, car };
 
 typedef struct { size_t bsID;  IRP_BSStatus bsStatus; float bsStateDemand; float bsStateSent; } IRP_BSInfo;
 
@@ -20,6 +21,7 @@ protected:
 	
 	std::vector<size_t> helperBSs;		// store BSs that can provide aid
 	std::vector<size_t> disabledBSs; 	// store BSs that are in need of aid
+	std::vector<size_t> combinedBSs;	// store all BSs for user mobility purposes
 	
 public:
 	void InitializeIRPManager();
@@ -33,6 +35,7 @@ public:
 
 	void checkStatus(); 	// check whether a BS should be a helper or if it is disabled
 	void offloadUser(); 	// specifies the user that should be offloaded, the source BS to offload from, and the destination BS to offload to
+	void mobileuser();		// Moves user from one base station to another to simulate mobility 
 };
 
 

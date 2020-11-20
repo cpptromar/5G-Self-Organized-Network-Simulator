@@ -16,6 +16,7 @@ public:
 	float TRX_Y;
 	float TRX_ANG;
 	size_t UE_ID;
+	size_t UE_MID;
 	float UE_LOC_X;
 	float UE_LOC_Y;
 	uint32_t MAX_DR;
@@ -28,7 +29,7 @@ public:
 	UELogData(const UELogData&) = default;
 	UELogData& operator=(const UELogData&) = default;
 	UELogData(UELogData&&) = default;
-	UELogData(uint32_t, size_t, float, float, size_t, float, size_t, float, float, float, size_t, float, float, uint32_t, uint32_t, uint32_t, float,float);
+	UELogData(uint32_t, size_t, float, float, size_t, float, size_t, float, float, float, size_t, size_t, float, float, uint32_t, uint32_t, uint32_t, float,float);
 	~UELogData() = default;
 };
 

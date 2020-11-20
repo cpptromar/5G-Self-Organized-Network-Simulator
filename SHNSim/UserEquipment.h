@@ -8,6 +8,7 @@ class UserEquipment
 {
 protected:
 	size_t userID;
+	size_t mobilityID;
 	Coord<float> loc;
 	uint32_t dataDemanded;
 	uint32_t dataReceived;
@@ -19,8 +20,9 @@ protected:
 	}
 
 public:
-	UserEquipment(const Coord<float>& loc, const size_t& ID, std::vector<uint32_t>& possMaxDrs, const uint32_t& initDemand);
+	UserEquipment(const Coord<float>& loc, const size_t& ID, const size_t& m, std::vector<uint32_t>& possMaxDrs, const uint32_t& initDemand);
 	const size_t& getUserID() const;
+	const size_t& getMobilityID() const;
 	const Coord<float>& getLoc() const;
 	const uint32_t& getDemand() const;
 	const uint32_t& getMaxDr(size_t channel) const;
