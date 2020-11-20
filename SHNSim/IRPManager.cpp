@@ -308,6 +308,7 @@ void IRPManager::mobileuser() //test push
 		const auto offloadUserLoc = (*(combinedRecords.look_up(usrID))).loc;					//usr location
 		userMobilities.pop_back();
 
+		//Next thing to work on is moving location of users
 		//-------------------------------------------------------------WE STOPPED HERE-------------------------------------------------------------------------------------------
 		//if (userMobilities == IRP_BSStatus::normal)
 		//	std::cout << "normal";
