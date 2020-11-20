@@ -579,7 +579,6 @@ void setUpDiagnosticsWindow1()
 // here is the code that provides the transitory function of the buttons, 
 // these will navigate the menus
 ////////////////////////////////////////////////////////////////////////
-// Also needs to be added to h file
 void goToDebug()
 {
 	gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
@@ -643,7 +642,7 @@ void GUIMain::doProgressBar(double frac, bool fin)
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
 }
 
-//Closes all windows *use this for any of the transitions between windows*  NOOOOTTTEEEEE: needs to be implemented and tested but im sure it'll work // needs to be added to h file
+//Closes all windows *use this for any of the transitions between windows*  NOOOOTTTEEEEE: needs to be implemented and tested but im sure it'll work
 void closeWindows()
 {
 	gtk_widget_hide_on_delete(WINDOWS.PostMenuScreen);

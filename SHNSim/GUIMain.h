@@ -83,8 +83,10 @@ void setUpSimProgressWindow();
 
 // navigation function prototypes - used to change windows
 void goToSimParams();
+void goToDebug();
 void runSim();
 void backToDrawingStage();
+void closeWindows();
 void exitProg();
 
 // functions used in drawing window
