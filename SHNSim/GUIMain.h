@@ -42,7 +42,7 @@ struct
 	GtkWidget* SimParamWindow;
 	GtkWidget* PostMenuScreen;
 	GtkWidget* DiagnosticsWindow;
-	GtkWidget* DiagnosticsWindow1;
+	GtkWidget* DebugWindow;
 	GtkWidget* ProgressWindow;
 
 	
@@ -75,7 +75,7 @@ struct
 void setUpDrawingWindow();
 void setUpSimParamWindow();
 void setUpDiagnosticsWindow();
-void setUpDiagnosticsWindow1();
+void setUpDebugWindow();
 void setUpPostMenuScreen();
 void setUpSimProgressWindow();
 
@@ -84,9 +84,9 @@ void setUpSimProgressWindow();
 // navigation function prototypes - used to change windows
 void goToSimParams();
 void goToDebug();
-void runSim();
-void backToDrawingStage();
+void goToDrawingStage();
 void closeWindows();
+void runSim();
 void exitProg();
 
 // functions used in drawing window

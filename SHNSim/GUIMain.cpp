@@ -27,12 +27,11 @@ int main(int argc, char** argv)
 	setUpSimParamWindow();
 	setUpPostMenuScreen();
 	setUpSimProgressWindow();
-	setUpDiagnosticsWindow1();
+	setUpDebugWindow();
 	
 
 	// initialize the system by making the first window visible
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
-	gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
 
 	gtk_main();
 	return 0;
@@ -40,15 +39,15 @@ int main(int argc, char** argv)
 
 void setUpDrawingWindow()
 {
-	GtkWidget *window, *darea, *button, *updateBsParamsBtn;
+	GtkWidget *window, *darea, *button, *updateBsParamsBtn, *debugbtn;
 
 	GUIDataContainer::count = 0;
 	GUIDataContainer::selectedTile = 0;
 	GUIDataContainer::highlightedSide = 0;
 
-	GUIDataContainer::screenHeight = (SCREEN.HEIGHT - 58);
-	GUIDataContainer::screenWidth = (SCREEN.WIDTH - 58);
-	GUIDataContainer::sideLength = GUIDataContainer::screenHeight * 0.25;
+	GUIDataContainer::screenHeight = (SCREEN.HEIGHT - 32);
+	GUIDataContainer::screenWidth = (SCREEN.WIDTH - 32);
+	GUIDataContainer::sideLength = GUIDataContainer::screenHeight * 0.20;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -56,6 +55,7 @@ void setUpDrawingWindow()
 
 	darea = gtk_drawing_area_new();
 	button = gtk_button_new_with_label("Next Page");
+	debugbtn = gtk_button_new_with_label("Debug");
 	updateBsParamsBtn = gtk_button_new_with_label("Set Parameters");
 	gtk_widget_set_name(updateBsParamsBtn, "subBtn");
 
@@ -83,6 +83,7 @@ void setUpDrawingWindow()
 	//=====================================================================================//
 
 	g_signal_connect(button, "clicked", G_CALLBACK(button_clicked), NULL);
+	g_signal_connect(debugbtn, "clicked", G_CALLBACK(goToDebug), NULL);
 	g_signal_connect(updateBsParamsBtn, "clicked", G_CALLBACK(updateBsParams), NULL);
 	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -145,7 +146,8 @@ void setUpDrawingWindow()
 	
 	// Add button to the bottom of the param box container
 	gtk_box_pack_end(GTK_BOX(realTimeParamBox), button, 0, 0, 5);
-	
+	gtk_box_pack_end(GTK_BOX(realTimeParamBox), debugbtn, 0, 0, 5);
+
 	// Pack drawing area and parameters into container
 	gtk_box_pack_start(GTK_BOX(mainContainer), darea, 1, 1, 5);
 	gtk_box_pack_start(GTK_BOX(mainContainer), realTimeParamBox, 0, 1, 10);
@@ -165,6 +167,7 @@ void setUpDrawingWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(window), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		
 		// Button
+		gtk_style_context_add_provider(gtk_widget_get_style_context(debugbtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(button), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(infoBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(updateBsParamsBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -243,7 +246,7 @@ void setUpSimParamWindow()
 	runSimBtn = gtk_button_new_with_label("Run Simulation");
 
 	// connect button signals
-	g_signal_connect(backToS1Btn, "clicked", G_CALLBACK(backToDrawingStage), NULL);
+	g_signal_connect(backToS1Btn, "clicked", G_CALLBACK(goToDrawingStage), NULL);
 	g_signal_connect(runSimBtn, "clicked", G_CALLBACK(runSim), NULL);
 
 	// create title labels
@@ -510,14 +513,14 @@ void setUpSimProgressWindow()
 	MiscWidgets.progressBar = prog1;
 }
 
-void setUpDiagnosticsWindow1()
+void setUpDebugWindow()
 {
 	GtkWidget* window, * darea;
 	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
-	WINDOWS.DiagnosticsWindow1 = window;
+	WINDOWS.DebugWindow = window;
 
 	darea = gtk_drawing_area_new();
 
@@ -542,6 +545,11 @@ void setUpDiagnosticsWindow1()
 	gtk_widget_set_name(debugBtn, "debugBtn");
 	g_signal_connect(debugBtn, "clicked", G_CALLBACK(debug), GTK_WINDOW(window));
 	gtk_box_pack_start(GTK_BOX(buttonBox), debugBtn, 0, 0, 5);
+
+	GtkWidget* bckBtn = gtk_button_new_with_label("       Back       ");
+	gtk_widget_set_name(bckBtn, "Back");
+	g_signal_connect(bckBtn, "clicked", G_CALLBACK(goToDrawingStage), GTK_WINDOW(window));
+	gtk_box_pack_end(GTK_BOX(buttonBox), bckBtn, 0, 0, 5);
 
 	// Pack drawing area and parameters into container
 	gtk_box_pack_start(GTK_BOX(mainContainer), darea, 1, 1, 5);
@@ -579,23 +587,32 @@ void setUpDiagnosticsWindow1()
 // here is the code that provides the transitory function of the buttons, 
 // these will navigate the menus
 ////////////////////////////////////////////////////////////////////////
+
 void goToDebug()
 {
-	gtk_widget_show_all(WINDOWS.DiagnosticsWindow1);
-	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
+	closeWindows();
+	gtk_widget_show_all(WINDOWS.DebugWindow);
 }
 void goToSimParams()
 {
+	closeWindows();
 	gtk_widget_show_all(WINDOWS.SimParamWindow);
-	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
 }
 
-////////////////////////////////////////////////////////////////////////
-// These are any return function that will bring you back to other menus
-////////////////////////////////////////////////////////////////////////
-void backToDrawingStage()
+void goToDrawingStage()
 {
+	closeWindows();
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
+
+}
+
+//Closes all windows *use this for any of the transitions between windows*
+void closeWindows()
+{
+	gtk_widget_hide_on_delete(WINDOWS.PostMenuScreen);
+	gtk_widget_hide_on_delete(WINDOWS.DebugWindow);
+	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
+	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 }
 
@@ -612,8 +629,7 @@ void runSim()
 	if(!valid)
 		return;
 
-	//gtk_widget_show_all(WINDOWS.PostMenuScreen);
-	//gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
+	//closeWindows();
 	gtk_widget_show_all(WINDOWS.ProgressWindow);
 
 	//update UI changes (the opening and closing of the windows)
@@ -634,22 +650,11 @@ void GUIMain::doProgressBar(double frac, bool fin)
 	
 	if (fin)
 	{
-		gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
-		gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
+		closeWindows();
 		gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	}
 
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
-}
-
-//Closes all windows *use this for any of the transitions between windows*  NOOOOTTTEEEEE: needs to be implemented and tested but im sure it'll work
-void closeWindows()
-{
-	gtk_widget_hide_on_delete(WINDOWS.PostMenuScreen);
-	gtk_widget_hide_on_delete(WINDOWS.DiagnosticsWindow1);
-	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
-	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
-	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 }
 
 // Exits the gui and at this point the whole program
@@ -664,6 +669,7 @@ void exitProg()
 		as well as populating those draw windows and entry boxes goes here 
 
 =============================================================================================================*/
+
 static void drawDot(cairo_t* cr)
 {
 	if (GUIDataContainer::dotCount == 0)
@@ -942,27 +948,7 @@ static void drawHex(cairo_t * cr)
 
 static void button_clicked(GtkWidget * widget, gpointer data)
 {
-	/*system("reset");
-	for (int i = 0; i < GUIDataContainer::count; i++)
-	{
-		printf("%i: (%f, %f, %i)\n", i, GUIDataContainer::coords[i][0], GUIDataContainer::coords[i][1], GUIDataContainer::status[i]);
-	}*/
 	getNeighbors();
-	/*
-	for (int n = 0; n < GUIDataContainer::count; n++)
-	{
-		printf("Base Station: %i\n\tCan be deleted: %s\n\tNeighbors: ", n, (deletionValid(n) ? "true" : "false"));
-		for (int i = 0; i < GUIDataContainer::neighbors[n].size(); i++)
-		{
-			printf("(%i,%i)", GUIDataContainer::neighbors[n][i].first, GUIDataContainer::neighbors[n][i].second);
-			if (i < GUIDataContainer::neighbors[n].size() - 1)
-			{
-				printf(", ");
-			}
-		}
-		printf("\n");
-	}
-	printf("\n");*/
 	goToSimParams();
 }
 
