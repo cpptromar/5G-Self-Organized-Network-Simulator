@@ -193,6 +193,8 @@ void EnvironmentController::decrementDemands(BSFailureParams & bsfp, const uint3
 
 void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numUsers, float& diff)
 {
+	srand(time(NULL)); //generate random number seed
+
 	for (auto users = uint32_t{ 0 }; users < numUsers; users++)
 	{
 		auto bsID = size_t{ bsfp.bsID };
@@ -228,6 +230,9 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		//next user to be added will have the current # of users. E.G. if there are 0 UEs then the first ID = 0.
 		const auto currUserID = size_t{ Simulator::getNumOfUsers() };
 
+		//Generate a random mobility ID for the current user [0 = Stationary, 1 = Walking, 2 = Driving (car)]
+		const auto currMobilityID = (rand() % 3);
+
 		//tranceiver set to the UE
 		const auto currentTranceiver = Simulator::getBS_m(bsID).getAntenna(antID).getConnectionInfo_m().addUser(currUserID);
 		if (!currentTranceiver.first)
@@ -239,7 +244,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		else
 			currentDemand = Simulator::rand() % dataRate;
 
-		const auto newRecord = UERecord{ currUserID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0 };
+		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0 };
 		Simulator::getBS_m(bsID).addUERecord(newRecord);
 
 		const auto& numChan = Simulator::getNumOfChannels();
@@ -253,7 +258,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		}
 
 		const auto userLoc = Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y };
-		auto newUser = UserEquipment{ userLoc, currUserID, possMaxDrsForUE, currentDemand };
+		auto newUser = UserEquipment{ userLoc, currUserID, currMobilityID, possMaxDrsForUE, currentDemand };
 		Simulator::addUE(newUser);
 
 		bsfp.UEsInRegion.push_back(currUserID);

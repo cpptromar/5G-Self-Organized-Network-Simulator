@@ -30,6 +30,7 @@ public:
 	const float& getRecPwr() const;
 	const uint32_t& getRecDR() const;
 	void setDemand(const uint32_t&);
+	void setLoc(const Coord<float>&);
 	bool incrementDemand();
 	bool decrementDemand();
 	void receive(const uint32_t&, const float&, const float& pathLossAlpha);

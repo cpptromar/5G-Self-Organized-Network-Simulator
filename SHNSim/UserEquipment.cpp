@@ -62,6 +62,12 @@ void UserEquipment::setDemand(const uint32_t& demand)
 	this->dataDemanded = demand;
 }
 
+//Set user location (used for user mobility)
+void UserEquipment::setLoc(const Coord<float>& newloc)
+{
+	this->loc = newloc;
+}
+
 bool UserEquipment::incrementDemand()
 {
 	if (this->dataDemanded < this->getMaxDr())
