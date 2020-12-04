@@ -513,6 +513,64 @@ void setUpSimProgressWindow()
 	MiscWidgets.progressBar = prog1;
 }
 
+void setUpAnalysisWindow()
+{
+	GtkWidget* window, * darea;
+	GUIDataContainer::dotCount = 0;
+
+	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+	WINDOWS.AnalysisWindow = window;
+
+	darea = gtk_drawing_area_new();
+
+	//=====================================================================================//
+
+	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event_test), NULL);
+	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_test), NULL);
+	g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
+
+	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
+	gtk_widget_set_events(window, GDK_POINTER_MOTION_MASK);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth - 200, GUIDataContainer::screenHeight - 150);
+	gtk_window_set_title(GTK_WINDOW(window), "5G Simulator");
+
+	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+	// Creating button for general debug purposes
+
+	GtkWidget* bckBtn = gtk_button_new_with_label("       Back       ");
+	gtk_widget_set_name(bckBtn, "Back");
+	g_signal_connect(bckBtn, "clicked", G_CALLBACK(goToPostStage), GTK_WINDOW(window));
+	gtk_box_pack_end(GTK_BOX(buttonBox), bckBtn, 0, 0, 5);
+
+	// Pack drawing area and parameters into container
+	gtk_box_pack_start(GTK_BOX(mainContainer), darea, 1, 1, 5);
+	gtk_box_pack_start(GTK_BOX(mainContainer), buttonBox, 0, 1, 20);
+
+
+	// set main container to scroll
+	GtkWidget* scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
+	gtk_container_add(GTK_CONTAINER(scrolledWindow), mainContainer);
+	gtk_container_add(GTK_CONTAINER(window), scrolledWindow);
+
+
+	// load color settings for the GUI from CSS file
+	GtkCssProvider* guiProvider = gtk_css_provider_new();
+	if (gtk_css_provider_load_from_path(guiProvider, StyleSheets.cssPath.c_str(), NULL))
+	{
+		// Window
+		gtk_style_context_add_provider(gtk_widget_get_style_context(window), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+		// Button
+		gtk_style_context_add_provider(gtk_widget_get_style_context(bckBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+	}
+}
+
 void setUpDebugWindow()
 {
 	GtkWidget* window, * darea;
@@ -571,6 +629,7 @@ void setUpDebugWindow()
 		
 		// Button
 		gtk_style_context_add_provider(gtk_widget_get_style_context(debugBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(bckBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 	}
 }
@@ -605,6 +664,19 @@ void goToDrawingStage()
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
 
 }
+void goToAnalysisStage()
+{
+	closeWindows();
+	gtk_widget_show_all(WINDOWS.AnalysisWindow);
+
+}
+
+void goToPostStage()
+{
+	closeWindows();
+	gtk_widget_show_all(WINDOWS.PostMenuScreen);
+
+}
 
 //Closes all windows *use this for any of the transitions between windows*
 void closeWindows()
@@ -614,6 +686,8 @@ void closeWindows()
 	gtk_widget_hide_on_delete(WINDOWS.DrawingWindow);
 	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
+	gtk_widget_hide_on_delete(WINDOWS.AnalysisWindow);
+
 }
 
 ////////////////////////////////////////////////////////////////////////
