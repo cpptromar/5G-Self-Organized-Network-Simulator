@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
 void setUpDrawingWindow()
 {
-	GtkWidget *window, *darea, *button, *updateBsParamsBtn, *debugbtn;
+	GtkWidget *window, *darea, *button, *updateBsParamsBtn, *debugbtn, * newButton;
 
 	GUIDataContainer::count = 0;
 	GUIDataContainer::selectedTile = 0;
@@ -55,9 +55,15 @@ void setUpDrawingWindow()
 
 	darea = gtk_drawing_area_new();
 	button = gtk_button_new_with_label("Next Page");
+	newButton = gtk_button_new_with_label("Experimental");
 	debugbtn = gtk_button_new_with_label("Debug");
 	updateBsParamsBtn = gtk_button_new_with_label("Set Parameters");
 	gtk_widget_set_name(updateBsParamsBtn, "subBtn");
+
+	gtk_widget_set_tooltip_text(button, "Continue to Parameters window with the default process");
+	gtk_widget_set_tooltip_text(newButton, "Continue to Parameters window with the experimental process"); // also edit this later
+	gtk_widget_set_tooltip_text(debugbtn, "Enter the Debug Screen"); // also edit this later
+	gtk_widget_set_tooltip_text(updateBsParamsBtn, "Updates the parameters"); // also edit this later
 
 	//=====================================================================================//
 	
@@ -83,6 +89,7 @@ void setUpDrawingWindow()
 	//=====================================================================================//
 
 	g_signal_connect(button, "clicked", G_CALLBACK(button_clicked), NULL);
+	g_signal_connect(newButton, "clicked", G_CALLBACK(button_clicked_exp), NULL);
 	g_signal_connect(debugbtn, "clicked", G_CALLBACK(goToDebug), NULL);
 	g_signal_connect(updateBsParamsBtn, "clicked", G_CALLBACK(updateBsParams), NULL);
 	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event), NULL);
@@ -146,6 +153,7 @@ void setUpDrawingWindow()
 	
 	// Add button to the bottom of the param box container
 	gtk_box_pack_end(GTK_BOX(realTimeParamBox), button, 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(realTimeParamBox), newButton, 0, 0, 5);
 	gtk_box_pack_end(GTK_BOX(realTimeParamBox), debugbtn, 0, 0, 5);
 
 	// Pack drawing area and parameters into container
@@ -169,6 +177,7 @@ void setUpDrawingWindow()
 		// Button
 		gtk_style_context_add_provider(gtk_widget_get_style_context(debugbtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(button), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(newButton), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(infoBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(updateBsParamsBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		
@@ -1019,8 +1028,14 @@ static void drawHex(cairo_t * cr)
 		*/
 	}
 }
-
+// These buttons are on the first drawing window 
 static void button_clicked(GtkWidget * widget, gpointer data)
+{
+	getNeighbors();
+	goToSimParams();
+}
+
+static void button_clicked_exp(GtkWidget* widget, gpointer data)
 {
 	getNeighbors();
 	goToSimParams();
