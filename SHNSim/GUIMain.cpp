@@ -448,7 +448,7 @@ void setUpPostMenuScreen()
 
 	// Set tooltips for buttons
 	gtk_widget_set_tooltip_text(quitProg, "Exit Program");
-	gtk_widget_set_tooltip_text(toAnalysis, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(toAnalysis, "Analysis the data with a histogram of users"); // also edit this later
 	gtk_widget_set_tooltip_text(toScatter, "Exit Program"); // also edit this later
 	gtk_widget_set_tooltip_text(toLineGraph, "Exit Program"); // also edit this later
 	gtk_widget_set_tooltip_text(toData, "Exit Program"); // also edit this later
@@ -456,7 +456,7 @@ void setUpPostMenuScreen()
 
 	// connect button signals
 	g_signal_connect(quitProg, "clicked", G_CALLBACK(exitProg), NULL);
-	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(goToAnalysisStage), NULL); // Edit this later
 	g_signal_connect(toScatter, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(toLineGraph, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(toData, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
