@@ -96,6 +96,7 @@ static void getScreenHeight();
 static void drawHex(cairo_t*);
 static void drawDot(cairo_t*);
 static void button_clicked(GtkWidget * widget, gpointer data);
+static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
 static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); //-SJ
