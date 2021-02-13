@@ -268,7 +268,7 @@ void IRPManager::offloadUser()
 			if (amountToRemove == prevAmountToRemove)
 			{
 				removalAttemptFailed++;
-				ErrorTracer::error("Error transferring UE to new eNodeB");
+				ErrorTracer::error("IRP manager: Error transferring UE to new eNodeB");
 			}
 		}
 	}
@@ -365,11 +365,22 @@ void IRPManager::mobileuser()
 				const auto phase = float{ 2.0f * (Simulator::randF() - 0.5f) * Simulator::PI };
 
 				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
-				const auto newLoc = Coord<float>{ loc.x + furthestBS.getLoc().x, loc.y + furthestBS.getLoc().y };
+				
+				//read and write to userequipment database (we also need to update the user equipment? and maybe UERecord?)
+				for (auto& uer : combinedRecords.readWriteDB()
+				{
+					auto newloc = Coord<float>{ loc.x + furthestBS.getLoc().x, loc.y + furthestBS.getLoc().y };
+					(*uer).loc = 0;
+				}
 
+
+				//const auto newLoc = Coord<float>{ loc.x + furthestBS.getLoc().x, loc.y + furthestBS.getLoc().y };
+
+				//----------------Probably don't use this anymore?--------------
 				//find user equipment and change user location to new one
 				auto UE = Simulator::getUE(usrID);
 				UE.setLoc(newLoc);
+				//--------------------------------------------------------------
 			}
 			//else do nothing
 		}
