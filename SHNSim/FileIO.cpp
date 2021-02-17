@@ -23,6 +23,8 @@ char FileIO::filePathSlash = char{ '/' };
 uint32_t FileIO::logCount = uint32_t{ 0 };
 uint32_t FileIO::logRowCount = uint32_t{ 0 };
 
+uint32_t FileIO::lineCounter = uint32_t{ 0 };
+
 
 const std::string& FileIO::getProgramFP()
 {
@@ -349,7 +351,7 @@ bool FileIO::readSaveFileIntoSim()
 {
 	//Creates ifstream object, trunc means that previous file content is discarded.
 	auto file_obj = std::ifstream{ FileIO::getSimSaveFP(), std::ios::in | std::ios::binary };
-
+	std::cout << FileIO::getSimSaveFP() << std::endl;
 	//Checks to make sure the object was created successfully.
 	if (!file_obj)
 		return ErrorTracer::error("\nCOULD NOT OPEN FILE(" + FileIO::getSimSaveFP() + ") in FileIO::readSaveFileToENV()");
@@ -540,4 +542,174 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	log.close();
 
 	return true;
+}
+
+ bool FileIO::readLog_Init(const uint32_t& simNum, int &numOfVars) //This reads the data var names (first line)
+{
+	 FileIO::lineCounter = 0;
+	//https://en.cppreference.com/w/cpp/io/basic_ifstream
+	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+
+	using namespace std;
+	std::string filePath = FileIO::programPath + FileIO::simulationSaveName;
+	
+	std::string newFilePath;
+	if (FileIO::splitLogFiles)
+	{
+		if (FileIO::logRowCount >= FileIO::AP_MaxLogLines)
+		{
+			FileIO::incrementLogCount();
+			FileIO::logRowCount = 0;
+		}
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + "_LOG_" + std::to_string(FileIO::logCount) + ".csv";
+	}
+	else
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + ".csv";
+
+	std::ifstream log;
+	std::string line;
+	//std::cout << "NewFilePath = " << newFilePath << std::endl;
+	//log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+
+	if (!log.is_open())
+	{
+		std::cout << "I could not open the log!!" << std::endl;
+		std::cout << "filepath = " << newFilePath << std::endl;
+		log.close();
+		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+	}
+
+	getline(log, line); //get the first line
+	std::istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+	std::string var;
+	int varCount = 0;
+
+	while (std::getline(iss, var, ',')) //get individual variable "cells" and store in var 
+	{
+		varCount++;//count how many different variables there are to create array
+	}
+	numOfVars = varCount;
+	int counter = 0;
+
+	return true;
+}
+
+ //this overload version is for the variable names
+ bool FileIO::readLog_NextLine(const uint32_t& simNum, std::string* varNames) //This gets the number of data var names to help with creating a data array
+ {
+	 FileIO::lineCounter = 0;
+	 //https://en.cppreference.com/w/cpp/io/basic_ifstream
+	 //http://www.cplusplus.com/reference/ios/ios_base/openmode/
+
+	 using namespace std;
+	 std::string filePath = FileIO::programPath + FileIO::simulationSaveName;
+
+	 std::string newFilePath;
+	 if (FileIO::splitLogFiles)
+	 {
+		 if (FileIO::logRowCount >= FileIO::AP_MaxLogLines)
+		 {
+			 FileIO::incrementLogCount();
+			 FileIO::logRowCount = 0;
+		 }
+		 newFilePath = filePath + "_SIM_" + std::to_string(simNum) + "_LOG_" + std::to_string(FileIO::logCount) + ".csv";
+	 }
+	 else
+		 newFilePath = filePath + "_SIM_" + std::to_string(simNum) + ".csv";
+
+	 std::ifstream log;
+	 std::string line;
+	 //std::cout << "NewFilePath = " << newFilePath << std::endl;
+	 //log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	 log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+
+	 if (!log.is_open())
+	 {
+		 std::cout << "I could not open the log!!" << std::endl;
+		 std::cout << "filepath = " << newFilePath << std::endl;
+		 log.close();
+		 return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+	 }
+
+	 getline(log, line); //get the first line
+	 std::istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+	 std::string var;
+
+	 int counter = 0;
+
+	 while (getline(iss, var, ',')) //store names into array
+	 {
+		 varNames[counter] = var;
+		 counter++;
+	 }
+	 FileIO::lineCounter++;
+	 return true;
+ }
+
+
+bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
+{
+	using namespace std;
+	bool done = false; 
+	//https://en.cppreference.com/w/cpp/io/basic_ifstream
+	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+
+	std::string filePath = FileIO::programPath + FileIO::simulationSaveName;
+	
+	std::string newFilePath;
+	if (FileIO::splitLogFiles)
+	{
+		if (FileIO::logRowCount >= FileIO::AP_MaxLogLines)
+		{
+			FileIO::incrementLogCount();
+			FileIO::logRowCount = 0;
+		}
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + "_LOG_" + std::to_string(FileIO::logCount) + ".csv";
+	}
+	else
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + ".csv";
+
+	std::ifstream log;
+	std::string line;
+	//std::cout << "NewFilePath = " << newFilePath << std::endl;
+	//log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+
+	if (!log.is_open())
+	{
+		std::cout << "I could not open the log!!" << std::endl;
+		std::cout << "filepath = " << newFilePath << std::endl;
+		log.close();
+		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+	}
+
+	for (int i = 0; i <= FileIO::lineCounter; i++)
+	{
+		if (i == FileIO::lineCounter) //skip over the lines that we already did until we get to the NEXT LINE and check to see whether it's not EOF
+		{
+			if (getline(log, line))
+			{
+				std::istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+				int counter = 0;
+				string buf;
+				while (getline(iss, buf, ',')) //this inputs all the separated variables into the lineData array
+				{
+					lineData[counter] = stof(buf); //stof() converts string to float (STOF : String TO Float)
+					counter++;
+				}
+			}
+			
+		}
+		else
+		{
+			if (getline(log, line));
+			else
+				return true; //end of file has occured!
+		}
+			
+	}
+
+	FileIO::lineCounter++;
+	return false; //not end of file
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -25,6 +25,7 @@
     <ClInclude Include="Coord.h" />
     <ClInclude Include="DataRateTable.h" />
     <ClInclude Include="DebugMain.h" />
+    <ClInclude Include="DrawingTools.h" />
     <ClInclude Include="EnvironmentInitialization.h" />
     <ClInclude Include="EnvironmentController.h" />
     <ClInclude Include="ErrorTracer.h" />
@@ -50,6 +51,7 @@
     <ClCompile Include="BSFailureParams.cpp" />
     <ClCompile Include="DataRateTable.cpp" />
     <ClCompile Include="DebugMain.cpp" />
+    <ClCompile Include="DrawingTools.cpp" />
     <ClCompile Include="EnvironmentInitialization.cpp" />
     <ClCompile Include="EnvironmentController.cpp" />
     <ClCompile Include="ErrorTracer.cpp" />

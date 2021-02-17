@@ -1,6 +1,8 @@
 #include "GUIMain.h"
+#include "Coord.h"
 #include <fstream>
 #include "ErrorTracer.h"
+#include "FileIO.h"
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
@@ -9,6 +11,8 @@ using namespace std;
 
 
 	GtkWidget* alertLvlTxt, * congestionLvlTxt;
+
+
 
 int main(int argc, char** argv)
 {
@@ -35,6 +39,24 @@ int main(int argc, char** argv)
 
 	gtk_main();
 	return 0;
+}
+
+
+//Holds the logic for how the progress bar is updated and what to do when finished
+void GUIMain::doProgressBar(double frac, bool fin)
+{
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(MiscWidgets.progressBar), (gdouble)frac);
+
+
+	if (fin)
+	{
+		closeWindows();
+		gtk_widget_show_all(WINDOWS.PostMenuScreen);
+	}
+
+	//without this line, the gtk UI widgets do not refresh.
+	//gtk widgets normally refresh upon returning to the main function!!
+	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
 }
 
 void setUpDrawingWindow()
@@ -448,7 +470,7 @@ void setUpPostMenuScreen()
 	// connect button signals
 	g_signal_connect(quitProg, "clicked", G_CALLBACK(exitProg), NULL);
 	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
-	g_signal_connect(toScatter, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
+	g_signal_connect(toScatter, "clicked", G_CALLBACK(goToDebug), NULL); // Edit this later
 	g_signal_connect(toLineGraph, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(toData, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(exportToCsv, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
@@ -529,7 +551,8 @@ void setUpDebugWindow()
 	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event_test), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_test), NULL);
-	g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
+	g_signal_connect(G_OBJECT(darea), "size-allocate", G_CALLBACK(size_allocate_test), NULL);
+	//g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
 
 	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_set_events(window, GDK_POINTER_MOTION_MASK);
@@ -640,23 +663,6 @@ void runSim()
 	ErrorTracer::programExit();
 }
 
-//Holds the logic for how the progress bar is updated and what to do when finished
-void GUIMain::doProgressBar(double frac, bool fin) 
-{
-	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(MiscWidgets.progressBar), (gdouble)frac);
-
-	//without this line, the gtk UI widgets do not refresh.
-	//gtk widgets normally refresh upon returning to the main function!!
-	
-	if (fin)
-	{
-		closeWindows();
-		gtk_widget_show_all(WINDOWS.PostMenuScreen);
-	}
-
-	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
-}
-
 // Exits the gui and at this point the whole program
 void exitProg()
 {
@@ -704,20 +710,22 @@ static void drawDot(cairo_t* cr)
 	cairo_line_to(cr, 0, 0);
 	cairo_fill(cr);
 
-	double mousedY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::mouseY;
-	double mousedX = GUIDataContainer::mouseX - GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
+	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
+	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
+	cout << "centerX = " << drawingCenterX << endl;
+	cout << "centerY = " << drawingCenterY << endl;
 
-	double mouseparam = mousedY / mousedX;
-	double mouseslope = atan(mouseparam) * 180.0 / M_PI;
-	double mousedist = sqrt(mousedY * mousedY + mousedX * mousedX);
-
+	
 
 	int r = 25;
 	//This is the key to drawing a dot... http://gtk.10911.n7.nabble.com/How-to-draw-a-simply-dot-in-cairo-td45377.html
 	cairo_set_source_rgb(cr, 0.33, 0.64, 0.44);
-	cairo_move_to(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY);
-	cairo_arc(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY, r, 0, 2 * M_PI);
-	cairo_fill(cr);
+
+	drawScatterPlot(cr,0,0);
+
+	//cairo_move_to(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY);
+	//cairo_arc(cr, GUIDataContainer::mouseX, GUIDataContainer::mouseY, r, 0, 2 * M_PI);
+	//cairo_fill(cr);
 	
 
 }
@@ -1306,141 +1314,17 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 {
 
 	bool changeScale = false;
-	//if (event->button == 1) //Left Mouse Click
-	//{
-	//	double dY = (GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - event->y);
-	//	double dX = (event->x - GUIDataContainer::coords[GUIDataContainer::selectedTile][0]);
+	if (event->button == 1) //Left Mouse Click
+	{
+		double Y = event->y;
+		double X = event->x;
 
-	//	double param = dY / dX;
-	//	double slope = atan(param) * 180.0 / M_PI;
-	//	double setX, setY;
-	//	int setPath;
-	//	double dist = sqrt(dY * dY + dX * dX);
-
-	//	bool changedTile = false;
-	//	double distance = sqrt(dY * dY + dX * dX);
-	//	double newdY, newdX, newDistance;
-	//	for (int i = 0; i < GUIDataContainer::count; i++)
-	//	{
-	//		newdY = (GUIDataContainer::coords[i][1] - event->y);
-	//		newdX = (event->x - GUIDataContainer::coords[i][0]);
-
-	//		newDistance = sqrt(newdY * newdY + newdX * newdX);
-	//		if (distance > newDistance)
-	//		{
-	//			distance = newDistance;
-	//			if (distance < GUIDataContainer::sideLength * sqrt(3) / 2)	// If click is inside hex
-	//			{
-	//				GUIDataContainer::selectedTile = i;
-	//				changedTile = true;
-	//			}
-	//		}
-	//	}
-	//	if (!changedTile)
-	//	{
-	//		if (dist > GUIDataContainer::sideLength * sqrt(3) / 2)
-	//		{
-	//			if (abs(slope) >= 60)
-	//			{
-	//				if (dY < 0)	// Bottom
-	//				{
-	//					setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
-	//					setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3);
-	//					setPath = 0;
-	//				}
-	//				else  // Top
-	//				{
-	//					setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0];
-	//					setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3);
-	//					setPath = 3;
-	//				}
-	//			}
-	//			else
-	//			{
-	//				if (dY < 0)
-	//				{
-	//					if (dX > 0)	// Bottom Right
-	//					{
-	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
-	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
-	//						setPath = 5;
-	//					}
-	//					else	// Bottom Left
-	//					{
-	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
-	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] + GUIDataContainer::sideLength * sqrt(3) / 2;
-	//						setPath = 1;
-	//					}
-	//				}
-	//				else
-	//				{
-	//					if (dX > 0)	// Top Right
-	//					{
-	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] + GUIDataContainer::sideLength * 1.5;
-	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
-	//						setPath = 4;
-	//					}
-	//					else	// Top Left
-	//					{
-	//						setX = GUIDataContainer::coords[GUIDataContainer::selectedTile][0] - GUIDataContainer::sideLength * 1.5;
-	//						setY = GUIDataContainer::coords[GUIDataContainer::selectedTile][1] - GUIDataContainer::sideLength * sqrt(3) / 2;
-	//						setPath = 2;
-	//					}
-	//				}
-	//			}
-	//			bool pointExists = false;
-	//			for (int i = 0; i < GUIDataContainer::count; i++)
-	//			{
-	//				if (round(GUIDataContainer::coords[i][0]) == round(setX) && round(GUIDataContainer::coords[i][1]) == round(setY))
-	//				{
-	//					pointExists = true;
-	//					break;
-	//				}
-	//			}
-	//			if (!pointExists)
-	//			{
-	//				vector<double> test;
-	//				test.push_back(setX);
-	//				test.push_back(setY);
-	//				GUIDataContainer::coords.push_back(test);
-
-	//				GUIDataContainer::status.push_back((int)0);
-	//				GUIDataContainer::endState.push_back((int)50);
-	//				GUIDataContainer::startTime.push_back((int)0);
-	//				GUIDataContainer::riseTime.push_back((int)1);
+		cout << "x:" << X << endl;
+		cout << "y:" << Y << endl;
 
 
-	//				GUIDataContainer::path[GUIDataContainer::count - 1] = setPath;
-
-	//				GUIDataContainer::selectedTile = GUIDataContainer::count;
-	//				GUIDataContainer::count += 1;
-	//				changeScale = true;
-	//			}
-	//		}
-	//		else	// If inside the hexagon, cycle states
-	//		{
-	//			GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
-	//			// rotate from healthy -> user congested -> demand congested -> failing
-	//			if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
-	//			{
-	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
-	//			}
-	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 1)
-	//			{
-	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-	//			}
-	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 2)
-	//			{
-	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-	//			}
-	//			else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
-	//			{
-	//				GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
-	//			}
-
-	//		}
-	//	}
-	//}
+	}
+	
 	gtk_widget_queue_draw(widget);
 	return TRUE;
 }
@@ -1457,6 +1341,21 @@ static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user
 	drawDot(cr);
 	return FALSE;
 }
+
+
+//when window size changed, keep track of the change
+static void size_allocate_test(GtkWidget* widget, GtkAllocation* allocation)
+{
+	GUIDataContainer::drAreaHeight = allocation->height;
+	GUIDataContainer::drAreaWidth = allocation->width;
+
+	/*cout << "I am in size allocate test, and i Have the following data:" << endl;
+	cout << "height: " << allocation->height << endl;
+	cout << "width: " << allocation->width << endl;
+	cout << "x: " << allocation->x << endl;
+	cout << "y: " << allocation->y << endl;*/
+}
+
 
 static void getNeighbors()
 {
@@ -1749,107 +1648,442 @@ void updateBsParams()
 	}		
 }
 
+//bool drawScatterPlot(cairo_t* cr, int time)
+//{
+//	cout << "I am in drawScatterPlot()!!!" << endl;
+//	const string filepath = "StevensTest_SIM_0.csv";
+//
+//	ifstream log;
+//	string line;
+//
+//	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
+//	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
+//	cout << "centerX = " << drawingCenterX << endl;
+//	cout << "centerY = " << drawingCenterY << endl;
+//
+//	log.open(filepath, ios::in); //open the file for readonly (ios::in)
+//
+//	if (!log.is_open())
+//	{
+//		cout << "I could not open the log!!" << endl;
+//		cout << "filepath = " << filepath << endl;
+//		log.close();
+//		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+//	}
+//
+//	getline(log, line); //get the first line
+//	istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+//	string var;
+//
+//	int counter = 0;
+//
+//	//count how many different variables there are to create array
+//	while (getline(iss, var, ',')) //get individual variable "cells" and store in var 
+//	{
+//		counter++;
+//	}
+//	
+//	string* varNames = new string[counter]; //this is the only way I was able to create a dynamically sized array..
+//	//cout << "The number of variables is: \"" << to_string(varCount) << "\"" << endl;
+//
+//	counter = 0;
+//
+//
+//	//clear the string stream and recopy the original line from the beginning
+//	iss.clear();
+//	iss.str(line);
+//
+//
+//	//Find indexes for certain variables...
+//	int xPtr = 0;
+//	int yPtr = 0;
+//	int bsIDptr = 0;
+//
+//	//store names into array, and find the indexes of the UE locations
+//	while (getline(iss, var, ',')) 
+//	{
+//		varNames[counter] = var;
+//		if (var == "UE_LOC_X")
+//			xPtr = counter;
+//		else if (var == "UE_LOC_Y")
+//			yPtr = counter;
+//		else if (var == "BS_ID")
+//			bsIDptr = counter;
+//
+//		counter++;
+//	}
+//	
+//
+//	while (getline(log, line)) //for all remaining lines...
+//	{
+//		
+//		float* varData = new float[counter];
+//		string buf;
+//		istringstream iss(line);
+//		counter = 0;
+//		//while (getline(iss, var, ','))
+//		while (getline(iss, buf, ',')) //this inputs all the separated variables into the varData array
+//		{
+//			varData[counter] = stof(buf); //stof() converts string to float (STOF : String TO Float)
+//			counter++;
+//		}
+//
+//
+//		//add dot for that UE
+//		switch ((int)varData[bsIDptr]) //give the BS's different colors!
+//		{
+//		case 0:
+//			cairo_set_source_rgb(cr, 0, 1, 1);
+//			break;
+//		case 1:
+//			cairo_set_source_rgb(cr, 0, 0, 0);
+//			break;
+//		case 2:
+//			cairo_set_source_rgb(cr, 0, 0, 1);
+//			break;
+//		case 3:
+//			cairo_set_source_rgb(cr, 0, 1, 0);
+//			break;
+//		case 4:
+//			cairo_set_source_rgb(cr, 1, 0.5, 0);
+//			break;
+//		case 5:
+//			cairo_set_source_rgb(cr, 1, 0, 1);
+//			break;
+//		case 6:
+//			cairo_set_source_rgb(cr, 1, 0, 0);
+//			break;
+//		default:
+//			cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+//			break;
+//		}
+//
+//		int r = 5;
+//		int scaleFactor = 20;
+//		cairo_move_to(cr, roundf(drawingCenterX + (varData[xPtr]* scaleFactor)), roundf(drawingCenterY + (varData[yPtr]* scaleFactor)));
+//		cairo_arc(cr, roundf(drawingCenterX + (varData[xPtr] * scaleFactor)), roundf(drawingCenterY + (varData[yPtr] * scaleFactor)), r, 0, 2 * M_PI);
+//		cairo_fill(cr);
+//		
+//	}
+//
+//	return TRUE;
+//}
+
+bool drawScatterPlot(cairo_t* cr, int time, int simNum)
+{
+	cout << "I am in drawScatterPlot()!!!" << endl;
+	
+	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
+	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
+	cout << "centerX = " << drawingCenterX << endl;
+	cout << "centerY = " << drawingCenterY << endl;
+
+
+
+	int numOfVars = 0;
+
+	FileIO::readLog_Init(0, numOfVars); //find out how many variables
+
+	string* varNames = new string[numOfVars]; //create array for variable names
+	FileIO::readLog_NextLine(0, varNames); //go get the variable names
+	float* lineData = new float[numOfVars];	 //create array for line data
+
+	//Find indexes for certain variables...
+	int xPtr = 0;
+	int yPtr = 0;
+	int bsIDptr = 0;
+	int timePtr = 0;
+
+	for (int i = 0; i < numOfVars; i++)
+	{
+		if (varNames[i] == "UE_LOC_X")
+			xPtr = i;
+		else if (varNames[i] == "UE_LOC_Y")
+			yPtr = i;
+		else if (varNames[i] == "BS_ID")
+			bsIDptr = i;
+		else if (varNames[i] == "Time")
+			timePtr = i;
+	}
+	int BScount = 0;
+
+
+	//FileIO::readLog_NextLine(0, lineData);
+
+	//cout << "lineData[timePtr] = " << lineData[timePtr] << endl;
+	//cout << "timePtr = " << timePtr << endl;
+
+	////=========================================================Printout of CSV data
+	//for (int i = 0; i < numOfVars; i++)
+	//	{
+	//		cout << varNames[i];
+	//		if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//			cout << ",";
+	//	}
+	//	cout << endl;
+
+	//	for (int i = 0; i < numOfVars; i++)
+	//	{
+	//		
+	//		if (lineData[i] < 0.0001 && lineData[i]>0)
+	//			printf("%.4e", lineData[i]);
+	//		else
+	//			printf("%.4f", (double)lineData[i]);
+	//		if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//			cout << ",";
+	//	}
+	//	cout << endl;
+	////=========================================================Printout of CSV data
+
+	for (int i = 0; i < numOfVars; i++)
+	{
+		cout << varNames[i];
+		if (i != numOfVars - 1)  //(don't put comma for last variable name)
+			cout << ",";
+	}
+	cout << endl;
+
+	//gets stuck in this while loop!!
+	//while (lineData[timePtr] = ! (float)time)
+	while (!FileIO::readLog_NextLine(0, lineData))
+	{
+		cout << "lineData[timePtr] = " << lineData[timePtr] << endl;
+		//FileIO::readLog_NextLine(0, lineData);
+		for (int i = 0; i < numOfVars; i++)
+		{
+
+			if (lineData[i] < 0.0001 && lineData[i]>0)
+				printf("%.4e", lineData[i]);
+			else
+				printf("%.4f", (double)lineData[i]);
+			if (i != numOfVars - 1)  //(don't put comma for last variable name)
+				cout << ",";
+		}
+		cout << endl;
+	}
+
+	 //looking for the right time chunk
+	cairo_set_source_rgb(cr, 0, 1, 1);
+	int r = 5;
+	int scaleFactor = 20;
+	if (lineData[timePtr] == time)
+	{
+		//do {
+		//	//draw dot...
+		//	cairo_move_to(cr, roundf(drawingCenterX + (lineData[xPtr] * scaleFactor)), roundf(drawingCenterY + (lineData[yPtr] * scaleFactor)));
+		//	cairo_arc(cr, roundf(drawingCenterX + (lineData[xPtr] * scaleFactor)), roundf(drawingCenterY + (lineData[yPtr] * scaleFactor)), r, 0, 2 * M_PI);
+		//	cairo_fill(cr);
+		//	FileIO::readLog_NextLine(0, lineData); //go get the next line data
+		//} while (lineData[timePtr] == time); //while it is still the right time chunk
+	}
+
+
+	//
+	//	//add dot for that UE
+	//	switch ((int)varData[bsIDptr]) //give the BS's different colors!
+	//	{
+	//	case 0:
+	//		cairo_set_source_rgb(cr, 0, 1, 1);
+	//		break;
+	//	case 1:
+	//		cairo_set_source_rgb(cr, 0, 0, 0);
+	//		break;
+	//	case 2:
+	//		cairo_set_source_rgb(cr, 0, 0, 1);
+	//		break;
+	//	case 3:
+	//		cairo_set_source_rgb(cr, 0, 1, 0);
+	//		break;
+	//	case 4:
+	//		cairo_set_source_rgb(cr, 1, 0.5, 0);
+	//		break;
+	//	case 5:
+	//		cairo_set_source_rgb(cr, 1, 0, 1);
+	//		break;
+	//	case 6:
+	//		cairo_set_source_rgb(cr, 1, 0, 0);
+	//		break;
+	//	default:
+	//		cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+	//		break;
+	//	}
+
+	//	int r = 5;
+	//	int scaleFactor = 20;
+	//	cairo_move_to(cr, roundf(drawingCenterX + (varData[xPtr] * scaleFactor)), roundf(drawingCenterY + (varData[yPtr] * scaleFactor)));
+	//	cairo_arc(cr, roundf(drawingCenterX + (varData[xPtr] * scaleFactor)), roundf(drawingCenterY + (varData[yPtr] * scaleFactor)), r, 0, 2 * M_PI);
+	//	cairo_fill(cr);
+
+	//}
+
+	//return TRUE;
+}
 
 bool debug()
 {
 	cout << "I am in debug()!!!" << endl;
-	const string filepath = "StevensTest_SIM_0.csv";
 
-	//https://en.cppreference.com/w/cpp/io/basic_ifstream
-	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+	int numOfVars= 0;
 
-	ifstream log;
-	string line;
+	FileIO::readLog_Init(0, numOfVars); //find out how many variables
 
-	log.open(filepath, ios::in); //open the file for readonly (ios::in)
+	string* varNames = new string[numOfVars]; //create array for variable names
+	FileIO::readLog_NextLine(0, varNames); //go get the variable names
 
-	if (!log.is_open())
-	{
-		cout << "I could not open the log!!" << endl;
-		cout << "filepath = " << filepath << endl;
-		log.close();
-		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
-	}
-
-	getline(log, line); //get the first line
-	istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
-	string var;
-	
-	int varCount = 0;
-
-	while (getline(iss, var, ',')) //get individual variable "cells" and store in var (could also replace with "iss>>var" as done below)
-	{
-		varCount++;//count how many different variables there are to create array
-	}
-
-	string* varNames = new string[varCount]; //this is the only way I was able to create a dynamically sized array..
-	//cout << "The number of variables is: \"" << to_string(varCount) << "\"" << endl;
-	
-	int counter = 0;
-
-	istringstream iss2(line);//re-copy the line 
-	while (getline(iss2, var, ',')) //store names into array TODO: I want to figure out how to return to the beginning of the iss stream
-	{
-		//cout << "var = " << var << " and counter = " << to_string(counter) << endl;
-		varNames[counter] = var;
-		counter++;
-	}
-	
-	//==============================================================================PRINTING
-	//print the variable names in one line
-	for (int i = 0; i < varCount; i++)
-	{
-		
-		cout << varNames[i];
-		if (i != varCount - 1)  //(don't put comma for last variable name)
-			cout << ",";
-	}
-	cout << endl;
-	//==============================================================================
+	float* lineData = new float[numOfVars];	 //create array for line data
+	FileIO::readLog_NextLine(0, lineData); //go get the next line data
 
 
-	while (getline(log,line)) //for all remaining lines...
-	{
-		float* varData = new float[varCount];
-		string buf;
-		istringstream iss(line); 
-		counter = 0;
-		//while (getline(iss, var, ','))
-		while (getline(iss, buf, ',')) //this inputs all the separated variables into the varData array
-		{
-			varData[counter] = stof(buf); //stof() converts string to float
-			counter++;
-		}
-
-		//==============================================================================PRINTING
-		//print the variables for that line
-		for (int i = 0; i < varCount; i++)
-		{
-			if (varData[i] < 0.0001 && varData[i]>0)
-				printf("%.4e", varData[i]);
-			else
-				printf("%.4f", (double)varData[i]);
-			if (i != varCount - 1)  //(don't put comma for last variable name)
-				cout << ",";
-		}
-		cout << endl;
-		//==============================================================================
-
-	}
 
 
-	/*for (int i = 0; i < 5; i++)
-	{
-		getline(log, line);
-		istringstream iss(line);
-		getline(iss, lineStream);
-		cout << "using iss not in the loops, we get lineStream = " << lineStream << endl;
-	}*/
-	
+	//this below code works
+	//	//print the variable names in one line
+	//for (int i = 0; i < numOfVars; i++)
+	//{
+	//	cout << varNames[i];
+	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//		cout << ",";
+	//}
+	//cout << endl;
 
-	//else
-	//	throw runtime_error("Could not open file");
+	//for (int i = 0; i < numOfVars; i++)
+	//{
+	//	
+	//	if (lineData[i] < 0.0001 && lineData[i]>0)
+	//		printf("%.4e", lineData[i]);
+	//	else
+	//		printf("%.4f", (double)lineData[i]);
+	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//		cout << ",";
+	//}
+	//cout << endl;
 
-	
-	return true;
+
+	//FileIO::readLog_NextLine(0, lineData); //go get the next line data
+
+	//for (int i = 0; i < numOfVars; i++)
+	//{
+	//	cout << varNames[i];
+	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//		cout << ",";
+	//}
+	//cout << endl;
+
+	//for (int i = 0; i < numOfVars; i++)
+	//{
+
+	//	if (lineData[i] < 0.0001 && lineData[i]>0)
+	//		printf("%.4e", lineData[i]);
+	//	else
+	//		printf("%.4f", (double)lineData[i]);
+	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
+	//		cout << ",";
+	//}
+	//cout << endl;
+
 }
+
+//
+//bool debug()
+//{
+//	cout << "I am in debug()!!!" << endl;
+//	const string filepath = "StevensTest_SIM_0.csv";
+//
+//	gtk_widget_queue_draw(WINDOWS.DebugWindow); //this will redraw the window, and thus draw the scatter plot
+//
+//	//https://en.cppreference.com/w/cpp/io/basic_ifstream
+//	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+//	
+//	ifstream log;
+//	string line;
+//
+//	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
+//	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
+//	cout << "centerX = " << drawingCenterX << endl;
+//	cout << "centerY = " << drawingCenterY << endl;
+//
+//	log.open(filepath, ios::in); //open the file for readonly (ios::in)
+//
+//	if (!log.is_open())
+//	{
+//		cout << "I could not open the log!!" << endl;
+//		cout << "filepath = " << filepath << endl;
+//		log.close();
+//		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
+//	}
+//
+//	getline(log, line); //get the first line
+//	istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+//	string var;
+//	
+//	int varCount = 0;
+//
+//	while (getline(iss, var, ',')) //get individual variable "cells" and store in var 
+//	{
+//		varCount++;//count how many different variables there are to create array
+//	}
+//
+//	string* varNames = new string[varCount]; //this is the only way I was able to create a dynamically sized array..
+//	//cout << "The number of variables is: \"" << to_string(varCount) << "\"" << endl;
+//	
+//	int counter = 0;
+//
+//	
+//	//clear the string stream and recopy the original line from the beginning
+//	iss.clear(); 
+//	iss.str(line);
+//
+//	while (getline(iss, var, ',')) //store names into array
+//	{
+//		//cout << "var = " << var << " and counter = " << to_string(counter) << endl;
+//		varNames[counter] = var;
+//		counter++;
+//	}
+//	
+//	
+//
+//	//============================================================================== PRINTING
+//	//print the variable names in one line
+//	for (int i = 0; i < varCount; i++)
+//	{
+//		
+//		cout << varNames[i];
+//		if (i != varCount - 1)  //(don't put comma for last variable name)
+//			cout << ",";
+//	}
+//	cout << endl;
+//	//==============================================================================
+//
+//	while (getline(log,line)) //for all remaining lines...
+//	{
+//		float* varData = new float[varCount];
+//		string buf;
+//		istringstream iss(line); 
+//		counter = 0;
+//		//while (getline(iss, var, ','))
+//		while (getline(iss, buf, ',')) //this inputs all the separated variables into the varData array
+//		{
+//			varData[counter] = stof(buf); //stof() converts string to float (STOF : String TO Float)
+//			counter++;
+//		}
+//
+//		//============================================================================== PRINTING
+//		//print the variables for that line
+//		for (int i = 0; i < varCount; i++)
+//		{
+//			if (varData[i] < 0.0001 && varData[i]>0)
+//				printf("%.4e", varData[i]);
+//			else
+//				printf("%.4f", (double)varData[i]);
+//			if (i != varCount - 1)  //(don't put comma for last variable name)
+//				cout << ",";
+//		}
+//		cout << endl;
+//		//==============================================================================
+//
+//	}
+//
+//
+//	
+//	return true;
+//}

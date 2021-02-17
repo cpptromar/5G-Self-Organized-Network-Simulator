@@ -14,6 +14,7 @@ private:
 	static std::string dataRateTableFilePath;
 	static std::string logFilePath;
 	static std::string simulationSaveName;
+	static uint32_t lineCounter; //used for reading line-by-line the saved CSV file
 
 	template<typename T> inline static const char* chPtrConv(T* p) { return reinterpret_cast<const char*>(p); }
 	template<typename T> inline static char* chPtrConv_m(T* p) { return reinterpret_cast<char*>(p); }
@@ -31,6 +32,7 @@ public:
 	static const std::string defaultDRTBLName;
 	static const std::string DRTBLSignature;
 
+
 	static const std::string& getDRTBLFP();
 	static const std::string& getProgramFP();
 	static const std::string getSimSaveFP();
@@ -46,4 +48,8 @@ public:
 	static bool readSaveFileIntoSim();
 
 	static bool appendLog(const uint32_t& sim);
+	static bool readLog_Init(const uint32_t& sim, int &numOfVars);
+	static bool readLog_NextLine(const uint32_t& simNum, std::string* varNames);
+	static bool readLog_NextLine(const uint32_t& sim, float* lineData);
+	
 };

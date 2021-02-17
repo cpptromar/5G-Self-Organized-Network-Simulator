@@ -5,6 +5,9 @@ char** GUIDataContainer::argv;
 
 int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide, GUIDataContainer::dotCount;
 double GUIDataContainer::sideLength, GUIDataContainer::screenWidth, GUIDataContainer::screenHeight, GUIDataContainer::mouseX, GUIDataContainer::mouseY;
+double GUIDataContainer::windowWidth, GUIDataContainer::windowHeight;
+double GUIDataContainer::drAreaHeight, GUIDataContainer::drAreaWidth;
+
 std::vector<std::pair<int, int>> GUIDataContainer::neighbors[1000];
 std::vector<std::vector<double>> GUIDataContainer::coords;
 std::vector<int> GUIDataContainer::status;	// 0 = healthy, 1 = congested, 2 = alt congested, 3 = down

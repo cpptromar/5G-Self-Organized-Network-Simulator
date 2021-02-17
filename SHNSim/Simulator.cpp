@@ -457,7 +457,6 @@ bool Simulator::runSimulation()
 				return ErrorTracer::error("\nFileIO::appendLog failed in Simulator::runSimulation()");
 
 			progFrac = (double)envClock / (double)simulationLength;
-			double progFracfin = (double)simulationLength / (double)simulationLength;
 
 
 			//clock is incremented
