@@ -45,6 +45,7 @@ struct
 	GtkWidget* DiagnosticsWindow;
 	GtkWidget* DebugWindow;
 	GtkWidget* ProgressWindow;
+	GtkWidget* AnalysisWindow;
 
 } WINDOWS;
 
@@ -81,13 +82,14 @@ void setUpDiagnosticsWindow();
 void setUpDebugWindow();
 void setUpPostMenuScreen();
 void setUpSimProgressWindow();
-
-
+void setUpAnalysisWindow();
 
 // navigation function prototypes - used to change windows
 void goToSimParams();
 void goToDebug();
 void goToDrawingStage();
+void goToAnalysisStage();
+void goToPostStage();
 void closeWindows();
 void runSim();
 void exitProg();
@@ -98,6 +100,7 @@ static void drawHex(cairo_t*);
 static void drawDot(cairo_t*);
 static bool drawScatterPlot(cairo_t*, int time, int simNum);
 static void button_clicked(GtkWidget * widget, gpointer data);
+static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
 static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); //-SJ
