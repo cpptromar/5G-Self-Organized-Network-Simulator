@@ -120,6 +120,15 @@ bool BaseStation::addUE(const UERecord& uer, const size_t& antID)
 		return false;
 }
 
+bool BaseStation::moveUE(const UERecord& uer, const Coord<float>& newloc)
+{
+	auto movingUser = UERecord(uer);
+	movingUser.loc = newloc;
+	
+	//no error checking here, but there is some in IRPManager::mobileuser()
+	return true;
+}
+
 void BaseStation::setFailedTrue()
 {
 	this->failed = true;

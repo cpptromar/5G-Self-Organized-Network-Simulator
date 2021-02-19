@@ -375,6 +375,15 @@ bool Simulator::transferUE(const size_t& bsOrigin, const size_t& UE, const size_
 		return false;
 }
 
+bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE, const Coord<float>& newloc)
+{
+	auto UER = Simulator::getBS(bsOrigin).getUEDB().look_up(UE);
+	if (UER && Simulator::getBS_m(bsOrigin).moveUE(*UER, newloc))
+		return true;
+	else
+		return false;
+}
+
 float Simulator::generateSNR(float distanceSquared)
 {
 	const auto distanceToLowerBoundSquared = pow(3 * Simulator::BSRegionScalingFactor, 2);

@@ -16,6 +16,8 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <string>
+#include <sstream>
 
 void IRPManager::InitializeIRPManager()
 {
@@ -89,11 +91,10 @@ void IRPManager::IRPManagerUpdate()
 	{
 		IRPManager::dataAnalysis();
 
-		IRPManager::mobileuser(); //Simulates users moving around from one base station to another
-
 		// Self-Healing functions
 		IRPManager::checkStatus();
 		IRPManager::offloadUser();
+		IRPManager::mobileuser(); //Simulates users moving around from one base station to another
 	}
 }
 
@@ -277,7 +278,6 @@ void IRPManager::offloadUser()
 //Simulation of users moving around on their own (stationary, walking, driving)
 void IRPManager::mobileuser()
 {
-	
 	//Clear the base station vector (used to store all the base stations no matter if they are failing, healthy, congested)
 	this->combinedBSs.clear();
 
@@ -291,98 +291,109 @@ void IRPManager::mobileuser()
 	for (const auto& BaseStations : combinedBSs)
 	{
 		// get the list of users stored within the base station
-		const auto& combinedRecords = Simulator::getBS(BaseStations).getUEDB();
+		const auto& combinedUEDB = Simulator::getBS(BaseStations).getUEDB();
 
-		//Create temporary vector to hold information about UE mobility (contains user id and mobility id)
-		auto userMobilities = std::vector<std::pair<size_t, size_t>>();
-		userMobilities.reserve(combinedRecords.size());
+		//Create temporary vector called userMobilities to hold information about UE mobility
+		auto userMobilities = std::vector<std::pair<size_t, size_t>>(); //pair of <user id, mobility id>
+		userMobilities.reserve(combinedUEDB.size());
 		
-		for (const auto& ue : combinedRecords.readDB())
+		//Add users to userMobilities
+		for (const auto& ue : combinedUEDB.readDB())
 		{
 			userMobilities.push_back(std::make_pair((*ue).userID, (*ue).mobilityID)); //Add user to list
+			ErrorTracer::error("User [ID, MobilityID] in list: [" + std::to_string((*ue).userID) + ", " + std::to_string((*ue).mobilityID) + "]\n");
 		}
 		
+		//should prevent while loop from running indefinitely
+		auto prevAmount = userMobilities.size();
+		auto removalAttemptFailed = uint32_t{ 0 };
+
 		//Keep looping until the list is empty
-		while (userMobilities.size() > 0)
+		while (userMobilities.size() > 0 && removalAttemptFailed < Simulator::AP_IRPMaxRemovalFailures)
 		{
-			// If the user has mobility type 1 or 2 (walking or driving), then move them
 			const auto usrID = userMobilities.back().first;											//usr ID
 			const auto userMobility = userMobilities.back().second;									//usr mobility ID
-			const auto movingUserLoc = (*(combinedRecords.look_up(usrID))).loc;						//usr location
+			const auto movingUserLoc = (*(combinedUEDB.look_up(usrID))).loc;						//current usr location
 			
-			float mobility_distscale = 1.0f; //Default 1 base station distance
+			float mobility_distscale = 1.0f; //Default is 1 base station distance (later in the code, we don't move the user even though this value is 1)
 			
 			switch (userMobility)
 			{
 			case 0: //stationary
 				mobility_distscale = 1.0f; //At most 1 base station distance
+				break;
 			case 1: //walking
 				mobility_distscale = 2.0f; //At most 2 base station distances
+				break;
 			case 2: //driving
 				mobility_distscale = 5.0f; //At most 5 base station distances
-			default: //default (shouldn't get here anyway)
-				mobility_distscale = 1.0f; //At most 1 base station distance
 				break;
 			}
 
 			// calculate max distance the user can travel
 			float maxSearchDist = mobility_distscale * Simulator::getBSRegionScalingFactor();
 			
-			//remove user from list
-			userMobilities.pop_back();
+			ErrorTracer::error("User mobility ID in loop: " + std::to_string(userMobility) + "\n");
 
-			if (mobility_distscale > 1.0f) //If the user is not stationary, move the user or else do nothing since user is stationary
+			if (mobility_distscale > 1.0f) //If the user is not stationary, move the user
 			{
-				// variables for determining the UE to be moved (modification of code from offloaduser)
-				auto maxDistBetweenUEandBS = float{ 1.0f };						// set it to arbitrarily small number
-				auto distBetweenUEandBS = float{};								// dist holder
-				auto furthestBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
+				// variables for determining the closest eNodeB to the UE to be removed
+				auto minDistBetweenUEandBS = float{ 100000 };				// set it to arbitrarily large number
+				auto distBetweenUEandBS = float{};							// dist holder
+				auto closestBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
 
-				// iterate through the list of base stations and compare their distance to the user to be removed
-				// to determine the furthest BS to move user near
-				for (const auto& newbs : this->combinedBSs)
+				// iterate through the list of helper eNodeBs and compare their distance to the user to be removed
+				// to determine the closest BS to offload to
+				for (const auto& newBS : this->combinedBSs)
 				{
-					// Location of current base station
-					const auto& currentBSLoc = Simulator::getBS(newbs).getLoc();
+					// Location of current eNodeB
+					const auto& newBSLoc = Simulator::getBS(newBS).getLoc();
 
-					// Determine the distance between the UE to be removed and the current base station			
-					distBetweenUEandBS = sqrt(((movingUserLoc.y - currentBSLoc.y) * (movingUserLoc.y - currentBSLoc.y)) + ((movingUserLoc.x - currentBSLoc.x) * (movingUserLoc.x - currentBSLoc.x)));
+					// Determine the distance between the UE to be removed and the current helper eNodeB			
+					distBetweenUEandBS = sqrt(((movingUserLoc.y - newBSLoc.y) * (movingUserLoc.y - newBSLoc.y)) + ((movingUserLoc.x - newBSLoc.x) * (movingUserLoc.x - newBSLoc.x)));
 
-					// Search for the furthest base station within range of how fast the user is supposed to move
-					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS > maxDistBetweenUEandBS)
+					// Search for the closest eNodeB within 3x the side length of the eNodeB
+					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
 					{
-						furthestBS_ID = newbs; // store closest BS ID to offload user too
-						maxDistBetweenUEandBS = distBetweenUEandBS;
+						closestBS_ID = newBS; // store closest BS ID to offload user too
+						minDistBetweenUEandBS = distBetweenUEandBS;
 					}
-
 				}
 
-				auto furthestBS = Simulator::getBS(furthestBS_ID);
-
+				//-----------------------------------------Update user location-----------------------------------------
 				//generate random point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
 				const auto radius = float{ radiusLimit(Simulator::randF() * Simulator::getBSRegionScalingFactor()) };
 				const auto phase = float{ 2.0f * (Simulator::randF() - 0.5f) * Simulator::PI };
 
+				//location stuff
 				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
-				
-				//read and write to userequipment database (we also need to update the user equipment? and maybe UERecord?)
-				for (auto& uer : combinedRecords.readWriteDB()
+				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(closestBS_ID).getLoc().x, loc.y + Simulator::getBS(closestBS_ID).getLoc().y };
+
+				ErrorTracer::error("\nBaseStation ID: " + std::to_string(BaseStations) + "\n");
+				ErrorTracer::error("Location: [" + std::to_string(loc.x) + ", " + std::to_string(loc.y) + "] \n");
+				ErrorTracer::error("New Location: [" + std::to_string(newLoc.x) + ", " + std::to_string(newLoc.y) + "] \n");
+
+				//Move user
+				if (closestBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStations, usrID, newLoc))
 				{
-					auto newloc = Coord<float>{ loc.x + furthestBS.getLoc().x, loc.y + furthestBS.getLoc().y };
-					(*uer).loc = 0;
+					ErrorTracer::error("A user has been moved! \n");
+					prevAmount -= 1;
 				}
 
-
-				//const auto newLoc = Coord<float>{ loc.x + furthestBS.getLoc().x, loc.y + furthestBS.getLoc().y };
-
-				//----------------Probably don't use this anymore?--------------
-				//find user equipment and change user location to new one
-				auto UE = Simulator::getUE(usrID);
-				UE.setLoc(newLoc);
-				//--------------------------------------------------------------
+				if (prevAmount == userMobilities.size())
+				{
+					removalAttemptFailed++;
+					ErrorTracer::error("IRP manager: Error changing (x,y) location of UE \n");
+				}
+			}			
+			else  //Else, don't move them, but still update the counter
+			{
+				ErrorTracer::error("A user has stood still! \n");
+				prevAmount -= 1;
 			}
-			//else do nothing
+			//remove user from list
+			userMobilities.pop_back();
 		}
 	}
 }

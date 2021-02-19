@@ -166,5 +166,6 @@ public:
 
 	static void				sendUETransmission(const size_t&, const uint32_t&, const float&);
 	static bool				transferUE(const size_t&, const size_t&, const size_t&, const size_t&);
+	static bool				moveUE(const size_t&, const size_t&, const Coord<float>&);
 	static float			generateSNR(float distanceSquared);
 };
