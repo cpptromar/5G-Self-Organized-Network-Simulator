@@ -33,6 +33,8 @@ struct
 {
 	GtkWidget* progressBar; //must be in struct rather than static variable in GTKMain class above
 							//because we had issues with "undefined reference to progressBar"
+
+	GtkWidget* timeSpinBtn;
 } MiscWidgets;
 
 
@@ -103,10 +105,11 @@ static void button_clicked(GtkWidget * widget, gpointer data);
 static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
-static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); //-SJ
+static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); 
 static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_data);
-static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data);//-SJ
-static void size_allocate_test(GtkWidget* widget, GtkAllocation* allocation);
+static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data);
+static gboolean do_drawScatterPlot(GtkWidget* widget, cairo_t* cr);
+static void window_size_allocate(GtkWidget* widget, GtkAllocation* allocation);
 
 static float distance(double x1, double y1, double x2, double y2);
 static int side(double x1, double y1, double x2, double y2);

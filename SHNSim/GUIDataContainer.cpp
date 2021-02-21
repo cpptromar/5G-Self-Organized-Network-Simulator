@@ -29,3 +29,10 @@ std::string GUIDataContainer::simName = "TEST";
 int GUIDataContainer::bufSizeInSeconds = 10;
 int GUIDataContainer::congestionState = 90;
 int GUIDataContainer::alertState = 80;
+
+// analysis window variables
+int spinnerTimeVal = 0;
+
+//variables to help in drawing the scatter plot
+int GUIDataContainer::currentScatterPlotTime = 0;
+

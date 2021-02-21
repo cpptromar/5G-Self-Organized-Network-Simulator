@@ -14,8 +14,9 @@
 
 class DrawingTools
 {
-	static void drawDot(cairo_t*);
+	
 
+	static void drawDot(cairo_t*);
 
 };
 

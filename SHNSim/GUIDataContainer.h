@@ -35,4 +35,12 @@ struct GUIDataContainer
 	static int bufSizeInSeconds;
 	static int congestionState;
 	static int alertState;
+
+
+	// analysis window variables
+	static int spinnerTimeVal;
+	
+	//variables to help in drawing the scatter plot
+	static int currentScatterPlotTime;
+
 };

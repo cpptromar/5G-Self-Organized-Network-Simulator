@@ -551,9 +551,9 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
 
 	using namespace std;
-	std::string filePath = FileIO::programPath + FileIO::simulationSaveName;
+	string filePath = FileIO::programPath + FileIO::simulationSaveName;
 	
-	std::string newFilePath;
+	string newFilePath;
 	if (FileIO::splitLogFiles)
 	{
 		if (FileIO::logRowCount >= FileIO::AP_MaxLogLines)
@@ -566,23 +566,23 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	else
 		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + ".csv";
 
-	std::ifstream log;
-	std::string line;
-	//std::cout << "NewFilePath = " << newFilePath << std::endl;
-	//log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+	ifstream log;
+	string line;
+	std::cout << "NewFilePath = " << newFilePath << std::endl;
+	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	if (!log.is_open())
 	{
-		std::cout << "I could not open the log!!" << std::endl;
-		std::cout << "filepath = " << newFilePath << std::endl;
+		cout << "I could not open the log!!" << endl;
+		cout << "filepath = " << newFilePath << endl;
 		log.close();
 		return ErrorTracer::error("\nCOULD NOT OPEN the CSV file");
 	}
 
 	getline(log, line); //get the first line
-	std::istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
-	std::string var;
+	istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+	string var;
 	int varCount = 0;
 
 	while (std::getline(iss, var, ',')) //get individual variable "cells" and store in var 
@@ -621,8 +621,8 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	 std::ifstream log;
 	 std::string line;
 	 //std::cout << "NewFilePath = " << newFilePath << std::endl;
-	 //log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	 log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+	 log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	 //log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	 if (!log.is_open())
 	 {
@@ -647,7 +647,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	 return true;
  }
 
-
+ //returns true when it is the end of the file
 bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 {
 	using namespace std;
@@ -673,8 +673,8 @@ bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 	std::ifstream log;
 	std::string line;
 	//std::cout << "NewFilePath = " << newFilePath << std::endl;
-	//log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	if (!log.is_open())
 	{
@@ -686,6 +686,7 @@ bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 
 	for (int i = 0; i <= FileIO::lineCounter; i++)
 	{
+		
 		if (i == FileIO::lineCounter) //skip over the lines that we already did until we get to the NEXT LINE and check to see whether it's not EOF
 		{
 			if (getline(log, line))
@@ -699,11 +700,13 @@ bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 					counter++;
 				}
 			}
+			else //if getline(log, line) said it's the end of file (EOF)
+				return true; //it is truely the EOF
 			
 		}
 		else
 		{
-			if (getline(log, line));
+			if (getline(log, line)); //skip the lines which we don't want, and if false, it is the end of file
 			else
 				return true; //end of file has occured!
 		}
