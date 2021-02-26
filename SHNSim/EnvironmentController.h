@@ -13,6 +13,7 @@ private:
 	static void updateCurrentStates();
 	static void channelFluctuation();
 	static void DRFluctuation();
+	static void UpdateUserLoc();
 	static void rampingState(BSFailureParams&, const int&);
 	static void restoreState(BSFailureParams&);
 	static void modifyState(BSFailureParams&, const float&);

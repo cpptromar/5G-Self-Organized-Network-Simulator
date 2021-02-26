@@ -87,7 +87,7 @@ public:
 	bool addUE(const UERecord& uer, const size_t& antID);
 
 	//Allows changes to the coordinate location of the specified UE
-	bool moveUE(const UERecord& uer, const Coord<float>& newloc);
+	bool moveUE(const size_t& ue_id, const Coord<float>& newloc);
 
 	//BS update function. This is only called by the Simulator each tick.
 	bool Update();

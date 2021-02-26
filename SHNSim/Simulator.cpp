@@ -375,10 +375,14 @@ bool Simulator::transferUE(const size_t& bsOrigin, const size_t& UE, const size_
 		return false;
 }
 
-bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE, const Coord<float>& newloc)
+bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE_ID, const Coord<float>& newloc)
 {
-	auto UER = Simulator::getBS(bsOrigin).getUEDB().look_up(UE);
-	if (UER && Simulator::getBS_m(bsOrigin).moveUE(*UER, newloc))
+	//Change ACTUAL UE location
+	auto &UE = Simulator::getUE_m(UE_ID);
+	UE.setLoc(newloc);
+	
+	//Change RECORDS version of UE location
+	if (Simulator::getBS_m(bsOrigin).moveUE(UE_ID, newloc))
 		return true;
 	else
 		return false;

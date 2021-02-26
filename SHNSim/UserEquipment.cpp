@@ -62,10 +62,10 @@ void UserEquipment::setDemand(const uint32_t& demand)
 	this->dataDemanded = demand;
 }
 
-//Set user location (used for user mobility)
-void UserEquipment::setLoc(const Coord<float>& newloc)
+//Set user (x,y) coordinates (used for user mobility)
+void UserEquipment::setLoc(const Coord<float>& newLoc)
 {
-	this->loc = newloc;
+	this->loc = newLoc;
 }
 
 bool UserEquipment::incrementDemand()
