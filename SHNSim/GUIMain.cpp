@@ -72,6 +72,11 @@ void setUpDrawingWindow()
 
 	GUIDataContainer::screenHeight = (SCREEN.HEIGHT - 32);
 	GUIDataContainer::screenWidth = (SCREEN.WIDTH - 32);
+	GUIDataContainer::defaultWindowHeight = GUIDataContainer::screenHeight * 0.75;	//	set default window size to 0.75 of the screen size
+	GUIDataContainer::defaultWindowWidth = GUIDataContainer::screenWidth * 0.75;	//	so it's not full screen...
+	GUIDataContainer::windowHeight = GUIDataContainer::defaultWindowHeight;		// these will be used to keep track of changes 
+	GUIDataContainer::windowWidth = GUIDataContainer::defaultWindowWidth;		// when the window size is reallocated. (future work as of 2021-02-26)
+
 	GUIDataContainer::sideLength = GUIDataContainer::screenHeight * 0.20;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -125,7 +130,7 @@ void setUpDrawingWindow()
 	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_set_events(window, GDK_POINTER_MOTION_MASK);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth - 200, GUIDataContainer::screenHeight - 150);
+	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth , GUIDataContainer::screenHeight);
 
 	// Creating button that, when click, will display a popup with information for the user
 	GtkWidget* infoBtn = gtk_button_new_with_label("Info");
@@ -235,7 +240,7 @@ void setUpSimParamWindow()
 	// create stage 2 window and configure window properties
 	GtkWidget* s2Window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(s2Window), "Self-Healing Simulator");
-	gtk_window_set_default_size(GTK_WINDOW(s2Window), SCREEN.WIDTH - 60, SCREEN.HEIGHT - 58);
+	gtk_window_set_default_size(GTK_WINDOW(s2Window), GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight);
 	g_signal_connect(s2Window, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 	gtk_window_set_position(GTK_WINDOW(s2Window), GTK_WIN_POS_CENTER);
 
@@ -254,11 +259,11 @@ void setUpSimParamWindow()
 	GtkWidget* backToS1Btn, * runSimBtn;
 
 	// instantiate input labels, textboxes, and buttons
-	bsSide = gtk_label_new("BS Side Length (5 < n < 20)");
+	bsSide = gtk_label_new("BS Side Length (5 < d < 20)");
 	bsSideTxt = gtk_entry_new();
-	numAntenna = gtk_label_new("Number of Antenna (1 < n < 6)");
+	numAntenna = gtk_label_new("Number of Sectors (1 < n < 3)"); //changed name from antenna to sector 2021-02-26
 	numAntennaTxt = gtk_entry_new();
-	numTransceivers = gtk_label_new("Number of Transceivers (80 < n < 200)");
+	numTransceivers = gtk_label_new("Number of Transceivers (5 < n < 20)"); //changed from (80,200) on 2021-02-26
 	numTransceiversTxt = gtk_entry_new();
 	distTransceivers = gtk_label_new("Distance between Transceivers (0.001 < n < 0.00865)");
 	distTransceiversTxt = gtk_entry_new();
@@ -380,7 +385,7 @@ void setUpSimParamWindow()
 	entryBoxes.baseStationSide = bsSideTxt;
 	entryBoxes.antennaNumber = numAntennaTxt;
 	entryBoxes.transceiverNum = numTransceiversTxt;
-	entryBoxes.transceiverDist = distTransceiversTxt;
+	entryBoxes.transceiverDist = distTransceiversTxt; //I don't think transceiver distance is being used!!! (SJ 2021-02-26)
 	entryBoxes.userEquipPerAntenna = uePerAntennaTxt;
 	entryBoxes.simulationLength = simLengthTxt;
 	entryBoxes.simulationNumber = simNumTxt;
@@ -454,7 +459,7 @@ void setUpPostMenuScreen()
 	// create stage 2 window and configure window properties
 	GtkWidget* PostMenuWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(PostMenuWindow), "Self-Healing Simulator");
-	gtk_window_set_default_size(GTK_WINDOW(PostMenuWindow), SCREEN.WIDTH - 60, SCREEN.HEIGHT - 58);
+	gtk_window_set_default_size(GTK_WINDOW(PostMenuWindow), GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight);
 	g_signal_connect(PostMenuWindow, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 	gtk_window_set_position(GTK_WINDOW(PostMenuWindow), GTK_WIN_POS_CENTER);
 
@@ -566,7 +571,7 @@ void setUpAnalysisWindow()
 	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_set_events(window, GDK_POINTER_MOTION_MASK);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::screenWidth - 200, GUIDataContainer::screenHeight - 150);
+	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight);
 	gtk_window_set_title(GTK_WINDOW(window), "Post Simulation Analysis");
 
 	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -1558,9 +1563,9 @@ bool addParams()
 			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid Basestation length");
 			return false;
 		}
-		if(GUIDataContainer::antNum < 1 || GUIDataContainer::antNum > 6)
+		if(GUIDataContainer::antNum < 1 || GUIDataContainer::antNum > 3) //need to change actual variable name!!
 		{
-			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid antenna number");
+			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid sector number"); //changed name from antenna to sector 2021-02-26
 			return false;
 		}
 		if(GUIDataContainer::transNum < 80 || GUIDataContainer::transNum > 200)
@@ -1756,15 +1761,15 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 {
 	cairo_set_source_rgb(cr, 0, 1, 1);
 	int r = 5;
-	int scaleFactor = 20;
+	double scaleFactor = 2 / ((double)GUIDataContainer::bsLen / (double)50); // scaling factor was determined by running a few different sims with different lengths
 
-	cout << "I am in drawScatterPlot()!!!" << endl;
-	cout << "Desired time = " << time << endl;
+	//cout << "I am in drawScatterPlot()!!!" << endl;
+	//cout << "Desired time = " << time << endl;
 
 	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
 	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
-	cout << "centerX = " << drawingCenterX << endl;
-	cout << "centerY = " << drawingCenterY << endl;
+	//cout << "centerX = " << drawingCenterX << endl;
+	//cout << "centerY = " << drawingCenterY << endl;
 
 
 	int numOfVars = 0;
@@ -1800,7 +1805,7 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 
 
 	bool eof = false;
-
+/*
 	while ((lineData[timePtr] != (float)time) && !eof) //if we are BEHIND the desired time...
 	{
 		//cout << "we don't want this line:" << endl;
@@ -1817,39 +1822,17 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		//cout << endl;
 		eof = FileIO::readLog_NextLine(0, lineData); //skip over that line
 	}
+
+	*/
 	int myCtr = 0;
-	while ((lineData[timePtr] == (float)time) && !eof) //if we are AT the desired time...
+
+	//read the very first entry for the given time and save the next position (which will be the next entry for the given time)
+	uint64_t nextPos = FileIO::readLog_LineAtPosition(0, lineData, FileIO::dict_time2pos[time]); 
+	if (lineData[timePtr] != (float)time)
+		cout	<< "lineData[timePtr] = " << lineData[timePtr] << endl 
+				<< "desired time = " << time << endl;
+	do
 	{
-		//if (time == 9)
-		//{
-		//	printf("myCtr = %d\tlineData[ueIDptr] = %f\n", myCtr, lineData[ueIDptr]);
-		//	//cout << "myCtr = " << myCtr << ""<< endl;
-		//	myCtr++;
-		//}
-		//if (myCtr == 213 || myCtr == 214)
-		//{
-		//	for (int i = 0; i < numOfVars; i++)
-		//	{
-		//		cout << varNames[i];
-		//		if (i != numOfVars - 1)  //(don't put comma for last variable name)
-		//			cout << ",";
-		//	}
-		//	cout << endl;
-
-		//	for (int i = 0; i < numOfVars; i++)
-		//	{
-
-		//		if (lineData[i] < 0.0001 && lineData[i]>0)
-		//			printf("%.4e", lineData[i]);
-		//		else
-		//			printf("%.4f", (double)lineData[i]);
-		//		if (i != numOfVars - 1)  //(don't put comma for last variable name)
-		//			cout << ",";
-		//	}
-		//	cout << endl;
-		//}
-
-
 		//add dot for that UE
 		switch ((int)lineData[bsIDptr]) //give the BS's different colors!
 		{
@@ -1885,10 +1868,17 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		cairo_fill(cr);
 
 
-		eof = FileIO::readLog_NextLine(0, lineData); //get next line of data from CSV
-	}
+		if (nextPos != NULL) //if it's not the eof
+			nextPos = FileIO::readLog_LineAtPosition(0, lineData, nextPos); //get next line for this time tick
+		else
+			eof = true;
 
-	cout << "I'm leaving drawScatterPlot()" << endl;
+		//eof = FileIO::readLog_NextLine(0, lineData); //get the next line
+
+	} while (lineData[timePtr] == (float)time && !eof);
+
+
+	//cout << "I'm leaving drawScatterPlot()" << endl;
 	return TRUE;
 }
 

@@ -12,6 +12,7 @@ struct GUIDataContainer
 
 	static int count, selectedTile, highlightedSide, dotCount;
 	static double sideLength, screenWidth, screenHeight, mouseX, mouseY;
+	static double defaultWindowWidth, defaultWindowHeight;
 	static double windowWidth, windowHeight;
 	static double drAreaWidth, drAreaHeight;
  	static std::vector<std::pair<int, int>> neighbors[1000];

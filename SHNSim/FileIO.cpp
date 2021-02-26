@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <map>
 
 #include "ErrorTracer.h"
 #include "Simulator.h"
@@ -14,6 +15,7 @@
 const uint32_t FileIO::AP_MaxLogLines = static_cast<uint32_t>(1e6);
 const std::string FileIO::defaultDRTBLName = std::string{ "DRTBL.csv" };
 const std::string FileIO::DRTBLSignature = std::string{ "Q29ubm9yIENhcnI=" };
+std::map<std::int32_t, std::int64_t> FileIO::dict_time2pos;
 
 std::string FileIO::programPath = std::string{};
 std::string FileIO::dataRateTableFilePath = std::string{};
@@ -24,6 +26,7 @@ uint32_t FileIO::logCount = uint32_t{ 0 };
 uint32_t FileIO::logRowCount = uint32_t{ 0 };
 
 uint32_t FileIO::lineCounter = uint32_t{ 0 };
+
 
 
 const std::string& FileIO::getProgramFP()
@@ -508,6 +511,9 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (Simulator::getIRPManager().getBuffer().size() < 1)
 		return ErrorTracer::error("Network Manager buffer empty when attempting to access log.");
+	
+	// keep track of where the different time ticks are in the log..
+	FileIO::dict_time2pos.insert(std::pair<std::uint32_t, std::uint64_t>(Simulator::getEnvClock(), log.tellp()));
 
 	// This is a ForEach loop (C++11 added foreach loop capabilities) 
 	// It does the loop for each ue in Simulator::getIRPManager().getBuffer().getLastTick() - SJ 
@@ -538,6 +544,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 		}
 
 	}
+
 
 	log.close();
 
@@ -647,11 +654,10 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	 return true;
  }
 
- //returns true when it is the end of the file
+//returns true when it is the end of the file
 bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 {
 	using namespace std;
-	bool done = false; 
 	//https://en.cppreference.com/w/cpp/io/basic_ifstream
 	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
 
@@ -715,4 +721,64 @@ bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 
 	FileIO::lineCounter++;
 	return false; //not end of file
+}
+
+// read the line starting from the given position;
+// returns the next position after the line is read;
+// will return NULL if eof was reached
+std::uint64_t FileIO::readLog_LineAtPosition(const uint32_t& simNum, float* lineData, std::uint64_t position)
+{
+
+	using namespace std;
+	//https://en.cppreference.com/w/cpp/io/basic_ifstream
+	//http://www.cplusplus.com/reference/ios/ios_base/openmode/
+
+	string filePath = FileIO::programPath + FileIO::simulationSaveName;
+
+	string newFilePath;
+	if (FileIO::splitLogFiles)
+	{
+		if (FileIO::logRowCount >= FileIO::AP_MaxLogLines)
+		{
+			FileIO::incrementLogCount();
+			FileIO::logRowCount = 0;
+		}
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + "_LOG_" + std::to_string(FileIO::logCount) + ".csv";
+	}
+	else
+		newFilePath = filePath + "_SIM_" + std::to_string(simNum) + ".csv";
+
+	ifstream log;
+	string line;
+	uint64_t endPosition = 0;
+	//std::cout << "NewFilePath = " << newFilePath << std::endl;
+	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
+	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
+
+	if (!log.is_open())
+	{
+		cout << "I could not open the log!!" << std::endl;
+		cout << "filepath = " << newFilePath << std::endl;
+		log.close();
+	}
+
+	log.seekg(position);		//navigate to the given position
+
+	if (getline(log, line))		//read the line
+	{
+		istringstream iss(line); //we use stringstream so that we can PARSE (get individual variables)the line that was read
+		int counter = 0;
+		string buf;
+		while (getline(iss, buf, ',')) //this inputs all the separated variables into the lineData array
+		{
+			lineData[counter] = stof(buf); //stof() converts string to float (STOF : String TO Float)
+			counter++;
+		}
+	}	
+	else //if getline(log, line) said it's the end of file (EOF) (i.e. it returns false)
+		return NULL; //return NULL if it's the EOF
+
+	endPosition = log.tellg();	//save the ending position
+
+	return endPosition; //return the next position after the line is read
 }

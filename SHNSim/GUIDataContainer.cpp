@@ -5,6 +5,7 @@ char** GUIDataContainer::argv;
 
 int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide, GUIDataContainer::dotCount;
 double GUIDataContainer::sideLength, GUIDataContainer::screenWidth, GUIDataContainer::screenHeight, GUIDataContainer::mouseX, GUIDataContainer::mouseY;
+double GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight;
 double GUIDataContainer::windowWidth, GUIDataContainer::windowHeight;
 double GUIDataContainer::drAreaHeight, GUIDataContainer::drAreaWidth;
 
@@ -18,9 +19,9 @@ std::vector<int> GUIDataContainer::endState;
 
 	
 // stage 2 parameters
-int GUIDataContainer::bsLen = 5;
-int GUIDataContainer::antNum = 3;
-int GUIDataContainer::transNum = 100;
+int GUIDataContainer::bsLen = 10; //base station length in METERS?? Dr. Omar and Dr. Kets want it like this
+int GUIDataContainer::antNum = 3;	//in the process of changing this to secNum... 2021-02-26
+int GUIDataContainer::transNum = 100;	
 int GUIDataContainer::uePerAnt = 15;
 int GUIDataContainer::simLen = 1000;
 int GUIDataContainer::GUIDataContainer::simNum = 1;
