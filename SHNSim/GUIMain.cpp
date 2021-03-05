@@ -53,6 +53,7 @@ void GUIMain::doProgressBar(double frac, bool fin)
 		//set up the post-simulation windows after simulation
 		setUpPostMenuScreen();
 		setUpAnalysisWindow();
+		setUpScatterplotWindow();
 
 		gtk_widget_show_all(WINDOWS.PostMenuScreen);
 	}
@@ -85,13 +86,13 @@ void setUpDrawingWindow()
 
 	darea = gtk_drawing_area_new();
 	button = gtk_button_new_with_label("Next Page");
-	newButton = gtk_button_new_with_label("Experimental");
+	//newButton = gtk_button_new_with_label("Experimental");
 	debugbtn = gtk_button_new_with_label("Debug");
 	updateBsParamsBtn = gtk_button_new_with_label("Set Parameters");
 	gtk_widget_set_name(updateBsParamsBtn, "subBtn");
 
 	gtk_widget_set_tooltip_text(button, "Continue to Parameters window with the default process");
-	gtk_widget_set_tooltip_text(newButton, "Continue to Parameters window with the experimental process"); // also edit this later
+	//gtk_widget_set_tooltip_text(newButton, "Continue to Parameters window with the experimental process"); // also edit this later
 	gtk_widget_set_tooltip_text(debugbtn, "Enter the Debug Screen"); // also edit this later
 	gtk_widget_set_tooltip_text(updateBsParamsBtn, "Updates the parameters"); // also edit this later
 
@@ -119,7 +120,7 @@ void setUpDrawingWindow()
 	//=====================================================================================//
 
 	g_signal_connect(button, "clicked", G_CALLBACK(button_clicked), NULL);
-	g_signal_connect(newButton, "clicked", G_CALLBACK(button_clicked_exp), NULL);
+	//g_signal_connect(newButton, "clicked", G_CALLBACK(button_clicked_exp), NULL);
 	g_signal_connect(debugbtn, "clicked", G_CALLBACK(goToDebug), NULL);
 	g_signal_connect(updateBsParamsBtn, "clicked", G_CALLBACK(updateBsParams), NULL);
 	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event), NULL);
@@ -183,7 +184,7 @@ void setUpDrawingWindow()
 	
 	// Add button to the bottom of the param box container
 	gtk_box_pack_end(GTK_BOX(realTimeParamBox), button, 0, 0, 5);
-	gtk_box_pack_end(GTK_BOX(realTimeParamBox), newButton, 0, 0, 5);
+	//gtk_box_pack_end(GTK_BOX(realTimeParamBox), newButton, 0, 0, 5);
 	gtk_box_pack_end(GTK_BOX(realTimeParamBox), debugbtn, 0, 0, 5);
 
 	// Pack drawing area and parameters into container
@@ -207,7 +208,7 @@ void setUpDrawingWindow()
 		// Button
 		gtk_style_context_add_provider(gtk_widget_get_style_context(debugbtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(button), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
-		gtk_style_context_add_provider(gtk_widget_get_style_context(newButton), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		//gtk_style_context_add_provider(gtk_widget_get_style_context(newButton), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(infoBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(updateBsParamsBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		
@@ -263,7 +264,7 @@ void setUpSimParamWindow()
 	bsSideTxt = gtk_entry_new();
 	numAntenna = gtk_label_new("Number of Sectors (1 < n < 3)"); //changed name from antenna to sector 2021-02-26
 	numAntennaTxt = gtk_entry_new();
-	numTransceivers = gtk_label_new("Number of Transceivers (5 < n < 20)"); //changed from (80,200) on 2021-02-26
+	numTransceivers = gtk_label_new("Number of Transceivers (80 < n < 200)"); //changed from (80,200) on 2021-02-26
 	numTransceiversTxt = gtk_entry_new();
 	distTransceivers = gtk_label_new("Distance between Transceivers (0.001 < n < 0.00865)");
 	distTransceiversTxt = gtk_entry_new();
@@ -459,7 +460,7 @@ void setUpPostMenuScreen()
 	// create stage 2 window and configure window properties
 	GtkWidget* PostMenuWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(PostMenuWindow), "Self-Healing Simulator");
-	gtk_window_set_default_size(GTK_WINDOW(PostMenuWindow), GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight);
+	gtk_window_set_default_size(GTK_WINDOW(PostMenuWindow), GUIDataContainer::defaultWindowWidth / 2, GUIDataContainer::defaultWindowHeight);
 	g_signal_connect(PostMenuWindow, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 	gtk_window_set_position(GTK_WINDOW(PostMenuWindow), GTK_WIN_POS_CENTER);
 
@@ -478,8 +479,8 @@ void setUpPostMenuScreen()
 
 	// Set tooltips for buttons
 	gtk_widget_set_tooltip_text(quitProg, "Exit Program");
-	gtk_widget_set_tooltip_text(toAnalysis, "Analysis the data with a histogram of users"); // also edit this later
-	gtk_widget_set_tooltip_text(toScatter, "Exit Program"); // also edit this later
+	gtk_widget_set_tooltip_text(toAnalysis, "Analysis the data with a histogram of users");
+	gtk_widget_set_tooltip_text(toScatter, "Scatterplot of UEs at snapshots in time"); 
 	gtk_widget_set_tooltip_text(toLineGraph, "Exit Program"); // also edit this later
 	gtk_widget_set_tooltip_text(toData, "Exit Program"); // also edit this later
 	gtk_widget_set_tooltip_text(exportToCsv, "Exit Program"); // also edit this later
@@ -487,7 +488,7 @@ void setUpPostMenuScreen()
 	// connect button signals
 	g_signal_connect(quitProg, "clicked", G_CALLBACK(exitProg), NULL);
 	g_signal_connect(toAnalysis, "clicked", G_CALLBACK(goToAnalysisStage), NULL); // Edit this later
-	g_signal_connect(toScatter, "clicked", G_CALLBACK(goToDebug), NULL); // Edit this later
+	g_signal_connect(toScatter, "clicked", G_CALLBACK(goToScatterplot), NULL); 
 	g_signal_connect(toLineGraph, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(toData, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
 	g_signal_connect(exportToCsv, "clicked", G_CALLBACK(exitProg), NULL); // Edit this later
@@ -552,14 +553,14 @@ void setUpSimProgressWindow()
 	MiscWidgets.progressBar = prog1;
 }
 
-void setUpAnalysisWindow()
+void setUpScatterplotWindow()
 {
 	GtkWidget* window, * darea;
 	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
-	WINDOWS.AnalysisWindow = window;
+	WINDOWS.ScatterplotWindow = window;
 
 	//=====================================================================================//
 
@@ -583,6 +584,28 @@ void setUpAnalysisWindow()
 	g_signal_connect(bckBtn, "clicked", G_CALLBACK(goToPostStage), GTK_WINDOW(window));
 	gtk_box_pack_end(GTK_BOX(buttonBox), bckBtn, 0, 0, 5);
 
+	// Zoom in and Out buttons
+	GtkWidget* Zin = gtk_button_new_with_label("       Zoom In   (+)       ");
+	GtkWidget* Zout = gtk_button_new_with_label("       Zoom Out  (-)       ");
+	GtkWidget* Pleft = gtk_button_new_with_label("       Pan Left  (<<)       ");
+	GtkWidget* Pright = gtk_button_new_with_label("       Pan Right (>>)       ");
+	GtkWidget* Pup = gtk_button_new_with_label("       Pan Up    (/\\)       ");
+	GtkWidget* Pdown = gtk_button_new_with_label("       Pan Down  (\\/)       ");
+	g_signal_connect(Zin, "clicked", G_CALLBACK(scatterPlot_Zin), NULL);
+	g_signal_connect(Zout, "clicked", G_CALLBACK(scatterPlot_Zout), NULL);
+	g_signal_connect(Pleft, "clicked", G_CALLBACK(scatterPlot_PanLeft), NULL);
+	g_signal_connect(Pright, "clicked", G_CALLBACK(scatterPlot_PanRight), NULL);
+	g_signal_connect(Pup, "clicked", G_CALLBACK(scatterPlot_PanUp), NULL);
+	g_signal_connect(Pdown, "clicked", G_CALLBACK(scatterPlot_PanDown), NULL);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Zin, 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Zout, 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Pleft , 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Pright, 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Pup, 0, 0, 5);
+	gtk_box_pack_end(GTK_BOX(buttonBox), Pdown, 0, 0, 5);
+
+
+
 	// Create spin button and put in button box
 	//https://developer.gnome.org/gtk-tutorial/stable/x967.html
 	GtkAdjustment* adj = (GtkAdjustment*)gtk_adjustment_new(1.0, 0, (gdouble)Simulator::getEnvClock(), 1.0, 5.0, 0.0);
@@ -590,20 +613,17 @@ void setUpAnalysisWindow()
 	gtk_spin_button_set_wrap(GTK_SPIN_BUTTON(MiscWidgets.timeSpinBtn), TRUE);
 	gtk_box_pack_end(GTK_BOX(buttonBox), MiscWidgets.timeSpinBtn, 0, 0, 5);
 
-	//  "Create/Update Scatterplot" button
-	GtkWidget* updatePlotBtn = gtk_button_new_with_label("       Create / Update Scatterplot       ");
-	gtk_widget_set_name(updatePlotBtn, "Update");
-	g_signal_connect(updatePlotBtn, "clicked", G_CALLBACK(gtk_widget_queue_draw), GTK_WIDGET(window));
-	gtk_box_pack_end(GTK_BOX(buttonBox), updatePlotBtn, 0, 0, 5);
-
-
 	//create scatterplot area, keep track of area size, and connect draw signal
 	darea = gtk_drawing_area_new();
 	g_signal_connect(G_OBJECT(darea), "size-allocate", G_CALLBACK(window_size_allocate), NULL);
 	g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(do_drawScatterPlot), NULL);
 
-
-
+	//  "Create/Update Scatterplot" button
+	GtkWidget* updatePlotBtn = gtk_button_new_with_label("       Update Scatterplot       ");
+	//g_signal_connect(updatePlotBtn, "clicked", G_CALLBACK(gtk_widget_queue_draw), GTK_WIDGET(window));
+	//g_signal_connect(updatePlotBtn, "clicked", G_CALLBACK(do_drawScatterPlot), NULL);
+	gtk_box_pack_end(GTK_BOX(buttonBox), updatePlotBtn, 0, 0, 5); 
+	g_signal_connect(updatePlotBtn, "clicked", G_CALLBACK(scatterPlot_Update), NULL);
 	// Pack drawing area and parameters into container
 	gtk_box_pack_start(GTK_BOX(mainContainer), darea, 1, 1, 5);
 	gtk_box_pack_start(GTK_BOX(mainContainer), buttonBox, 0, 1, 20);
@@ -626,6 +646,11 @@ void setUpAnalysisWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(bckBtn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 	}
+}
+
+void setUpAnalysisWindow()
+{
+	
 }
 
 void setUpDebugWindow()
@@ -720,20 +745,28 @@ void goToDrawingStage()
 {
 	closeWindows();
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
-
 }
 void goToAnalysisStage()
 {
 	closeWindows();
 	gtk_widget_show_all(WINDOWS.AnalysisWindow);
-
 }
 
 void goToPostStage()
 {
 	closeWindows();
+	// reset the variables for the scatterplot
+	GUIDataContainer::cairoElement = nullptr;
+	GUIDataContainer::scaleFactor = 0;
+	GUIDataContainer::drawingCenterY = 0;
+	GUIDataContainer::drawingCenterX = 0;
 	gtk_widget_show_all(WINDOWS.PostMenuScreen);
+}
 
+void goToScatterplot()
+{
+	closeWindows();
+	gtk_widget_show_all(WINDOWS.ScatterplotWindow);
 }
 
 //Closes all windows *use this for any of the transitions between windows*
@@ -745,6 +778,7 @@ void closeWindows()
 	gtk_widget_hide_on_delete(WINDOWS.ProgressWindow);
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 	gtk_widget_hide_on_delete(WINDOWS.AnalysisWindow);
+	gtk_widget_hide_on_delete(WINDOWS.ScatterplotWindow);
 
 }
 
@@ -785,43 +819,6 @@ void exitProg()
 
 =============================================================================================================*/
 
-static void drawDot(cairo_t* cr)
-{
-	if (GUIDataContainer::dotCount == 0)
-	{
-		vector<double> test;
-		test.push_back(GUIDataContainer::screenWidth * 0.95 / 2.0);
-		test.push_back(GUIDataContainer::screenHeight * 0.95 / 2.0);
-		GUIDataContainer::coords.erase(GUIDataContainer::coords.begin(), GUIDataContainer::coords.end());
-		GUIDataContainer::coords.push_back(test);
-
-		GUIDataContainer::status.erase(GUIDataContainer::status.begin(), GUIDataContainer::status.end());
-		GUIDataContainer::status.push_back((int)0);
-
-		GUIDataContainer::endState.erase(GUIDataContainer::endState.begin(), GUIDataContainer::endState.end());
-		GUIDataContainer::endState.push_back((int)50);
-
-		GUIDataContainer::startTime.erase(GUIDataContainer::startTime.begin(), GUIDataContainer::startTime.end());
-		GUIDataContainer::startTime.push_back((int)0);
-
-		GUIDataContainer::riseTime.erase(GUIDataContainer::riseTime.begin(), GUIDataContainer::riseTime.end());
-		GUIDataContainer::riseTime.push_back((int)1);
-
-		GUIDataContainer::path.erase(GUIDataContainer::path.begin(), GUIDataContainer::path.end());
-		GUIDataContainer::path.push_back(7);
-		GUIDataContainer::dotCount = 1;
-	}
-	cairo_set_source_rgb(cr, 1, 1, 1);
-	cairo_line_to(cr, 0, 0);
-	cairo_line_to(cr, 0, GUIDataContainer::screenHeight);
-	cairo_line_to(cr, GUIDataContainer::screenWidth, GUIDataContainer::screenHeight);
-	cairo_line_to(cr, GUIDataContainer::screenWidth, 0);
-	cairo_line_to(cr, 0, 0);
-	cairo_fill(cr);
-
-	drawScatterPlot(cr,0,0);
-
-}
 
 static void drawHex(cairo_t * cr)
 {
@@ -1424,7 +1421,7 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 
 	}
 	
-	gtk_widget_queue_draw(widget);
+	//gtk_widget_queue_draw(widget);
 	return TRUE;
 }
 
@@ -1433,6 +1430,10 @@ static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_da
 {
 	drawHex(cr);
 	return FALSE;
+}
+void scatterPlot_Update()
+{
+	gtk_widget_queue_draw(WINDOWS.ScatterplotWindow);
 }
 
 static gboolean do_drawScatterPlot(GtkWidget* widget, cairo_t* cr)
@@ -1450,13 +1451,6 @@ static gboolean do_drawScatterPlot(GtkWidget* widget, cairo_t* cr)
 
 	return true;
 }
-
-static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data)
-{
-	drawDot(cr);
-	return FALSE;
-}
-
 
 //when window size changed, keep track of the change
 static void window_size_allocate(GtkWidget* widget, GtkAllocation* allocation)
@@ -1757,19 +1751,35 @@ void updateBsParams()
 	}		
 }
 
+// Functions to navigate the scatterplot
+void scatterPlot_Zin()
+{	GUIDataContainer::scaleFactor += 0.75; scatterPlot_Update();}
+void scatterPlot_Zout()
+{	GUIDataContainer::scaleFactor -= 0.75; scatterPlot_Update();}
+void scatterPlot_PanRight()
+{	GUIDataContainer::drawingCenterX -= (GUIDataContainer::drAreaWidth / 8); scatterPlot_Update();}
+void scatterPlot_PanLeft()
+{	GUIDataContainer::drawingCenterX += (GUIDataContainer::drAreaWidth / 8); scatterPlot_Update();}
+void scatterPlot_PanUp()
+{	GUIDataContainer::drawingCenterY += (GUIDataContainer::drAreaHeight / 8); scatterPlot_Update();}
+void scatterPlot_PanDown()
+{	GUIDataContainer::drawingCenterY -= (GUIDataContainer::drAreaHeight / 8); scatterPlot_Update();}
+
+
 bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 {
 	cairo_set_source_rgb(cr, 0, 1, 1);
 	int r = 5;
-	double scaleFactor = 2 / ((double)GUIDataContainer::bsLen / (double)50); // scaling factor was determined by running a few different sims with different lengths
+	//Only set once
+	if (GUIDataContainer::drawingCenterX == 0 || GUIDataContainer::drawingCenterY == 0 || GUIDataContainer::scaleFactor == 0)
+	{
+		GUIDataContainer::scaleFactor = 2 / ((double)GUIDataContainer::bsLen / (double)50);
+		GUIDataContainer::drawingCenterX = GUIDataContainer::drAreaWidth / 2;
+		GUIDataContainer::drawingCenterY = GUIDataContainer::drAreaHeight / 2;
+	}
 
-	//cout << "I am in drawScatterPlot()!!!" << endl;
-	//cout << "Desired time = " << time << endl;
+	// scaling factor was determined by running a few different sims with different lengths
 
-	float drawingCenterX = GUIDataContainer::drAreaWidth / 2;
-	float drawingCenterY = GUIDataContainer::drAreaHeight / 2;
-	//cout << "centerX = " << drawingCenterX << endl;
-	//cout << "centerY = " << drawingCenterY << endl;
 
 
 	int numOfVars = 0;
@@ -1828,9 +1838,9 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 
 	//read the very first entry for the given time and save the next position (which will be the next entry for the given time)
 	uint64_t nextPos = FileIO::readLog_LineAtPosition(0, lineData, FileIO::dict_time2pos[time]); 
-	if (lineData[timePtr] != (float)time)
-		cout	<< "lineData[timePtr] = " << lineData[timePtr] << endl 
-				<< "desired time = " << time << endl;
+	//if (lineData[timePtr] != (float)time)
+	//	cout	<< "lineData[timePtr] = " << lineData[timePtr] << endl 
+	//			<< "desired time = " << time << endl;
 	do
 	{
 		//add dot for that UE
@@ -1863,8 +1873,9 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		}
 
 		//draw circle
-		cairo_move_to(cr, roundf(drawingCenterX + (lineData[xPtr] * scaleFactor)), roundf(drawingCenterY + (lineData[yPtr] * scaleFactor)));
-		cairo_arc(cr, roundf(drawingCenterX + (lineData[xPtr] * scaleFactor)), roundf(drawingCenterY + (lineData[yPtr] * scaleFactor)), r, 0, 2 * M_PI);
+		//note that drawing coordinates are: (0,0) in top left rather than bottom left. This is why we subtract y instead of adding it
+		cairo_move_to(cr, roundf(GUIDataContainer::drawingCenterX + (lineData[xPtr] * GUIDataContainer::scaleFactor)), roundf(GUIDataContainer::drawingCenterY - (lineData[yPtr] * GUIDataContainer::scaleFactor)));
+		cairo_arc(cr, roundf(GUIDataContainer::drawingCenterX + (lineData[xPtr] * GUIDataContainer::scaleFactor)), roundf(GUIDataContainer::drawingCenterY - (lineData[yPtr] * GUIDataContainer::scaleFactor)), r, 0, 2 * M_PI);
 		cairo_fill(cr);
 
 

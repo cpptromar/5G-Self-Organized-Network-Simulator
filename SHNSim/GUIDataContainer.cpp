@@ -34,6 +34,9 @@ int GUIDataContainer::alertState = 80;
 // analysis window variables
 int spinnerTimeVal = 0;
 
-//variables to help in drawing the scatter plot
+//variables to help in drawing and manipulating the scatter plot
 int GUIDataContainer::currentScatterPlotTime = 0;
-
+double GUIDataContainer::scaleFactor = 0;
+float GUIDataContainer::drawingCenterX = 0;
+float GUIDataContainer::drawingCenterY = 0;
+cairo_t* GUIDataContainer::cairoElement = nullptr;

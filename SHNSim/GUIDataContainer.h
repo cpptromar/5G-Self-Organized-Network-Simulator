@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <cairo.h>
 
 // define structure that represents the list of nodes (hexagons) in the system
 // as well as other parameters needed to run the simulation
@@ -43,5 +44,8 @@ struct GUIDataContainer
 	
 	//variables to help in drawing the scatter plot
 	static int currentScatterPlotTime;
-
+	static double scaleFactor;
+	static float drawingCenterX;
+	static float drawingCenterY;
+	static cairo_t* cairoElement;
 };

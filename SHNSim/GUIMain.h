@@ -48,6 +48,7 @@ struct
 	GtkWidget* DebugWindow;
 	GtkWidget* ProgressWindow;
 	GtkWidget* AnalysisWindow;
+	GtkWidget* ScatterplotWindow;
 
 } WINDOWS;
 
@@ -85,6 +86,7 @@ void setUpDebugWindow();
 void setUpPostMenuScreen();
 void setUpSimProgressWindow();
 void setUpAnalysisWindow();
+void setUpScatterplotWindow();
 
 // navigation function prototypes - used to change windows
 void goToSimParams();
@@ -92,6 +94,7 @@ void goToDebug();
 void goToDrawingStage();
 void goToAnalysisStage();
 void goToPostStage();
+void goToScatterplot();
 void closeWindows();
 void runSim();
 void exitProg();
@@ -99,7 +102,6 @@ void exitProg();
 // functions used in drawing window
 static void getScreenHeight();
 static void drawHex(cairo_t*);
-static void drawDot(cairo_t*);
 static bool drawScatterPlot(cairo_t*, int time, int simNum);
 static void button_clicked(GtkWidget * widget, gpointer data);
 static void button_clicked_exp(GtkWidget* widget, gpointer data);
@@ -107,7 +109,6 @@ static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
 static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); 
 static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_data);
-static gboolean on_draw_event_test(GtkWidget* widget, cairo_t* cr, gpointer user_data);
 static gboolean do_drawScatterPlot(GtkWidget* widget, cairo_t* cr);
 static void window_size_allocate(GtkWidget* widget, GtkAllocation* allocation);
 
@@ -127,3 +128,11 @@ bool addParams();
 
 // function used to update vector with information for environment controller
 void updateBsParams();
+
+void scatterPlot_Zin();
+void scatterPlot_Zout();
+void scatterPlot_PanLeft();
+void scatterPlot_PanRight();
+void scatterPlot_PanUp();
+void scatterPlot_PanDown();
+void scatterPlot_Update();
