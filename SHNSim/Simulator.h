@@ -43,6 +43,7 @@ private:
 	static float		defaultNormalState;
 	static float		defaultCongestionState; 
 	static float		defaultFailureState;
+	static uint32_t		mobilityBufSizeInMinutes;
 
 	///////////////////////////////////////////////////////////////////////////////////
 	/*                            CORE FUNCTIONALITY                                 */
@@ -89,6 +90,7 @@ protected:
 	static void setDefaultCongestionState(const float& conglvl);
 	static void setDefaultFailureState(const float& faillvl);
 	static void resetCoreObjects();
+	static void setmobilityBufSizeInMinutes(const uint32_t& mobBufSize);
 
 public:
 	///////////////////////////////////////////////////////////////////////////////////
@@ -160,6 +162,7 @@ public:
 	static const float&		getDefaultCongestionState();
 	static const float&		getDefaultFailureState();
 	static std::mt19937&	getRandNumEngine();
+	static const uint32_t&	getmobilityBufSizeInMinutes();
 
 	static const float		randF();
 	static const uint32_t	rand();

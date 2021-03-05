@@ -70,7 +70,7 @@ float Simulator::alertState = 0.8f;
 float Simulator::defaultNormalState = 0.5f;
 float Simulator::defaultCongestionState = 0.9f;
 float Simulator::defaultFailureState = 0.0f;
-
+uint32_t Simulator::mobilityBufSizeInMinutes = 30;
 
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
@@ -221,6 +221,11 @@ void Simulator::setAlertState(const float& alertlvl)
 	Simulator::alertState = alertlvl;
 }
 
+void Simulator::setmobilityBufSizeInMinutes(const uint32_t& bufSize)
+{
+	Simulator::mobilityBufSizeInMinutes = bufSize;
+}
+
 const size_t& Simulator::getNumOfChannels()
 {
 	return Simulator::numberOfChannels;
@@ -346,6 +351,11 @@ const float& Simulator::getAlertState()
 std::mt19937& Simulator::getRandNumEngine()
 {
 	return Simulator::rng_engine;
+}
+
+const uint32_t& Simulator::getmobilityBufSizeInMinutes()
+{
+	return Simulator::mobilityBufSizeInMinutes;
 }
 
 const float Simulator::randF()

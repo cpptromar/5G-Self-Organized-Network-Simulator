@@ -184,10 +184,12 @@ void EnvironmentController::UpdateUserLoc()
 			float maxSearchDist = mobility_distscale * Simulator::getBSRegionScalingFactor();
 			if (mobility_distscale > 1.0f) //If the user is not stationary, move the user
 			{
-				// variables for determining the closest eNodeB to the UE to be removed
-				auto minDistBetweenUEandBS = float{ 100000 };				// set it to arbitrarily large number
+				// variables for determining which base station to move UE 
+				std::vector<int> BSmobileList;
+				BSmobileList.clear();
+
 				auto distBetweenUEandBS = float{};							// dist holder
-				auto closestBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
+				auto newBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
 
 				// iterate through the list of helper eNodeBs and compare their distance to the user to be removed
 				// to determine the closest BS to offload to
@@ -196,16 +198,21 @@ void EnvironmentController::UpdateUserLoc()
 					// Location of current eNodeB
 					const auto& newBSLoc = newBS.getLoc();
 
-					// Determine the distance between the UE to be removed and the current helper eNodeB			
+					// Determine the distance between the UE to be removed and base station			
 					distBetweenUEandBS = sqrt(((movingUserLoc.y - newBSLoc.y) * (movingUserLoc.y - newBSLoc.y)) + ((movingUserLoc.x - newBSLoc.x) * (movingUserLoc.x - newBSLoc.x)));
-
-					// Search for the closest eNodeB within 3x the side length of the eNodeB
-					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+					
+					// For each base station in range, put their ID into a vector list
+					if (distBetweenUEandBS <= maxSearchDist)
 					{
-						closestBS_ID = newBS.getBSID(); // store closest BS ID to offload user too
-						minDistBetweenUEandBS = distBetweenUEandBS;
+						newBS_ID = newBS.getBSID(); // store BS ID to BsmobileList vector
+						BSmobileList.push_back(newBS_ID);
 					}
 				}
+				//------------------------------Choose a random base station within range------------------------------
+
+				const auto BSrandNum = Simulator::rand() % BSmobileList.size();
+				newBS_ID = BSmobileList[BSrandNum];
+
 				//-----------------------------------------Update user location-----------------------------------------
 				//generate random point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -214,9 +221,10 @@ void EnvironmentController::UpdateUserLoc()
 
 				//location stuff
 				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
-				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(closestBS_ID).getLoc().x, loc.y + Simulator::getBS(closestBS_ID).getLoc().y };
+				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(newBS_ID).getLoc().x, loc.y + Simulator::getBS(newBS_ID).getLoc().y };
+				
 				//Move user
-				if (closestBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
+				if (newBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
 				{
 					ErrorTracer::error("User: " + std::to_string(usrID) + " moved to: " + "[" + std::to_string(newLoc.x) + ", " + std::to_string(newLoc.y) + "]\n");
 					prevAmount -= 1;
@@ -410,7 +418,10 @@ void EnvironmentController::ECUpdate()
 {
 	EnvironmentController::channelFluctuation();
 	EnvironmentController::DRFluctuation();
-	EnvironmentController::UpdateUserLoc();
+
+	if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 20)) == 0) //Based on the how often the user wants (in minutes), move user equipment location around.
+		EnvironmentController::UpdateUserLoc();
+	
 	updateCurrentStates();
 
 	for (auto& bsfp : BSRegionControlInfo)
