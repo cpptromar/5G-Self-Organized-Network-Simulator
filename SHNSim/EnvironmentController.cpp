@@ -245,7 +245,7 @@ void EnvironmentController::UpdateUserLoc()
 			userMobilities.pop_back();
 		}
 	}
-}
+}//this is a test
 
 void EnvironmentController::rampingState(BSFailureParams& bsfp, const int& timeRemaining)
 {
