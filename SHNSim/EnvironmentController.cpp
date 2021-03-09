@@ -134,9 +134,6 @@ void EnvironmentController::UpdateUserLoc()
 {
 	//Simulation of users moving around on their own (stationary, walking, driving)
 
-	//If you want to adjust probability of users moving, add stuff like this:
-	//if (Simulator::randF() <= Simulator::AP_ProbAllUsersDRFluctuate)
-
 	// for every base station in the list
 	for (const auto& BaseStation : Simulator::getBSList())
 	{
