@@ -1,9 +1,10 @@
 #include "UserEquipment.h"
 #include "Simulator.h"
 
-UserEquipment::UserEquipment(const Coord<float>& loc, const size_t& ID, std::vector<uint32_t>& possMaxDrs, const uint32_t& initDemand)
+UserEquipment::UserEquipment(const Coord<float>& loc, const size_t& ID, const size_t& m, std::vector<uint32_t>& possMaxDrs, const uint32_t& initDemand)
 {
 	this->userID = ID;
+	this->mobilityID = m;
 	this->loc = Coord<float>{ loc };
 	this->dataDemanded = initDemand;
 	this->dataReceived = 0;
@@ -15,6 +16,12 @@ UserEquipment::UserEquipment(const Coord<float>& loc, const size_t& ID, std::vec
 const size_t& UserEquipment::getUserID() const
 {
 	return this->userID;
+}
+
+//gets Mobility ID
+const size_t& UserEquipment::getMobilityID() const
+{
+	return this->mobilityID;
 }
 
 //gets Location
@@ -53,6 +60,12 @@ const uint32_t& UserEquipment::getRecDR() const
 void UserEquipment::setDemand(const uint32_t& demand)
 {
 	this->dataDemanded = demand;
+}
+
+//Set user (x,y) coordinates (used for user mobility)
+void UserEquipment::setLoc(const Coord<float>& newLoc)
+{
+	this->loc = newLoc;
 }
 
 bool UserEquipment::incrementDemand()

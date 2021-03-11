@@ -72,7 +72,7 @@ float Simulator::alertState = 0.8f;
 float Simulator::defaultNormalState = 0.5f;
 float Simulator::defaultCongestionState = 0.9f;
 float Simulator::defaultFailureState = 0.0f;
-
+uint32_t Simulator::mobilityBufSizeInMinutes = 30;
 
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
@@ -223,6 +223,11 @@ void Simulator::setAlertState(const float& alertlvl)
 	Simulator::alertState = alertlvl;
 }
 
+void Simulator::setmobilityBufSizeInMinutes(const uint32_t& bufSize)
+{
+	Simulator::mobilityBufSizeInMinutes = bufSize;
+}
+
 const size_t& Simulator::getNumOfChannels()
 {
 	return Simulator::numberOfChannels;
@@ -350,6 +355,11 @@ std::mt19937& Simulator::getRandNumEngine()
 	return Simulator::rng_engine;
 }
 
+const uint32_t& Simulator::getmobilityBufSizeInMinutes()
+{
+	return Simulator::mobilityBufSizeInMinutes;
+}
+
 const float Simulator::randF()
 {
 	return Simulator::rng_real_distribution(Simulator::rng_engine);
@@ -372,6 +382,19 @@ bool Simulator::transferUE(const size_t& bsOrigin, const size_t& UE, const size_
 {
 	auto UER = Simulator::getBS(bsOrigin).getUEDB().look_up(UE);
 	if (UER && Simulator::getBS_m(bsRecieve).addUE(*UER, antReceive) && Simulator::getBS_m(bsOrigin).removeUE(UE))
+		return true;
+	else
+		return false;
+}
+
+bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE_ID, const Coord<float>& newloc)
+{
+	//Change ACTUAL UE location
+	auto &UE = Simulator::getUE_m(UE_ID);
+	UE.setLoc(newloc);
+	
+	//Change RECORDS version of UE location
+	if (Simulator::getBS_m(bsOrigin).moveUE(UE_ID, newloc))
 		return true;
 	else
 		return false;

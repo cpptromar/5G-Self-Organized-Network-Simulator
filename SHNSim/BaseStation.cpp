@@ -120,6 +120,21 @@ bool BaseStation::addUE(const UERecord& uer, const size_t& antID)
 		return false;
 }
 
+bool BaseStation::moveUE(const size_t& ue_id, const Coord<float>& newloc)
+{
+	auto UER = this->userRecords.look_up_m(ue_id);
+	if (UER)
+	{
+		(*UER).loc = newloc;
+		return true;
+	}
+	else
+	{
+		ErrorTracer::error("BaseStation: Could not find UE Record when attempting to move user.");
+		return false;
+	}
+}
+
 void BaseStation::setFailedTrue()
 {
 	this->failed = true;

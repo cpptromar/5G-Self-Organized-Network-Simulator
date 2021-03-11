@@ -85,6 +85,7 @@ void IRPManager::dataAnalysis()
 void IRPManager::IRPManagerUpdate()
 {
 	IRPManager::IRPDataCollection();
+
 	if (Simulator::getEnvClock() % Simulator::getIRPBufSizeInSeconds() == 0)
 	{
 		IRPManager::dataAnalysis();
@@ -126,6 +127,7 @@ void IRPManager::IRPDataCollection()
 						tr.getLoc().y,
 						tr.getTheta(),
 						ueTrPair.first,
+						usr.getMobilityID(),
 						usr.getLoc().x,
 						usr.getLoc().y,
 						usr.getMaxDr(),
@@ -265,7 +267,7 @@ void IRPManager::offloadUser()
 			if (amountToRemove == prevAmountToRemove)
 			{
 				removalAttemptFailed++;
-				ErrorTracer::error("Error transferring UE to new eNodeB");
+				ErrorTracer::error("IRP manager: Error transferring UE to new eNodeB");
 			}
 		}
 	}

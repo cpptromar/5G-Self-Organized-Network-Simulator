@@ -268,6 +268,9 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 		const auto& userID = ue.getUserID();
 		file_obj.write(FileIO::chPtrConv(&userID), sizeof(userID));
 
+		const auto& mobilityID = ue.getMobilityID();
+		file_obj.write(FileIO::chPtrConv(&mobilityID), sizeof(mobilityID));
+
 		const auto& x = ue.getLoc().x;
 		file_obj.write(FileIO::chPtrConv(&x), sizeof(x));
 
@@ -317,6 +320,9 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 		{
 			const auto& userID = (*uer).userID;
 			file_obj.write(FileIO::chPtrConv(&userID), sizeof(userID));
+
+			const auto& mobilityID = (*uer).mobilityID;
+			file_obj.write(FileIO::chPtrConv(&mobilityID), sizeof(mobilityID));
 
 			const auto& x = (*uer).loc.x;
 			file_obj.write(FileIO::chPtrConv(&x), sizeof(x));
@@ -396,6 +402,9 @@ bool FileIO::readSaveFileIntoSim()
 		if (userID != c)
 			return ErrorTracer::error("\nPOSSIBLE FILE CORRUPTION(" + std::to_string(userID) + "!=" + std::to_string(userID) + ") in FileIO::readSaveFileToENV()");
 
+		auto mobilityID = size_t{ 0 };
+		file_obj.read(FileIO::chPtrConv_m(&mobilityID), sizeof(mobilityID));
+
 		auto x = float{ 0 };
 		file_obj.read(FileIO::chPtrConv_m(&x), sizeof(x));
 
@@ -409,7 +418,7 @@ bool FileIO::readSaveFileIntoSim()
 		for (auto& drInChan : possMaxDrs)
 			file_obj.read(FileIO::chPtrConv_m(&drInChan), sizeof(drInChan));
 
-		auto newUser = UserEquipment{ Coord<float>{ x,y }, userID, possMaxDrs, demand };
+		auto newUser = UserEquipment{ Coord<float>{ x,y }, userID, mobilityID, possMaxDrs, demand };
 		Simulator::addUE(newUser);
 	}
 
@@ -451,6 +460,9 @@ bool FileIO::readSaveFileIntoSim()
 			auto userID = size_t{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&userID), sizeof(userID));
 
+			auto mobilityID = size_t{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&mobilityID), sizeof(mobilityID));
+
 			auto x = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&x), sizeof(x));
 
@@ -475,7 +487,7 @@ bool FileIO::readSaveFileIntoSim()
 			auto ps = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&ps), sizeof(ps));
 
-			auto newRecord = UERecord{ userID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps };
+			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps };
 			newBS.addUERecord(newRecord);
 		}
 		Simulator::addBS(newBS);
@@ -505,7 +517,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (FileIO::logRowCount == 0)
 	{
-		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_LOC_X,UE_LOC_Y,MAX_DR,DEMAND_DR,REAL_DR,BS_Tran_SNR,UE_Rec_SNR\n"; // added the name for the column holding the bs number
+		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR,DEMAND_DR,REAL_DR,BS_Tran_SNR,UE_Rec_SNR\n"; // added the name for the column holding the bs number
 		FileIO::incrementLogRowCount();
 	}
 
@@ -530,6 +542,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 			<< ue.TRX_Y << ','
 			<< ue.TRX_ANG << ','
 			<< ue.UE_ID << ','
+			<< ue.UE_MID << ','
 			<< ue.UE_LOC_X << ','
 			<< ue.UE_LOC_Y << ','
 			<< ue.MAX_DR << ','

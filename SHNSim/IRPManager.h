@@ -8,6 +8,7 @@
 #include "ErrorTracer.h"
 
 enum class IRP_BSStatus { normal = 0, congestion, failure };
+enum class IRP_UEMobility { stationary = 0, walking, car };
 
 typedef struct { size_t bsID;  IRP_BSStatus bsStatus; float bsStateDemand; float bsStateSent; } IRP_BSInfo;
 

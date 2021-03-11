@@ -11,6 +11,8 @@
 #include "Antenna.h"
 #include "FileIO.h"
 #include "ErrorTracer.h"
+#include <string>
+#include <sstream>
 
 
 std::vector<BSFailureParams> EnvironmentController::BSRegionControlInfo = std::vector<BSFailureParams>{};
@@ -128,6 +130,120 @@ void EnvironmentController::DRFluctuation()
 	}
 }
 
+void EnvironmentController::UpdateUserLoc()
+{
+	//Simulation of users moving around on their own (stationary, walking, driving)
+
+	// for every base station in the list
+	for (const auto& BaseStation : Simulator::getBSList())
+	{
+		// get the user database stored within the base station
+		const auto& UEDB = BaseStation.getUEDB();
+
+		//Create temporary vector called userMobilities to hold information about UE mobility
+		auto userMobilities = std::vector<std::pair<size_t, size_t>>(); //pair of <user id, mobility id>
+		userMobilities.reserve(UEDB.size());
+
+		//Add users to userMobilities
+		for (const auto& ue : UEDB.readDB())
+		{
+			userMobilities.push_back(std::make_pair((*ue).userID, (*ue).mobilityID)); //Add user to list
+		}
+
+		//should prevent while loop from running indefinitely
+		auto prevAmount = userMobilities.size();
+		auto removalAttemptFailed = uint32_t{ 0 };
+		//Keep looping until the list is empty
+		while (userMobilities.size() > 0 && removalAttemptFailed < Simulator::AP_IRPMaxRemovalFailures)
+		{
+			const auto usrID = userMobilities.back().first;											//usr ID
+			const auto userMobility = userMobilities.back().second;									//usr mobility ID
+			const auto movingUserLoc = (*(UEDB.look_up(usrID))).loc;								//current usr location
+
+			float mobility_distscale = 1.0f; //Default is 1 base station distance (later in the code, we don't move the user even though this value is 1)
+
+			switch (userMobility)
+			{
+			case 0: //stationary
+				mobility_distscale = 1.0f; //At most 1 base station distance
+				break;
+			case 1: //walking
+				mobility_distscale = 2.0f; //At most 2 base station distances
+				break;
+			case 2: //driving
+				mobility_distscale = 5.0f; //At most 5 base station distances
+				break;
+			}
+			
+			ErrorTracer::error("\nUser: " + std::to_string(usrID) + " previous location: " + "[" + std::to_string(movingUserLoc.x) + ", " + std::to_string(movingUserLoc.y) + "]\n");
+
+			// calculate max distance the user can travel
+			float maxSearchDist = mobility_distscale * Simulator::getBSRegionScalingFactor();
+			if (mobility_distscale > 1.0f) //If the user is not stationary, move the user
+			{
+				// variables for determining which base station to move UE 
+				std::vector<int> BSmobileList;
+				BSmobileList.clear();
+
+				auto distBetweenUEandBS = float{};							// dist holder
+				auto newBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
+
+				// iterate through the list of helper eNodeBs and compare their distance to the user to be removed
+				// to determine the closest BS to offload to
+				for (const auto& newBS : Simulator::getBSList())
+				{
+					// Location of current eNodeB
+					const auto& newBSLoc = newBS.getLoc();
+
+					// Determine the distance between the UE to be removed and base station			
+					distBetweenUEandBS = sqrt(((movingUserLoc.y - newBSLoc.y) * (movingUserLoc.y - newBSLoc.y)) + ((movingUserLoc.x - newBSLoc.x) * (movingUserLoc.x - newBSLoc.x)));
+					
+					// For each base station in range, put their ID into a vector list
+					if (distBetweenUEandBS <= maxSearchDist)
+					{
+						newBS_ID = newBS.getBSID(); // store BS ID to BsmobileList vector
+						BSmobileList.push_back(newBS_ID);
+					}
+				}
+				//------------------------------Choose a random base station within range------------------------------
+
+				const auto BSrandNum = Simulator::rand() % BSmobileList.size();
+				newBS_ID = BSmobileList[BSrandNum];
+
+				//-----------------------------------------Update user location-----------------------------------------
+				//generate random point
+				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
+				const auto radius = float{ radiusLimit(Simulator::randF() * Simulator::getBSRegionScalingFactor()) };
+				const auto phase = float{ 2.0f * (Simulator::randF() - 0.5f) * Simulator::PI };
+
+				//location stuff
+				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
+				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(newBS_ID).getLoc().x, loc.y + Simulator::getBS(newBS_ID).getLoc().y };
+				
+				//Move user
+				if (newBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
+				{
+					ErrorTracer::error("User: " + std::to_string(usrID) + " moved to: " + "[" + std::to_string(newLoc.x) + ", " + std::to_string(newLoc.y) + "]\n");
+					prevAmount -= 1;
+				}
+
+				if (prevAmount == userMobilities.size())
+				{
+					removalAttemptFailed++;
+					ErrorTracer::error("EnvironmentController: Error changing (x,y) location of UE \n");
+				}
+			}
+			else  //Else, don't move them, but still update the counter
+			{
+				ErrorTracer::error("User: " + std::to_string(usrID) + " didn't move: " + "[" + std::to_string(movingUserLoc.x) + ", " + std::to_string(movingUserLoc.y) + "]\n");
+				prevAmount -= 1;
+			}
+			//remove user from list
+			userMobilities.pop_back();
+		}
+	}
+}//this is a test
+
 void EnvironmentController::rampingState(BSFailureParams& bsfp, const int& timeRemaining)
 {
 	float diff = bsfp.endState - bsfp.currentState;
@@ -193,6 +309,8 @@ void EnvironmentController::decrementDemands(BSFailureParams & bsfp, const uint3
 
 void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numUsers, float& diff)
 {
+	srand(time(NULL)); //generate random number seed
+
 	for (auto users = uint32_t{ 0 }; users < numUsers; users++)
 	{
 		auto bsID = size_t{ bsfp.bsID };
@@ -228,6 +346,9 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		//next user to be added will have the current # of users. E.G. if there are 0 UEs then the first ID = 0.
 		const auto currUserID = size_t{ Simulator::getNumOfUsers() };
 
+		//Generate a random mobility ID for the current user [0 = Stationary, 1 = Walking, 2 = Driving (car)]
+		const auto currMobilityID = (rand() % 3);
+
 		//tranceiver set to the UE
 		const auto currentTranceiver = Simulator::getBS_m(bsID).getAntenna(antID).getConnectionInfo_m().addUser(currUserID);
 		if (!currentTranceiver.first)
@@ -239,7 +360,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		else
 			currentDemand = Simulator::rand() % dataRate;
 
-		const auto newRecord = UERecord{ currUserID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0 };
+		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0 };
 		Simulator::getBS_m(bsID).addUERecord(newRecord);
 
 		const auto& numChan = Simulator::getNumOfChannels();
@@ -253,7 +374,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		}
 
 		const auto userLoc = Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y };
-		auto newUser = UserEquipment{ userLoc, currUserID, possMaxDrsForUE, currentDemand };
+		auto newUser = UserEquipment{ userLoc, currUserID, currMobilityID, possMaxDrsForUE, currentDemand };
 		Simulator::addUE(newUser);
 
 		bsfp.UEsInRegion.push_back(currUserID);
@@ -294,6 +415,10 @@ void EnvironmentController::ECUpdate()
 {
 	EnvironmentController::channelFluctuation();
 	EnvironmentController::DRFluctuation();
+
+	if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 20)) == 0) //Based on the how often the user wants (in minutes), move user equipment location around.
+		EnvironmentController::UpdateUserLoc();
+	
 	updateCurrentStates();
 
 	for (auto& bsfp : BSRegionControlInfo)
