@@ -416,8 +416,10 @@ void EnvironmentController::ECUpdate()
 	EnvironmentController::channelFluctuation();
 	EnvironmentController::DRFluctuation();
 
-	if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 20)) == 0) //Based on the how often the user wants (in minutes), move user equipment location around.
-		EnvironmentController::UpdateUserLoc();
+	if ((Simulator::getEnvClock() != 0))
+		if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 20)) == 0) //Based on the how often the user wants (in minutes), move user equipment location around.
+			EnvironmentController::UpdateUserLoc();
+	
 	
 	updateCurrentStates();
 
