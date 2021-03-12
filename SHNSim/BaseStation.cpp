@@ -194,6 +194,9 @@ bool BaseStation::Update()
 		{
 			(*uer).bitsSent = 0;
 			(*uer).powerSent = 0;
+			(*uer).rsrp = 0;
+			(*uer).rsrq = 0;
+			(*uer).ddr = 0;
 		}
 	}
 	else
@@ -206,8 +209,14 @@ bool BaseStation::Update()
 		// (BaseStations are iterated through in the main class)
 		for (auto& uer : this->userRecords.readWriteDB())
 		{
-			(*uer).bitsSent = 0;
+			(*uer).bitsSent  = 0;
 			(*uer).powerSent = 0;
+			
+			//New KPIs (hard-coded for now)
+			(*uer).rsrp = 0;
+			(*uer).rsrq = 0;
+			(*uer).ddr  = 0;
+
 			(*uer).demand = Simulator::getUE((*uer).userID).getDemand();
 			this->outgoingTransmissions.push_back(Transmission{ this->bsID, (*uer).userID, (*uer).antenna, (*uer).currentTransceiver, (*uer).demand });
 		}
@@ -224,7 +233,12 @@ bool BaseStation::Update()
 				(*UER).bitsSent = transmission.data;
 				const auto& powerTransmitted = this->calculateTransmittedPower(Simulator::AP_SimulationBandwidth, (*UER).currentSNR);
 				(*UER).powerSent = powerTransmitted;
-
+				
+				//New KPIs (hard-coded for now)
+				(*UER).rsrp = (Simulator::rand() % 97);
+				(*UER).rsrq = (Simulator::rand() % 97);
+				(*UER).ddr = (Simulator::randF());
+				
 				Simulator::sendUETransmission(userID, transmission.data, powerTransmitted);
 			}
 
