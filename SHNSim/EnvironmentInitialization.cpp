@@ -14,8 +14,6 @@
 	//Creates the UE records for BS in normal condition
 bool EnvironmentInitialization::setDefaultUsers()
 {
-	srand(time(NULL)); //generate random number seed
-
 	for (auto& bs : Simulator::getBSList_m())
 	{
 		for (const auto& ant : bs.getAntennaVec())
@@ -36,7 +34,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 				const auto currUserID = Simulator::getNumOfUsers();
 
 				//Generate a random mobility ID for the current user [0 = Stationary, 1 = Walking, 2 = Driving (car)]
-				const auto currMobilityID = (rand() % 3);
+				const auto currMobilityID = (Simulator::rand() % 3);
 
 				//tranceiver set to the UE
 				const auto currentTranceiver = bs.getAntenna(ant.getAntID()).getConnectionInfo_m().addUser(currUserID);
@@ -54,7 +52,10 @@ bool EnvironmentInitialization::setDefaultUsers()
 					SNR, 
 					currentDemand, 
 					0, 
-					0 
+					0,
+					0,
+					0,
+					0
 				};
 				bs.addUERecord(newRecord);
 

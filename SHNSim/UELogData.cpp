@@ -1,7 +1,8 @@
 #include "UELogData.h"
 
 UELogData::UELogData(uint32_t time, size_t bs_id, float bs_loc_x, float bs_loc_y, size_t ant_id, float ant_sec, size_t trx_id, float trx_x, float trx_y, 
-	float trx_ang, size_t ue_id, size_t ue_mid, float ue_loc_x, float ue_loc_y, uint32_t max_dr, uint32_t demand_dr, uint32_t real_dr, float rec_snr, float trans_snr)
+	float trx_ang, size_t ue_id, size_t ue_mid, float ue_loc_x, float ue_loc_y, uint32_t max_dr, uint32_t demand_dr, uint32_t real_dr, float rec_snr, float trans_snr,
+	uint32_t rsrp, uint32_t rsrq, float ddr)
 {
 	this->TIME = time;
 	this->BS_LOC_X = bs_loc_x;
@@ -22,4 +23,7 @@ UELogData::UELogData(uint32_t time, size_t bs_id, float bs_loc_x, float bs_loc_y
 	this->REAL_DR = real_dr;
 	this->REC_SNR = rec_snr;
 	this->TRANS_SNR = trans_snr;
+	this->RSRP = rsrp;
+	this->RSRQ = rsrq;
+	this->DDR = ddr;
 }

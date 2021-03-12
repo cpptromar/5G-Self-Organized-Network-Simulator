@@ -134,8 +134,12 @@ void IRPManager::IRPDataCollection()
 						usr.getDemand(),
 						usr.getRecDR(),
 						(*uer).powerSent,
-						usr.getRecPwr()
-					);
+						usr.getRecPwr(),
+						// New KPIs
+						(*uer).rsrp,
+						(*uer).rsrq,
+						(*uer).ddr
+					);	
 					td.push_back(logData);
 				}
 			}

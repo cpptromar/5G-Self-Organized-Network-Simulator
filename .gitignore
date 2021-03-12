@@ -348,3 +348,27 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/SHNSim/TEST_SIM_0.csv
+/SHNSim/TEST_RANDKPIs_SIM_0.csv
+/SHNSim/TEST_RANDKPIs.IRP.csv
+/SHNSim/TEST_RANDKPIs.env.0.save
+/SHNSim/TEST_RANDKPIs.env
+/SHNSim/TEST_RANDKPIs.EC.csv
+/SHNSim/TEST_plswork_SIM_0.csv
+/SHNSim/TEST_plswork.IRP.csv
+/SHNSim/TEST_plswork.env.0.save
+/SHNSim/TEST_plswork.env
+/SHNSim/TEST_plswork.EC.csv
+/SHNSim/TEST_NEW_KPIs.env
+/SHNSim/TEST_NEW_KPIs.EC.csv
+/SHNSim/TEST_NEWKPIs.env
+/SHNSim/TEST_NEWKPIs.EC.csv
+/SHNSim/TEST_NEWKPI2_SIM_0.csv
+/SHNSim/TEST_NEWKPI2.IRP.csv
+/SHNSim/TEST_NEWKPI2.env.0.save
+/SHNSim/TEST_NEWKPI2.env
+/SHNSim/TEST_NEWKPI2.EC.csv
+/SHNSim/TEST.IRP.csv
+/SHNSim/TEST.env.0.save
+/SHNSim/TEST.env
+/SHNSim/TEST.EC.csv
