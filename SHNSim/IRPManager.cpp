@@ -138,6 +138,7 @@ void IRPManager::IRPDataCollection()
 						// New KPIs
 						(*uer).rsrp,
 						(*uer).rsrq,
+						(*uer).rssi,
 						(*uer).ddr
 					);	
 					td.push_back(logData);

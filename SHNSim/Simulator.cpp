@@ -35,6 +35,7 @@ const float Simulator::AP_SNRLowerBound = -12.0f;
 const float Simulator::AP_SimulationBandwidth = 20;
 const float Simulator::AP_ProbChannelChanges = 0.25f;
 const float Simulator::AP_ProbAllUsersDRFluctuate = 0.2f;
+const float Simulator::AP_ProbBitsDropped = .15f;
 const int Simulator::AP_DemandFluctuation = 3;
 const uint32_t Simulator::AP_MinBSRegionRadius = 3;
 const uint32_t Simulator::AP_MaxBSRegionRadius = 500;

@@ -55,6 +55,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 					0,
 					0,
 					0,
+					0,
 					0
 				};
 				bs.addUERecord(newRecord);
