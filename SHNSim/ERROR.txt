@@ -1,2 +1,0 @@
-
-IRP manager: Error transferring UE to new eNodeB

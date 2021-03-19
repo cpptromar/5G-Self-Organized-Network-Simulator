@@ -356,7 +356,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		else
 			currentDemand = Simulator::rand() % dataRate;
 
-		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0, 0, 0, 0};
+		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0, 0, 0, 0, 0};
 		Simulator::getBS_m(bsID).addUERecord(newRecord);
 
 		const auto& numChan = Simulator::getNumOfChannels();
