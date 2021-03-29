@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31105.61
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SHNSim", "SHNSim\SHNSim.vcxproj", "{32456BD0-EB21-4201-9864-151433FE0179}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SHNSim", "SHNSim.vcxproj", "{32456BD0-EB21-4201-9864-151433FE0179}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +26,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {CE2F12EB-C86F-4551-9D99-E2AA634B5673}
+		SolutionGuid = {7C51455A-3A11-4700-98D4-F77247797D1B}
 	EndGlobalSection
 EndGlobal

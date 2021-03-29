@@ -174,8 +174,6 @@ void EnvironmentController::UpdateUserLoc()
 				mobility_distscale = 5.0f; //At most 5 base station distances
 				break;
 			}
-			
-			ErrorTracer::error("\nUser: " + std::to_string(usrID) + " previous location: " + "[" + std::to_string(movingUserLoc.x) + ", " + std::to_string(movingUserLoc.y) + "]\n");
 
 			// calculate max distance the user can travel
 			float maxSearchDist = mobility_distscale * Simulator::getBSRegionScalingFactor();
@@ -223,7 +221,6 @@ void EnvironmentController::UpdateUserLoc()
 				//Move user
 				if (newBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
 				{
-					ErrorTracer::error("User: " + std::to_string(usrID) + " moved to: " + "[" + std::to_string(newLoc.x) + ", " + std::to_string(newLoc.y) + "]\n");
 					prevAmount -= 1;
 				}
 
@@ -235,7 +232,6 @@ void EnvironmentController::UpdateUserLoc()
 			}
 			else  //Else, don't move them, but still update the counter
 			{
-				ErrorTracer::error("User: " + std::to_string(usrID) + " didn't move: " + "[" + std::to_string(movingUserLoc.x) + ", " + std::to_string(movingUserLoc.y) + "]\n");
 				prevAmount -= 1;
 			}
 			//remove user from list
@@ -360,7 +356,7 @@ void EnvironmentController::addUsers(BSFailureParams& bsfp, const uint32_t& numU
 		else
 			currentDemand = Simulator::rand() % dataRate;
 
-		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0 };
+		const auto newRecord = UERecord{ currUserID, currMobilityID, Coord<float>{ loc.x + bs.getLoc().x, loc.y + bs.getLoc().y }, antID, currentTranceiver.second, SNR, currentDemand, 0, 0, 0, 0, 0, 0};
 		Simulator::getBS_m(bsID).addUERecord(newRecord);
 
 		const auto& numChan = Simulator::getNumOfChannels();

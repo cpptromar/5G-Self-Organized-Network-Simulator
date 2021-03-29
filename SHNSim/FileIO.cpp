@@ -347,6 +347,19 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 
 			const auto& ps = (*uer).powerSent;
 			file_obj.write(FileIO::chPtrConv(&ps), sizeof(ps));
+			
+			const auto& rsrp = (*uer).rsrp;
+			file_obj.write(FileIO::chPtrConv(&rsrp), sizeof(rsrp));
+
+			const auto& rsrq = (*uer).rsrq;
+			file_obj.write(FileIO::chPtrConv(&rsrq), sizeof(rsrq));
+
+			const auto& rssi = (*uer).rssi;
+			file_obj.write(FileIO::chPtrConv(&rssi), sizeof(rssi));
+
+			const auto& ddr = (*uer).ddr;
+			file_obj.write(FileIO::chPtrConv(&ddr), sizeof(ddr));
+			
 		}
 	}
 
@@ -487,7 +500,19 @@ bool FileIO::readSaveFileIntoSim()
 			auto ps = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&ps), sizeof(ps));
 
-			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps };
+			auto rsrp = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&rsrp), sizeof(rsrp));
+
+			auto rsrq = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&rsrq), sizeof(rsrq));
+
+			auto rssi = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&rssi), sizeof(rssi));
+
+			auto ddr = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&ddr), sizeof(ddr));
+
+			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps, rsrp, rsrq, rssi, ddr};
 			newBS.addUERecord(newRecord);
 		}
 		Simulator::addBS(newBS);
@@ -517,7 +542,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (FileIO::logRowCount == 0)
 	{
-		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR,DEMAND_DR,REAL_DR,BS_Tran_SNR,UE_Rec_SNR\n"; // added the name for the column holding the bs number
+		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR,DEMAND_DR,REAL_DR,BS_Tran_SNR,UE_Rec_SNR,RSRP,RSRQ,RSSI,DDR\n"; // added the name for the column holding the bs number
 		FileIO::incrementLogRowCount();
 	}
 
@@ -529,28 +554,31 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	// This is a ForEach loop (C++11 added foreach loop capabilities) 
 	// It does the loop for each ue in Simulator::getIRPManager().getBuffer().getLastTick() - SJ 
-	for (const auto& ue : Simulator::getIRPManager().getBuffer().getLastTick()) 
+	for (const auto& ue_ld : Simulator::getIRPManager().getBuffer().getLastTick()) 
 	{
-		log << ue.TIME << ','
-			<< ue.BS_ID << ','
-			<< ue.BS_LOC_X << ','
-			<< ue.BS_LOC_Y << ','
-			<< ue.ANT_ID << ','
-			<< ue.ANT_SEC << ','
-			<< ue.TRX_ID << ','
-			<< ue.TRX_X << ','
-			<< ue.TRX_Y << ','
-			<< ue.TRX_ANG << ','
-			<< ue.UE_ID << ','
-			<< ue.UE_MID << ','
-			<< ue.UE_LOC_X << ','
-			<< ue.UE_LOC_Y << ','
-			<< ue.MAX_DR << ','
-			<< ue.DEMAND_DR << ','
-			<< ue.REAL_DR << ','
-			<< ue.TRANS_SNR << ','
-			<< ue.REC_SNR << '\n';
-
+		log << ue_ld.TIME << ','
+			<< ue_ld.BS_ID << ','
+			<< ue_ld.BS_LOC_X << ','
+			<< ue_ld.BS_LOC_Y << ','
+			<< ue_ld.ANT_ID << ','
+			<< ue_ld.ANT_SEC << ','
+			<< ue_ld.TRX_ID << ','
+			<< ue_ld.TRX_X << ','
+			<< ue_ld.TRX_Y << ','
+			<< ue_ld.TRX_ANG << ','
+			<< ue_ld.UE_ID << ','
+			<< ue_ld.UE_MID << ','
+			<< ue_ld.UE_LOC_X << ','
+			<< ue_ld.UE_LOC_Y << ','
+			<< ue_ld.MAX_DR << ','
+			<< ue_ld.DEMAND_DR << ','
+			<< ue_ld.REAL_DR << ','
+			<< ue_ld.TRANS_SNR << ','
+			<< ue_ld.REC_SNR << ','
+			<< ue_ld.RSRP << ','
+			<< ue_ld.RSRQ << ','
+			<< ue_ld.RSSI << ','
+			<< ue_ld.DDR << '\n';
 		if (FileIO::splitLogFiles)
 		{
 			FileIO::incrementLogRowCount();

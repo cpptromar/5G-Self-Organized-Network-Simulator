@@ -119,6 +119,7 @@ public:
 	static const float		AP_SimulationBandwidth;
 	static const float		AP_ProbChannelChanges;
 	static const float		AP_ProbAllUsersDRFluctuate;
+	static const float		AP_ProbBitsDropped;
 	static const int		AP_DemandFluctuation;
 	static const uint32_t	AP_MinBSRegionRadius;
 	static const uint32_t	AP_MaxBSRegionRadius;
