@@ -34,6 +34,7 @@ public:
 
 	void checkStatus(); 	// check whether a BS should be a helper or if it is disabled
 	void offloadUser(); 	// specifies the user that should be offloaded, the source BS to offload from, and the destination BS to offload to
+	void offloadUserKPIs();	// new self-healing algorithm based on KPIs instead of only BS status
 };
 
 

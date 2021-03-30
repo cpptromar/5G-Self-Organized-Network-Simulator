@@ -17,3 +17,11 @@ UERecord::UERecord(const size_t& uid, const size_t& mid, const Coord<float>& loc
 	this->rssi = rssi;
 	this->ddr = ddr;
 }
+
+const float& UERecord::getRSRP() {
+	return this->rsrp;
+}
+
+const float& UERecord::getDDR() {
+	return this->ddr;
+}

@@ -21,4 +21,7 @@ struct UERecord
 	UERecord(const UERecord&) = default;
 	UERecord(UERecord&&) noexcept = default;
 	UERecord& operator=(const UERecord&) = default;
+
+	const float& getRSRP();
+	const float& getDDR();
 };
