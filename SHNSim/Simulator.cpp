@@ -75,6 +75,9 @@ float Simulator::defaultCongestionState = 0.9f;
 float Simulator::defaultFailureState = 0.0f;
 uint32_t Simulator::mobilityBufSizeInMinutes = 30;
 
+//KPI Thresholds
+float Simulator::RSRPThreshold = -80;					//-80 dBm
+
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
 	Simulator::numberOfChannels = nChannels;

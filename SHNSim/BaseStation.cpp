@@ -192,6 +192,7 @@ bool BaseStation::Update()
 		
 		for (auto& uer : this->userRecords.readWriteDB())
 		{
+			(*uer).currentSNR = 0;
 			(*uer).bitsSent = 0;
 			(*uer).powerSent = 0;
 			(*uer).rsrp = 0;
@@ -210,6 +211,7 @@ bool BaseStation::Update()
 		// (BaseStations are iterated through in the main class)
 		for (auto& uer : this->userRecords.readWriteDB())
 		{
+			(*uer).currentSNR = 0;
 			(*uer).bitsSent  = 0;
 			(*uer).powerSent = 0;
 			
@@ -231,11 +233,20 @@ bool BaseStation::Update()
 			auto UER = this->userRecords.look_up_m(userID);
 			if (UER)
 			{
+				// SNR Re-Calculation
+				const auto distanceSquared = float{ static_cast<float>(pow((*UER).loc.x - this->loc.x, static_cast<int>(2)) + pow((*UER).loc.y - this->loc.y, static_cast<int>(2))) };
+				const auto SNR = float{ Simulator::generateSNR(distanceSquared) };
+				(*UER).currentSNR = SNR;
+
+				// Data Rate 
 				this->dataRate += transmission.data;
 				(*UER).bitsSent = transmission.data;
+
+				// Power Calculation
 				const auto& powerTransmitted = this->calculateTransmittedPower(Simulator::AP_SimulationBandwidth, (*UER).currentSNR);
 				(*UER).powerSent = powerTransmitted;
 				
+				// KPIs
 				//The RS part = Reference Signal BUT WE DON'T ACTUALLY HAVE A REFERENCE SIGNAL. Instead, each signal is represented by an update that occurs every tick.
 				//RSRP = Reference Signal Received Power
 				//RSSI = Reference Signal Strength Index
@@ -251,6 +262,7 @@ bool BaseStation::Update()
 				//calculate reference signal recieved quality (RSRQ)
 				(*UER).rsrq = 10*log10(N) + (*UER).rsrp - (*UER).rssi;
 
+				//Bits Dropped / Data Drop Rate
 				//bits received = bits sent - rand value (max value 10)
 				uint32_t bitsDropped = 0;
 
@@ -271,7 +283,8 @@ bool BaseStation::Update()
 					(*UER).ddr = 0;
 				else
 					(*UER).ddr = ((float(bitsDropped) / float((*UER).bitsSent)) * 100);
-					
+				
+
 				//Send bits received because we perform the calculation of data drop and whatever here
 				Simulator::sendUETransmission(userID, uint32_t(bitsReceived), powerTransmitted);
 			}

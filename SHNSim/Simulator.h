@@ -44,6 +44,7 @@ private:
 	static float		defaultCongestionState; 
 	static float		defaultFailureState;
 	static uint32_t		mobilityBufSizeInMinutes;
+	static float		RSRPThreshold;
 
 	///////////////////////////////////////////////////////////////////////////////////
 	/*                            CORE FUNCTIONALITY                                 */

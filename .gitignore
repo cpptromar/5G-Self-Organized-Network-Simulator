@@ -3,6 +3,7 @@
 # Makefile output files
 /SHNSim/*.o
 /SHNSim/output
+/SHNSim/output.file
 
 # Simulator output files (for any simulation name) comment this section if you want to upload them
 /SHNSim/*.env
@@ -373,3 +374,4 @@
 
 # # Ionide (cross platform F# VS Code tools) working folder
 # .ionide/
+SHNSim/output
