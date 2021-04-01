@@ -45,7 +45,7 @@ const float Simulator::AP_StateCushion = 0.05f;
 const float Simulator::AP_MaxCongestionState = 2.00;
 const uint32_t Simulator::AP_DefaultECStartTime = 0;
 const uint32_t Simulator::AP_DefaultECRiseTime = 1;
-const float Simulator::AP_PathLossAlpha = 3.0f;
+const float Simulator::AP_PathLossAlpha = 1.2f;
 const uint32_t Simulator::AP_IRPMaxRemovalFailures = 5;
 
 std::mt19937 Simulator::rng_engine;

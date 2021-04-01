@@ -236,20 +236,22 @@ bool BaseStation::Update()
 				const auto& powerTransmitted = this->calculateTransmittedPower(Simulator::AP_SimulationBandwidth, (*UER).currentSNR);
 				(*UER).powerSent = powerTransmitted;
 				
-				//New KPIs (hard-coded for now)
-				float N = 100;												//20 MHz Channel Bandwidth uses N of 100
 				//The RS part = Reference Signal BUT WE DON'T ACTUALLY HAVE A REFERENCE SIGNAL. Instead, each signal is represented by an update that occurs every tick.
 				//RSRP = Reference Signal Received Power
 				//RSSI = Reference Signal Strength Index
 				//DDR = Data Drop Rate (Bits lost) We just calculate this simply by doing bits sent - bits recieved
+				//N = Number of resource blocks (100 for 20 MHz bandwidth)
+				float N = 100;
 				
-				(*UER).rsrp = 10 * log(1000 * (powerTransmitted / Simulator::AP_PathLossAlpha)); //convert to dBm P(dBm) = 10 * log10( 1000 * P(W) / 1W)
-				(*UER).rssi = ((*UER).rsrp) + 10 * log(12 * N);
+				(*UER).rsrp = 10 * log10(powerTransmitted / Simulator::AP_PathLossAlpha) + 30;	//convert to dBm P(dBm) = 10 * log10(P(W) / 1W) + 30
 				
-				//convert recieved power to reported value
-				(*UER).rsrq = N * ((*UER).rsrp / (*UER).rssi);
+				//convert rsrp to recieved strength signal index (RSSI)
+				(*UER).rssi = (*UER).rsrp + 10 * log10(12 * N);
 
-				// bits received = bits sent - rand value (max value 10)
+				//calculate reference signal recieved quality (RSRQ)
+				(*UER).rsrq = 10*log10(N) + (*UER).rsrp - (*UER).rssi;
+
+				//bits received = bits sent - rand value (max value 10)
 				uint32_t bitsDropped = 0;
 
 				if (Simulator::randF() <= Simulator::AP_ProbBitsDropped) //Depending on the probability set in Simulator, drop a certain amount of bits
@@ -268,7 +270,7 @@ bool BaseStation::Update()
 				if (bitsReceived == 0)
 					(*UER).ddr = 0;
 				else
-					(*UER).ddr = (float(bitsDropped) / float((*UER).bitsSent));
+					(*UER).ddr = ((float(bitsDropped) / float((*UER).bitsSent)) * 100);
 					
 				//Send bits received because we perform the calculation of data drop and whatever here
 				Simulator::sendUETransmission(userID, uint32_t(bitsReceived), powerTransmitted);

@@ -351,11 +351,11 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 			const auto& rsrp = (*uer).rsrp;
 			file_obj.write(FileIO::chPtrConv(&rsrp), sizeof(rsrp));
 
-			const auto& rsrq = (*uer).rsrq;
-			file_obj.write(FileIO::chPtrConv(&rsrq), sizeof(rsrq));
-
 			const auto& rssi = (*uer).rssi;
 			file_obj.write(FileIO::chPtrConv(&rssi), sizeof(rssi));
+
+			const auto& rsrq = (*uer).rsrq;
+			file_obj.write(FileIO::chPtrConv(&rsrq), sizeof(rsrq));
 
 			const auto& ddr = (*uer).ddr;
 			file_obj.write(FileIO::chPtrConv(&ddr), sizeof(ddr));
@@ -503,16 +503,16 @@ bool FileIO::readSaveFileIntoSim()
 			auto rsrp = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&rsrp), sizeof(rsrp));
 
-			auto rsrq = float{ 0 };
-			file_obj.read(FileIO::chPtrConv_m(&rsrq), sizeof(rsrq));
-
 			auto rssi = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&rssi), sizeof(rssi));
+
+			auto rsrq = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&rsrq), sizeof(rsrq));
 
 			auto ddr = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&ddr), sizeof(ddr));
 
-			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps, rsrp, rsrq, rssi, ddr};
+			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps, rsrp, rssi, rsrq, ddr};
 			newBS.addUERecord(newRecord);
 		}
 		Simulator::addBS(newBS);
@@ -542,7 +542,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (FileIO::logRowCount == 0)
 	{
-		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR,DEMAND_DR,REAL_DR,BS_Tran_SNR,UE_Rec_SNR,RSRP,RSRQ,RSSI,DDR\n"; // added the name for the column holding the bs number
+		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
 		FileIO::incrementLogRowCount();
 	}
 
@@ -573,11 +573,11 @@ bool FileIO::appendLog(const uint32_t& simNum)
 			<< ue_ld.MAX_DR << ','
 			<< ue_ld.DEMAND_DR << ','
 			<< ue_ld.REAL_DR << ','
-			<< ue_ld.TRANS_SNR << ','
-			<< ue_ld.REC_SNR << ','
+			<< ue_ld.TRANS_PWR << ','
+			<< ue_ld.REC_PWR << ','
 			<< ue_ld.RSRP << ','
-			<< ue_ld.RSRQ << ','
 			<< ue_ld.RSSI << ','
+			<< ue_ld.RSRQ << ','
 			<< ue_ld.DDR << '\n';
 		if (FileIO::splitLogFiles)
 		{
