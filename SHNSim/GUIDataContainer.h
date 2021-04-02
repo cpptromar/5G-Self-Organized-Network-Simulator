@@ -11,7 +11,7 @@ struct GUIDataContainer
 	static int argc; 
 	static char** argv;
 
-	static int count, selectedTile, highlightedSide, dotCount;
+	static int count, selectedTile, highlightedSide;
 	static double sideLength, screenWidth, screenHeight, mouseX, mouseY;
 	static double defaultWindowWidth, defaultWindowHeight;
 	static double windowWidth, windowHeight;

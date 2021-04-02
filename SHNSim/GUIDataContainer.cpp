@@ -3,7 +3,7 @@
 int GUIDataContainer::argc; 
 char** GUIDataContainer::argv;
 
-int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide, GUIDataContainer::dotCount;
+int GUIDataContainer::count, GUIDataContainer::selectedTile, GUIDataContainer::highlightedSide;
 double GUIDataContainer::sideLength, GUIDataContainer::screenWidth, GUIDataContainer::screenHeight, GUIDataContainer::mouseX, GUIDataContainer::mouseY;
 double GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight;
 double GUIDataContainer::windowWidth, GUIDataContainer::windowHeight;

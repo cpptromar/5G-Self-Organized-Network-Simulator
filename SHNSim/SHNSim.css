@@ -72,3 +72,9 @@ label#displayLabel {
 	padding-bottom: 10px;
 	border: 1px solid black;
 }
+
+combobox {
+	color: #000000;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 16px;
+}

@@ -33,8 +33,9 @@ struct
 {
 	GtkWidget* progressBar; //must be in struct rather than static variable in GTKMain class above
 							//because we had issues with "undefined reference to progressBar"
-
 	GtkWidget* timeSpinBtn;
+	GtkWidget* versionComboBox;
+	GtkWidget* RSRPthresh_range;
 } MiscWidgets;
 
 
@@ -122,6 +123,7 @@ void getDimensions();
 GtkWidget* UserMessage(GtkWindow* window, string message);
 void displayInformation(GtkWidget* widget, GtkWindow* window);
 bool debug();
+static gboolean stopScroll(GtkWidget* wid, GdkEvent* event, void* data);
 
 // function to add parameters to param struct; used to pass params to run the simulation
 bool addParams();

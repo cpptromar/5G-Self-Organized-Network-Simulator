@@ -32,6 +32,12 @@ int main(int argc, char** argv)
 	setUpSimProgressWindow();
 	setUpDebugWindow();
 
+	setUpAnalysisWindow();
+	setUpDiagnosticsWindow();
+	setUpPostMenuScreen();
+	setUpScatterplotWindow();
+
+
 	// initialize the system by making the first window visible
 	gtk_widget_show_all(WINDOWS.DrawingWindow);
 
@@ -81,6 +87,7 @@ void setUpDrawingWindow()
 	GUIDataContainer::sideLength = GUIDataContainer::screenHeight * 0.20;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_widget_hide(GTK_WIDGET(window));	//hide by default
 
 	WINDOWS.DrawingWindow = window;
 
@@ -247,6 +254,7 @@ void setUpSimParamWindow()
 
 	// copy window into struct objcet for global use across functions
 	WINDOWS.SimParamWindow = s2Window;
+	gtk_widget_hide(GTK_WIDGET(s2Window));	//hide by default
 
 	// create input labels and text boxes from stage 2 of C# code
 	GtkWidget* bsSide, * numAntenna, * numTransceivers, * distTransceivers, * uePerAntenna; // labels
@@ -258,6 +266,15 @@ void setUpSimParamWindow()
 	
 	// create back button and run simulation button
 	GtkWidget* backToS1Btn, * runSimBtn;
+
+	// create combo box for algorithm selection and its label
+	GtkWidget* comboLabel;
+	GtkWidget* verCombo;
+
+	// create slider for RSRP threshold and label
+	GtkWidget* RSRPthresh;
+	GtkWidget* threshSlider;
+
 
 	// instantiate input labels, textboxes, and buttons
 	bsSide = gtk_label_new("BS Side Length (5 < d < 20)");
@@ -284,6 +301,24 @@ void setUpSimParamWindow()
 
 	backToS1Btn = gtk_button_new_with_label("Back");
 	runSimBtn = gtk_button_new_with_label("Run Simulation");
+
+	// ================= Version ComboBox
+	comboLabel = gtk_label_new("Algorithm Version");
+	verCombo = gtk_combo_box_text_new(); //https://developer.gnome.org/gnome-devel-demos/stable/combobox.c.html.en
+	const char* versions[] = {"[0] Old", "[1] New (2021)"};	//list the available algorithm versions... ORDER MATTERS!!!!
+	for (int i = 0; i < sizeof(versions) / sizeof(versions[0]); i++)	//the division of sizeof()/sizeof() simply returns how many elements in array
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(verCombo), versions[i]);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(verCombo), 1);	//set [1] to be default
+	g_signal_connect(verCombo, "scroll-event", G_CALLBACK(stopScroll), NULL);	//this stops scroll wheel from changing the value [which can accidentally happen]
+
+
+	// ================= RSRP Threshold Slider
+	RSRPthresh = gtk_label_new("RSRP Threshold (dBm)");
+	GtkAdjustment* adj = (GtkAdjustment*)gtk_adjustment_new(0, -100, -30, 0.1, 5.0, 0.0);	//the RSRP Threshold can be between -100 dBm and -30 dBm
+	threshSlider = gtk_scale_new(GTK_ORIENTATION_HORIZONTAL, adj);
+	//gtk_scale_set_draw_value(GTK_SCALE(threshSlider), -85.0);	//RSRP Threshold is -85 dBm by default
+	gtk_range_set_value(GTK_RANGE(threshSlider), -85.0);
+	g_signal_connect(threshSlider, "scroll-event", G_CALLBACK(stopScroll), NULL);	//this stops scroll wheel from changing the value [which can accidentally happen]
 
 	// connect button signals
 	g_signal_connect(backToS1Btn, "clicked", G_CALLBACK(goToDrawingStage), NULL);
@@ -314,7 +349,7 @@ void setUpSimParamWindow()
 	GtkWidget* selfHealingParamRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	GtkWidget* selfHealingParamL = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	GtkWidget* selfHealingParamR = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	
+		
 	// instantiate button container
 	GtkWidget* btnContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	
@@ -342,8 +377,14 @@ void setUpSimParamWindow()
 	gtk_box_pack_start(GTK_BOX(simParamR), simSaveNameTxt, 0, 0, 0);
 	
 	// pack self healing parameters into self-healing container
-	gtk_box_pack_start(GTK_BOX(selfHealingParamL), bufSize, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSize, 0, 0, 15);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSizeTxt, 0, 0, 0);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), comboLabel, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), verCombo, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), RSRPthresh, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), threshSlider, 0, 0, 15);
+
+
 	
 	// pack buttons into button container
 	gtk_box_pack_start(GTK_BOX(btnContainer), backToS1Btn, 1, 1, 10);
@@ -394,6 +435,10 @@ void setUpSimParamWindow()
 	entryBoxes.simulationSaveName = simSaveNameTxt;
 	entryBoxes.bufferSize = bufSizeTxt;
 
+	// add misc widgets to struct
+	MiscWidgets.versionComboBox = verCombo;
+	MiscWidgets.RSRPthresh_range = threshSlider;
+
 	// Initializes textboxes with default values
 	gtk_entry_set_text (GTK_ENTRY (bsSideTxt), (gchar *)(std::to_string(GUIDataContainer::bsLen).c_str()));
 	gtk_entry_set_text (GTK_ENTRY (numAntennaTxt), (gchar *)(std::to_string(GUIDataContainer::antNum).c_str()));
@@ -423,6 +468,8 @@ void setUpSimParamWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(simStart), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(simSaveName), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(bufSize), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(comboLabel), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(RSRPthresh), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 		// buttons		
 		gtk_style_context_add_provider(gtk_widget_get_style_context(backToS1Btn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -445,6 +492,9 @@ void setUpSimParamWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(simParamTitle), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(selfHealingParamTitle), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
+		// combobox
+		gtk_style_context_add_provider(gtk_widget_get_style_context(verCombo), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
 	}
 }
 
@@ -466,6 +516,7 @@ void setUpPostMenuScreen()
 
 	// copy window into struct objcet for global use across functions
 	WINDOWS.PostMenuScreen = PostMenuWindow;
+	gtk_widget_hide(GTK_WIDGET(PostMenuWindow));	//hide by default
 
 	// create quit button and to analysis button
 	GtkWidget* quitProg, * toAnalysis, * toScatter, * toLineGraph, * toData, * exportToCsv;
@@ -543,6 +594,7 @@ void setUpSimProgressWindow()
 	GtkWidget* prog1;
 	GtkWidget* buttonQuit;
 	window = GTK_WIDGET(gtk_builder_get_object(builder, "windowProgress"));
+	gtk_widget_hide(GTK_WIDGET(window)); //hide on default
 	g_signal_connect(window, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 
 	buttonQuit = GTK_WIDGET(gtk_builder_get_object(builder, "buttonQuit"));
@@ -556,9 +608,10 @@ void setUpSimProgressWindow()
 void setUpScatterplotWindow()
 {
 	GtkWidget* window, * darea;
-	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	
+	gtk_widget_hide(GTK_WIDGET(window));	//hide by default
 
 	WINDOWS.ScatterplotWindow = window;
 
@@ -608,10 +661,11 @@ void setUpScatterplotWindow()
 
 	// Create spin button and put in button box
 	//https://developer.gnome.org/gtk-tutorial/stable/x967.html
-	GtkAdjustment* adj = (GtkAdjustment*)gtk_adjustment_new(1.0, 0, (gdouble)Simulator::getEnvClock(), 1.0, 5.0, 0.0);
+	GtkAdjustment* adj = (GtkAdjustment*)gtk_adjustment_new(0, 0, (gdouble)Simulator::getEnvClock() - 1, 1.0, 5.0, 0.0);
 	MiscWidgets.timeSpinBtn = gtk_spin_button_new(adj, 0, 0);
 	gtk_spin_button_set_wrap(GTK_SPIN_BUTTON(MiscWidgets.timeSpinBtn), TRUE);
 	gtk_box_pack_end(GTK_BOX(buttonBox), MiscWidgets.timeSpinBtn, 0, 0, 5);
+	g_signal_connect(MiscWidgets.timeSpinBtn, "value-changed", G_CALLBACK(scatterPlot_Update), NULL);
 
 	//create scatterplot area, keep track of area size, and connect draw signal
 	darea = gtk_drawing_area_new();
@@ -648,19 +702,24 @@ void setUpScatterplotWindow()
 	}
 }
 
-void setUpAnalysisWindow()
+void setUpAnalysisWindow()	//future work
 {
-	
+	GtkWidget* window;
+	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_widget_hide(GTK_WIDGET(window));	//hide by default
+	WINDOWS.AnalysisWindow = window;
+
+
 }
 
 void setUpDebugWindow()
 {
 	GtkWidget* window, * darea;
-	GUIDataContainer::dotCount = 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	
 	WINDOWS.DebugWindow = window;
+	gtk_widget_hide(GTK_WIDGET(window));	//hide by default
 
 	darea = gtk_drawing_area_new();
 
@@ -1552,6 +1611,12 @@ bool addParams()
 		// string
 		GUIDataContainer::simName = gtk_entry_get_text(GTK_ENTRY(entryBoxes.simulationSaveName));
 		
+		//comboBox
+		GUIDataContainer::algorithmVer = gtk_combo_box_get_active(GTK_COMBO_BOX(MiscWidgets.versionComboBox));	//get the active one...
+		GUIDataContainer::RSRPThreshold = gtk_range_get_value(GTK_RANGE(MiscWidgets.RSRPthresh_range));
+		cout << "Active ID = " << GUIDataContainer::algorithmVer << endl;
+		cout << "RSRP threshold = " << GUIDataContainer::RSRPThreshold << endl;
+
 		if(GUIDataContainer::bsLen < 5 || GUIDataContainer::bsLen > 20)
 		{
 			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid Basestation length");
@@ -1907,7 +1972,7 @@ bool debug()
 	float* lineData = new float[numOfVars];	 //create array for line data
 	FileIO::readLog_NextLine(0, lineData); //go get the next line data
 
-
+	
 
 
 	//this below code works
@@ -1955,4 +2020,10 @@ bool debug()
 	//}
 	//cout << endl;
 
+	return true;
+}
+
+gboolean stopScroll(GtkWidget* wid, GdkEvent* event, void* data)
+{
+	return TRUE;
 }
