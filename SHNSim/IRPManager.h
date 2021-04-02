@@ -18,6 +18,7 @@ protected:
 	NetworkLogBuffer Buffer;
 	std::vector<IRP_BSInfo> networkStatuses;
 	float percentDecrease;
+	bool doneHealing;					// Used to tell whether healing portion is done (for offloadUserKPIs)
 	
 	std::vector<size_t> helperBSs;		// store BSs that can provide aid
 	std::vector<size_t> disabledBSs; 	// store BSs that are in need of aid

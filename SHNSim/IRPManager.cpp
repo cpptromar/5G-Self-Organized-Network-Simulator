@@ -22,6 +22,7 @@ void IRPManager::InitializeIRPManager()
 	this->Buffer.setWindowSize(Simulator::getIRPBufSizeInSeconds());
 	this->networkStatuses = std::vector<IRP_BSInfo>(Simulator::getNumOfBSs());
 	this->percentDecrease = 0.1f;
+	this->doneHealing = false;
 	auto bs = size_t{ 0 };
 	for (auto& bss : this->networkStatuses)
 		bss = { bs++, IRP_BSStatus::normal, 0.0f, 0.0f };
@@ -92,7 +93,8 @@ void IRPManager::IRPManagerUpdate()
 
 		// Self-Healing functions
 		IRPManager::checkStatus();
-		IRPManager::offloadUser();
+		//IRPManager::offloadUser();
+		IRPManager::offloadUserKPIs(); //Run ours?
 	}
 }
 
@@ -278,142 +280,168 @@ void IRPManager::offloadUser()
 	}
 }
 
-////New algorithm based on BaseStation Status and new KPIs
-//void IRPManager::offloadUserKPIs() {
-//	// Heal the network first, then optimize afterwards
-//	bool doneHealing = false;																					// Used to tell whether healing portion is done
-//	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();											// Calculate max distance to search for
-//
-//	// Healing
-//	if (doneHealing == false) {
-//		// Perform healing on every BaseStation
-//		for (const auto& unhealthyBS : disabledBSs) {
-//			//Offload users from failing BaseStation first, then congested BaseStations second
-//			float amountToRemove = { 0.0f };																	//Create a percentage float to keep offloading users until the BS is uncongested
-//
-//			if (this->networkStatuses.at(unhealthyBS).bsStatus == IRP_BSStatus::failure)						//If BS is failing, offload all users
-//				amountToRemove = float{ this->networkStatuses.at(unhealthyBS).bsStateDemand * percentDecrease };
-//			else																								//BS is congested, so offload until uncongested
-//				amountToRemove = float{ (this->networkStatuses.at(unhealthyBS).bsStateDemand - Simulator::getDefaultNormalState()) * percentDecrease };
-//
-//			//If the BaseStation needs users to be offloaded,
-//			
-//			//1. Collect user information once
-//			const UEDataBase& disabledBsRecords = Simulator::getBS(unhealthyBS).getUEDB();						//Get UEDataBase from the current BaseStation
-//			auto userDemands = std::vector<std::pair<size_t, uint32_t>>();										//Make vector pair
-//			userDemands.reserve(disabledBsRecords.size());														//Reserve memory for the vector
-//			for (const auto& ue : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
-//				userDemands.push_back(std::make_pair((*ue).userID, (*ue).demand));								//Add their ID and demand to the vector pair
-//
-//			//2. Sort User Equipment from lowest demand to highest. This will let us prioritize users with higher demand first
-//			std::sort(userDemands.begin(), userDemands.end(),													//Sort from beginning of vector pair to the end
-//				[](const std::pair<size_t, uint32_t>& lhs, const std::pair<size_t, uint32_t>& rhs) {			//Based on their demand
-//					return lhs.second < rhs.second;																//Refer to std::sort
-//				});
-//
-//			//3. Loop until BaseStation is uncongested 
-//			
-//			//Error checking
-//			float prevAmountToRemove = amountToRemove;
-//			uint32_t removalAttemptFailed = { 0 };
-//			
-//			//Start loop
-//			while (amountToRemove > 0 && removalAttemptFailed < Simulator::AP_IRPMaxRemovalFailures)			//Try to offload users until max failures is reached
-//			{
-//				//Error checking
-//				if (disabledBsRecords.size() < 1)																//If the disabledBsRecords is empty
-//				{
-//					removalAttemptFailed++;																		//Add to failures
-//					continue;																					//Skip trying to offload user
-//				}
-//				
-//				//3a. Get information about the user with the highest demand (will be last on the vector list)
-//				const size_t usrID = userDemands.back().first;													//The UserID of the user
-//				const uint32_t userDemand = userDemands.back().second;											//The Demand of that user
-//				const Coord<float> offloadUserLoc = (*(disabledBsRecords.look_up(usrID))).loc;					//The Location of that user
-//				userDemands.pop_back();																			//Remove them from the vector list
-//
-//				//3b. Calculate which BaseStation is the closest to offload the UE to
-//				float minDistBetweenUEandBS = { 100000 };														//Will be used later to keep track of the closest BaseStation
-//				float distBetweenUEandBS = {};																	//Actual distance between UE and BS
-//				size_t closestBS_ID = { Simulator::getNumOfBSs() };												//BaseStation ID number of the closest BaseStation
-//
-//				//3b1. Compare the distance between each helper BaseStation and the current User Equipment (using iterators)
-//				for (const auto& hbs : this->helperBSs)															//For each helper BaseStation in the helperBS vector list (created on IRPManager.h)
-//				{
-//					const Coord<float>& helperBSLoc = Simulator::getBS(hbs).getLoc();							//Get location of the helper BS
-//					
-//					//Distance formula = sqrt((y2-y1)^2 + (x2-x1)^2)											//Calculate distance between UE and BS
-//					distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y))
-//											+ ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
-//					
-//					//If the helper BaseStation is within searching distance && it is closer than the previously found distance,
-//					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
-//					{
-//						closestBS_ID = hbs;																		//Store the ID of that helper BS
-//						minDistBetweenUEandBS = distBetweenUEandBS;												//Store the distance between that helper BS and the current UE
-//					}
-//				}
-//
-//				//Exiting this loop
-//				//3b2. Add the user to the to the closest BS and remove it from the original BS where it is at
-//				if (closestBS_ID < Simulator::getNumOfBSs() &&													//Check if the BSID is valid
-//					Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0)) {								//Call transferUE
-//					amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();					//Modify amountToRemove
-//				}
-//
-//				if (amountToRemove == prevAmountToRemove) {	 													//If transferUE didn't work,
-//					removalAttemptFailed++;																		//Add 1 to amount of removal attempts
-//					ErrorTracer::error("IRPManager::offloadUserKPIs(): Error transferring UE to new eNodeB");	//Use an ErrorTracer to notify the simulator via the console window
-//				}
-//			} //End amountToRemove loop
-//		} //End BaseStation loop
-//	} //End healing
-//	// Optimization
-//	else { //doneHealing == true, start optimizing
-//		// Get BaseStations
-//		for (const BaseStation& CurrBS : Simulator::getBSList()) {												//For each BaseStation
-//			
-//			//1. Collect user information
-//			const UEDataBase& disabledBsRecords = Simulator::getBS(CurrBS.getBSID()).getUEDB();					//Get UEDataBase from the current BaseStation
-//			
-//			auto RSRPUser = std::vector<std::pair<size_t, uint32_t>>();											//Make vector pair
-//			RSRPUser.reserve(disabledBsRecords.size());															//Reserve memory for the vector
-//			for (const auto& ue : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
-//				RSRPUser.push_back(std::make_pair((*ue).userID, (*ue).getRSRP()));								//Add their ID and RSRP to the vector pair
-//
-//			//Sort User Equipment from lowest RSRP to highest. This will let us prioritize users with higher demand first
-//			std::sort(RSRPUser.begin(), RSRPUser.end(),															//Sort from beginning of vector pair to the end
-//				[](const std::pair<size_t, uint32_t>& lhs, const std::pair<size_t, uint32_t>& rhs) {			//Based on their RSRP
-//					return lhs.second < rhs.second;																//Refer to std::sort
-//				});
-//			float RSRPUser = CurrBS.getUEDB().;																	// Get KPIs from UERecord
-//			float RSRPThreshold = 0;																			// Set threshold value for each KPI (0 = toggle off)
-//		}
-//		
-//		/* Compare User value for each KPI with the set threshold
-//			If below threshold, search for base station */
-//		if (RSRPUser < RSPRThreshold)
-//		{
-//			/* 
-//			Get User location
-//			Find closest base station to the user
-//			Call offload function moving users
-//			- check to see base station status 
-//			- move user if not failing
-//			*/
-//			if (this->networkStatuses.at(Curr_BS_Status).bsStatus == IRP_BSStatus::failure)
-//			{
-//				// if failing scan for next closest non-failing base station
-//			}
-//			else
-//			{
-//				// move user
-//			}
-//		}
-//		else
-//		{
-//
-//		}
-//	}
-//}
+//New algorithm based on BaseStation Status and new KPIs
+void IRPManager::offloadUserKPIs() {
+	// Heal the network first, then optimize afterwards
+	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();											// Calculate max distance to search for
+
+	// Healing
+	if (this->doneHealing == false) {
+		// Perform healing on every unhealthy BaseStation
+
+		float allBSAmountsToRemove = { 0.0f };																	//Create a percentage to check if the basestations are done healing
+
+		for (const auto& unhealthyBS : disabledBSs) {
+			//Offload users from failing BaseStation first, then congested BaseStations second
+			float amountToRemove = { 0.0f };																	//Create a percentage float to keep offloading users until the BS is uncongested
+
+			if (this->networkStatuses.at(unhealthyBS).bsStatus == IRP_BSStatus::failure)						//If BS is failing, offload all users
+				amountToRemove = float{ this->networkStatuses.at(unhealthyBS).bsStateDemand * percentDecrease };
+			else																								//BS is congested, so offload until uncongested
+				amountToRemove = float{ (this->networkStatuses.at(unhealthyBS).bsStateDemand - Simulator::getDefaultNormalState()) * percentDecrease };
+
+			//Checking if all basestations are done healing
+			allBSAmountsToRemove += amountToRemove;																//Add current BaseStation's amountToRemove to the total
+
+			//If the BaseStation needs users to be offloaded,
+			
+			//1. Collect user information once
+			const UEDataBase& disabledBsRecords = Simulator::getBS(unhealthyBS).getUEDB();						//Get UEDataBase from the current BaseStation
+			auto userDemands = std::vector<std::pair<size_t, uint32_t>>();										//Make vector pair
+			userDemands.reserve(disabledBsRecords.size());														//Reserve memory for the vector
+			for (const auto& ue : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
+				userDemands.push_back(std::make_pair((*ue).userID, (*ue).demand));								//Add their ID and demand to the vector pair
+
+			//2. Sort User Equipment from lowest demand to highest. This will let us prioritize users with higher demand first
+			std::sort(userDemands.begin(), userDemands.end(),													//Sort from beginning of vector pair to the end
+				[](const std::pair<size_t, uint32_t>& lhs, const std::pair<size_t, uint32_t>& rhs) {			//Based on their demand
+					return lhs.second < rhs.second;																//Refer to std::sort
+				});
+
+			//3. Loop until BaseStation is uncongested 
+			
+			//Error checking
+			float prevAmountToRemove = amountToRemove;
+			uint32_t removalAttemptFailed = { 0 };
+			
+			//Start loop
+			while (amountToRemove > 0 && removalAttemptFailed < Simulator::AP_IRPMaxRemovalFailures)			//Try to offload users until max failures is reached
+			{
+				//Error checking
+				if (disabledBsRecords.size() < 1)																//If the disabledBsRecords is empty
+				{
+					removalAttemptFailed++;																		//Add to failures
+					continue;																					//Skip trying to offload user
+				}
+				
+				//3a. Get information about the user with the highest demand (will be last on the vector list)
+				const size_t usrID = userDemands.back().first;													//The UserID of the user
+				const uint32_t userDemand = userDemands.back().second;											//The Demand of that user
+				const Coord<float> offloadUserLoc = (*(disabledBsRecords.look_up(usrID))).loc;					//The Location of that user
+				userDemands.pop_back();																			//Remove them from the vector list
+
+				//3b. Calculate which BaseStation is the closest to offload the UE to
+				float minDistBetweenUEandBS = { 100000 };														//Will be used later to keep track of the closest BaseStation
+				float distBetweenUEandBS = {};																	//Actual distance between UE and BS
+				size_t closestBS_ID = { Simulator::getNumOfBSs() };												//BaseStation ID number of the closest BaseStation
+
+				//3b1. Compare the distance between each helper BaseStation and the current User Equipment (using iterators)
+				for (const auto& hbs : this->helperBSs)															//For each helper BaseStation in the helperBS vector list (created on IRPManager.h)
+				{
+					const Coord<float>& helperBSLoc = Simulator::getBS(hbs).getLoc();							//Get location of the helper BS
+					
+					//Distance formula = sqrt((y2-y1)^2 + (x2-x1)^2)											//Calculate distance between UE and BS
+					distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y))
+											+ ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
+					
+					//If the helper BaseStation is within searching distance && it is closer than the previously found distance,
+					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+					{
+						closestBS_ID = hbs;																		//Store the ID of that helper BS
+						minDistBetweenUEandBS = distBetweenUEandBS;												//Store the distance between that helper BS and the current UE
+					}
+				}
+
+				//Exiting this loop
+				//3b2. Add the user to the to the closest BS and remove it from the original BS where it is at
+				if (closestBS_ID < Simulator::getNumOfBSs() &&													//Check if the BSID is valid
+					Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0)) {								//Call transferUE
+					amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();					//Modify amountToRemove
+				}
+
+				if (amountToRemove == prevAmountToRemove) {	 													//If transferUE didn't work,
+					removalAttemptFailed++;																		//Add 1 to amount of removal attempts
+					ErrorTracer::error("IRPManager::offloadUserKPIs(): Error transferring UE to new eNodeB");	//Use an ErrorTracer to notify the simulator via the console window
+				}
+			} //End amountToRemove loop
+		} //End BaseStation loop
+
+		//Checking if all basestations are done healing
+		if (allBSAmountsToRemove <= 0) {																		//If all BaseStations are done healing (no more amount to remove)
+			this->doneHealing = true;																			//Set doneHealing to true so that optimization will occur next time
+		}
+
+	} //End Healing
+	
+	// Optimization
+	else { //doneHealing == true, start optimizing
+		// Get BaseStations
+		for (const size_t& CurrBS_ID : helperBSs) {																//For each BaseStation (healthy only since all the users will be offloaded already)
+			
+			//1. Collect user information and make a vector list (RSRPUser)
+			const UEDataBase& disabledBsRecords = Simulator::getBS(CurrBS_ID).getUEDB();						//Get UEDataBase from the current BaseStation
+			
+			auto RSRPUser = std::vector<std::pair<size_t, float>>();											//Make vector pair
+			RSRPUser.reserve(disabledBsRecords.size());															//Reserve memory for the vector
+			for (const auto& uer : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
+				RSRPUser.push_back(std::make_pair((*uer).userID, (*uer).getRSRP()));							//Add their ID and RSRP to the vector pair
+
+			//2. Sort User Equipment from worst RSRP (front) to best RSRP (back). This will let us prioritize users furthest away from the BaseStation first
+			std::sort(RSRPUser.begin(), RSRPUser.end(),															//Sort from beginning of vector pair to the end
+				[](const std::pair<size_t, float>& lhs, const std::pair<size_t, float>& rhs) {					//Based on their RSRP
+					return lhs.second < rhs.second;																//Refer to std::sort
+				});
+
+			float RSRPThreshold = Simulator::getRSRPThreshold();												//Get RSRP Threshold from Simulator
+
+			//3. Clean up RSRPUser vector list so that only the users outside of the threshold remain
+			while (RSRPUser.back().second > RSRPThreshold && RSRPUser.size() > 0) {							//Compare best RSRP to Threshold and if list is empty
+				RSRPUser.erase(RSRPUser.end());																//Remove any users from the vector list that don't need to be transferred (good RSRP value)
+			}
+
+			//4. Keep transferring users until the vector list is empty (all users outside of RSRP threshold are transferred)
+			while (RSRPUser.size() > 0) {																	//Keep removing users from vector list until empty
+				//4a. Gather User information
+				const size_t usrID = RSRPUser.back().first;													//The User ID of this user
+																											//CurrBS_ID is the BS ID of this user
+				const Coord<float> offloadUserLoc = (*(disabledBsRecords.look_up(usrID))).loc;				//The Location of this user
+
+				//4b. Calculate which BaseStation is the closest to offload the UE to
+				float minDistBetweenUEandBS = { 100000 };													//Will be used later to keep track of the closest BaseStation
+				float distBetweenUEandBS = {};																//Actual distance between UE and BS
+				size_t closestBS_ID = { Simulator::getNumOfBSs() };											//BaseStation ID number of the closest BaseStation
+				RSRPUser.pop_back();																		//Remove user from sorted RSRP vector list
+
+				//4c. Compare the distance between each helper BaseStation and the current User Equipment (using iterators)
+				for (const auto& hbs : this->helperBSs)														//For each helper BaseStation in the helperBS vector list (created on IRPManager.h)
+				{
+					const Coord<float>& helperBSLoc = Simulator::getBS(hbs).getLoc();						//Get location of the helper BS
+
+					//Distance formula = sqrt((y2-y1)^2 + (x2-x1)^2)										//Calculate distance between UE and BS
+					distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y))
+						+ ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
+
+					//If the helper BaseStation is within searching distance && it is closer than the previously found distance,
+					if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+					{
+						closestBS_ID = hbs;																	//Store the ID of that helper BS
+						minDistBetweenUEandBS = distBetweenUEandBS;											//Store the distance between that helper BS and the current UE
+					}
+				}
+
+				//4d. Add the user to the to the closest BS and remove it from the original BS where it is at
+				Simulator::transferUE(CurrBS_ID, usrID, closestBS_ID, 0);									//Transfer UE
+			}//end of transferring all UEs outside of RSRP threshold range
+		}//Exit BaseStation Loop
+	}//Exit optimization section
+}

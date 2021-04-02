@@ -76,7 +76,7 @@ float Simulator::defaultFailureState = 0.0f;
 uint32_t Simulator::mobilityBufSizeInMinutes = 30;
 
 //KPI Thresholds
-float Simulator::RSRPThreshold = -80;					//-80 dBm
+float Simulator::RSRPThreshold = -85.0f;					//-85 dBm
 
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
@@ -232,6 +232,11 @@ void Simulator::setmobilityBufSizeInMinutes(const uint32_t& bufSize)
 	Simulator::mobilityBufSizeInMinutes = bufSize;
 }
 
+void Simulator::setRSRPThreshold(const float& threshold)
+{
+	Simulator::RSRPThreshold = threshold;
+}
+
 const size_t& Simulator::getNumOfChannels()
 {
 	return Simulator::numberOfChannels;
@@ -362,6 +367,11 @@ std::mt19937& Simulator::getRandNumEngine()
 const uint32_t& Simulator::getmobilityBufSizeInMinutes()
 {
 	return Simulator::mobilityBufSizeInMinutes;
+}
+
+const float& Simulator::getRSRPThreshold()
+{
+	return Simulator::RSRPThreshold;
 }
 
 const float Simulator::randF()

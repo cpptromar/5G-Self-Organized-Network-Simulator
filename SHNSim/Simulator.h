@@ -92,6 +92,7 @@ protected:
 	static void setDefaultFailureState(const float& faillvl);
 	static void resetCoreObjects();
 	static void setmobilityBufSizeInMinutes(const uint32_t& mobBufSize);
+	static void setRSRPThreshold(const float& threshold);
 
 public:
 	///////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +166,7 @@ public:
 	static const float&		getDefaultFailureState();
 	static std::mt19937&	getRandNumEngine();
 	static const uint32_t&	getmobilityBufSizeInMinutes();
+	static const float&		getRSRPThreshold();
 
 	static const float		randF();
 	static const uint32_t	rand();
