@@ -37,6 +37,8 @@ struct GUIDataContainer
 	static int bufSizeInSeconds;
 	static int congestionState;
 	static int alertState;
+	static uint32_t algorithmVer; //algorithm version for self healing and whatnot...
+	static float RSRPThreshold;
 
 
 	// analysis window variables

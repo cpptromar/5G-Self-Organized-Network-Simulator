@@ -30,6 +30,8 @@ std::string GUIDataContainer::simName = "TEST";
 int GUIDataContainer::bufSizeInSeconds = 10;
 int GUIDataContainer::congestionState = 90;
 int GUIDataContainer::alertState = 80;
+uint32_t GUIDataContainer::algorithmVer = 1; //default to new version (2021 version)
+float GUIDataContainer::RSRPThreshold = -85.0f;	//default to -85 dBm
 
 // analysis window variables
 int spinnerTimeVal = 0;

@@ -77,6 +77,7 @@ uint32_t Simulator::mobilityBufSizeInMinutes = 30;
 
 //KPI Thresholds
 float Simulator::RSRPThreshold = -85.0f;					//-85 dBm
+uint32_t Simulator::algorithmVer = 1;						//Default to NEW algorithm [2021 version] (0 is old, 1 is new)
 
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
@@ -237,6 +238,10 @@ void Simulator::setRSRPThreshold(const float& threshold)
 	Simulator::RSRPThreshold = threshold;
 }
 
+void Simulator::setalgorithmVer(const uint32_t& version) {
+	Simulator::algorithmVer = version;
+}
+
 const size_t& Simulator::getNumOfChannels()
 {
 	return Simulator::numberOfChannels;
@@ -372,6 +377,11 @@ const uint32_t& Simulator::getmobilityBufSizeInMinutes()
 const float& Simulator::getRSRPThreshold()
 {
 	return Simulator::RSRPThreshold;
+}
+
+const uint32_t& Simulator::getalgorithmVer()
+{
+	return Simulator::algorithmVer;
 }
 
 const float Simulator::randF()

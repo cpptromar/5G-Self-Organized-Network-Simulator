@@ -169,6 +169,10 @@ bool EnvironmentInitialization::generateNewENV()
 	Simulator::setHealthyBSNumUsersPerAnt(GUIDataContainer::uePerAnt);
 	EnvironmentInitialization::initializeNumTransceivers();
 
+	//Self-Healing/Optimization parameters
+	Simulator::setalgorithmVer(GUIDataContainer::algorithmVer);
+	Simulator::setRSRPThreshold(GUIDataContainer::RSRPThreshold);
+
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.

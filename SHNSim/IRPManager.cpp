@@ -93,8 +93,19 @@ void IRPManager::IRPManagerUpdate()
 
 		// Self-Healing functions
 		IRPManager::checkStatus();
-		//IRPManager::offloadUser();
-		IRPManager::offloadUserKPIs(); //Run ours?
+
+		//Choose algorithm based on user input
+		switch (Simulator::getalgorithmVer()) {
+		case 0:
+			IRPManager::offloadUser();
+			break;
+		case 1:
+			IRPManager::offloadUserKPIs(); //Run ours?
+			break;
+		default:
+			ErrorTracer::error("IRPManager::IRPManagerUpdate(): Error choosing algorithm");
+			break;
+		}
 	}
 }
 

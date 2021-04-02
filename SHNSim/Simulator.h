@@ -45,6 +45,7 @@ private:
 	static float		defaultFailureState;
 	static uint32_t		mobilityBufSizeInMinutes;
 	static float		RSRPThreshold;
+	static uint32_t		algorithmVer;
 
 	///////////////////////////////////////////////////////////////////////////////////
 	/*                            CORE FUNCTIONALITY                                 */
@@ -93,6 +94,7 @@ protected:
 	static void resetCoreObjects();
 	static void setmobilityBufSizeInMinutes(const uint32_t& mobBufSize);
 	static void setRSRPThreshold(const float& threshold);
+	static void setalgorithmVer(const uint32_t& version);
 
 public:
 	///////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +169,7 @@ public:
 	static std::mt19937&	getRandNumEngine();
 	static const uint32_t&	getmobilityBufSizeInMinutes();
 	static const float&		getRSRPThreshold();
+	static const uint32_t&	getalgorithmVer();
 
 	static const float		randF();
 	static const uint32_t	rand();
