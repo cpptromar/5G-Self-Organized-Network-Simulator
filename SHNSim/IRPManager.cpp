@@ -396,8 +396,22 @@ void IRPManager::offloadUserKPIs() {
 	
 	// Optimization
 	else { //doneHealing == true, start optimizing
-		// Get BaseStations
-		for (const size_t& CurrBS_ID : helperBSs) {																//For each BaseStation (healthy only since all the users will be offloaded already)
+		//Get BaseStations
+		
+		//Group both helper base stations and congested base stations
+		std::vector<size_t> OptimizingBSs;		// store BSs that need to be optimized (healthy and congested)
+
+		for (const auto& bss : IRPManager::networkStatuses) {
+			if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())		//If the BaseStation is healthy
+				OptimizingBSs.push_back(bss.bsID);
+			if (bss.bsStatus == IRP_BSStatus::congestion)														//Or if the BaseStation is congested
+				OptimizingBSs.push_back(bss.bsID);
+
+			//Don't check failing BaseStations because all users will be offloaded by the time optimization is occurring,
+			//therefore, having an empty UEDB with no users to optimize
+		}
+
+		for (const size_t& CurrBS_ID : OptimizingBSs) {															//For each BaseStation (non-failing only since all the users will be offloaded already)
 			
 			//1. Collect user information and make a vector list (RSRPUser)
 			const UEDataBase& disabledBsRecords = Simulator::getBS(CurrBS_ID).getUEDB();						//Get UEDataBase from the current BaseStation

@@ -169,6 +169,9 @@ bool EnvironmentInitialization::generateNewENV()
 	Simulator::setHealthyBSNumUsersPerAnt(GUIDataContainer::uePerAnt);
 	EnvironmentInitialization::initializeNumTransceivers();
 
+	//User Mobility / Movement parameters
+	Simulator::setmobilityBufSizeInMinutes(GUIDataContainer::mobilityBufSizeInMinutes);
+
 	//Self-Healing/Optimization parameters
 	Simulator::setalgorithmVer(GUIDataContainer::algorithmVer);
 	Simulator::setRSRPThreshold(GUIDataContainer::RSRPThreshold);

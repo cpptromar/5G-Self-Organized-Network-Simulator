@@ -75,7 +75,7 @@ struct
 struct
 {
 	GtkWidget* baseStationSide, * antennaNumber, * transceiverNum, * transceiverDist, * maxDataRate, * userEquipPerAntenna;
-	GtkWidget* simulationLength, * simulationNumber, * simulationStart, * simulationSaveName, * bufferSize;
+	GtkWidget* simulationLength, * simulationNumber, * simulationStart, * simulationSaveName, * bufferSize, *mobilityBuffer;
 	GtkWidget* alertEntry, * congestionEntry;
 } entryBoxes;
 

@@ -261,8 +261,8 @@ void setUpSimParamWindow()
 	GtkWidget* bsSideTxt, * numAntennaTxt, * numTransceiversTxt, * distTransceiversTxt, * uePerAntennaTxt; // textbox
 
 	// create input labels and text boxes from stage 3 of C# code
-	GtkWidget* simLength, * simNum, * simStart, * simSaveName, * bufSize; // labels
-	GtkWidget* simLengthTxt, * simNumTxt, * simStartTxt, * simSaveNameTxt, * bufSizeTxt; // textboxes
+	GtkWidget* simLength, * simNum, * simStart, * simSaveName, * bufSize, * mobilityBuf; // labels
+	GtkWidget* simLengthTxt, * simNumTxt, * simStartTxt, * simSaveNameTxt, * bufSizeTxt, * mobilityBufTxt; // textboxes
 	
 	// create back button and run simulation button
 	GtkWidget* backToS1Btn, * runSimBtn;
@@ -296,8 +296,10 @@ void setUpSimParamWindow()
 	simStartTxt = gtk_entry_new();
 	simSaveName = gtk_label_new("Simulation Save Name");
 	simSaveNameTxt = gtk_entry_new();
-	bufSize = gtk_label_new("Buffer size");
+	bufSize = gtk_label_new("Self-Healing Buffer size (in seconds)");
 	bufSizeTxt = gtk_entry_new();
+	mobilityBuf = gtk_label_new("Mobility Buffer size (in minutes)");
+	mobilityBufTxt = gtk_entry_new();
 
 	backToS1Btn = gtk_button_new_with_label("Back");
 	runSimBtn = gtk_button_new_with_label("Run Simulation");
@@ -377,14 +379,14 @@ void setUpSimParamWindow()
 	gtk_box_pack_start(GTK_BOX(simParamR), simSaveNameTxt, 0, 0, 0);
 	
 	// pack self healing parameters into self-healing container
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), mobilityBuf, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), mobilityBufTxt, 0, 0, 15);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSize, 0, 0, 15);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSizeTxt, 0, 0, 0);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamL), comboLabel, 0, 0, 15);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamL), verCombo, 0, 0, 15);
-	gtk_box_pack_start(GTK_BOX(selfHealingParamL), RSRPthresh, 0, 0, 15);
-	gtk_box_pack_start(GTK_BOX(selfHealingParamL), threshSlider, 0, 0, 15);
-
-
+	gtk_box_pack_start(GTK_BOX(selfHealingParamR), RSRPthresh, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamR), threshSlider, 0, 0, 15);
 	
 	// pack buttons into button container
 	gtk_box_pack_start(GTK_BOX(btnContainer), backToS1Btn, 1, 1, 10);
@@ -434,6 +436,7 @@ void setUpSimParamWindow()
 	entryBoxes.simulationStart = simStartTxt;
 	entryBoxes.simulationSaveName = simSaveNameTxt;
 	entryBoxes.bufferSize = bufSizeTxt;
+	entryBoxes.mobilityBuffer = mobilityBufTxt;
 
 	// add misc widgets to struct
 	MiscWidgets.versionComboBox = verCombo;
@@ -1608,6 +1611,8 @@ bool addParams()
 		GUIDataContainer::bufSizeInSeconds = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.bufferSize)));
 		GUIDataContainer::alertState = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.alertEntry)));
 		GUIDataContainer::congestionState = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.congestionEntry)));
+		GUIDataContainer::mobilityBufSizeInMinutes = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.mobilityBuffer)));
+		
 		// string
 		GUIDataContainer::simName = gtk_entry_get_text(GTK_ENTRY(entryBoxes.simulationSaveName));
 		
@@ -1660,6 +1665,12 @@ bool addParams()
 		if(GUIDataContainer::bufSizeInSeconds < 1)
 		{
 			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid buffer size");
+			return false;
+		}
+
+		if(GUIDataContainer::mobilityBufSizeInMinutes < 1 || GUIDataContainer::mobilityBufSizeInMinutes > GUIDataContainer::simLen)
+		{
+			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid mobility buffer size");
 			return false;
 		}
 		

@@ -19,7 +19,7 @@ struct GUIDataContainer
  	static std::vector<std::pair<int, int>> neighbors[1000];
  	static std::vector<std::vector<double>> coords;
 	static std::vector<int> path;
-	static std::vector<int> status;	// 0 = healthy, 1 = congested, 2 = alt congested, 3 = down
+	static std::vector<int> status;													// 0 = healthy, 1 = congested, 2 = alt congested, 3 = down
 	static std::vector<int> startTime;
 	static std::vector<int> riseTime;
 	static std::vector<int> endState;	
@@ -37,9 +37,9 @@ struct GUIDataContainer
 	static int bufSizeInSeconds;
 	static int congestionState;
 	static int alertState;
-	static uint32_t algorithmVer; //algorithm version for self healing and whatnot...
+	static uint32_t algorithmVer;													//algorithm version for self healing and whatnot...
 	static float RSRPThreshold;
-
+	static uint32_t mobilityBufSizeInMinutes;										//User mobility buffer size
 
 	// analysis window variables
 	static int spinnerTimeVal;

@@ -73,7 +73,7 @@ float Simulator::alertState = 0.8f;
 float Simulator::defaultNormalState = 0.5f;
 float Simulator::defaultCongestionState = 0.9f;
 float Simulator::defaultFailureState = 0.0f;
-uint32_t Simulator::mobilityBufSizeInMinutes = 30;
+uint32_t Simulator::mobilityBufSizeInMinutes = 5;			//5 minutes default = 300 ticks (each tick is supposed to be 1 second)
 
 //KPI Thresholds
 float Simulator::RSRPThreshold = -85.0f;					//-85 dBm
