@@ -592,7 +592,8 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	return true;
 }
 
- bool FileIO::readLog_Init(const uint32_t& simNum, int &numOfVars) //This reads the data var names (first line)
+//Reads the data var names (first line) and places the number of variables in numOfVars 
+ bool FileIO::readLog_Init(const uint32_t& simNum, int &numOfVars) 
 {
 	 FileIO::lineCounter = 0;
 	//https://en.cppreference.com/w/cpp/io/basic_ifstream
@@ -616,9 +617,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	ifstream log;
 	string line;
-	std::cout << "NewFilePath = " << newFilePath << std::endl;
 	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	if (!log.is_open())
 	{
@@ -668,9 +667,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	 std::ifstream log;
 	 std::string line;
-	 //std::cout << "NewFilePath = " << newFilePath << std::endl;
 	 log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	 //log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	 if (!log.is_open())
 	 {
@@ -719,9 +716,7 @@ bool FileIO::readLog_NextLine(const uint32_t& simNum, float* lineData)
 
 	std::ifstream log;
 	std::string line;
-	//std::cout << "NewFilePath = " << newFilePath << std::endl;
 	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	if (!log.is_open())
 	{
@@ -792,9 +787,7 @@ std::uint64_t FileIO::readLog_LineAtPosition(const uint32_t& simNum, float* line
 	ifstream log;
 	string line;
 	uint64_t endPosition = 0;
-	//std::cout << "NewFilePath = " << newFilePath << std::endl;
 	log.open(newFilePath, std::ios::in); //open the file for readonly (ios::in)
-	//log.open("StevensTest_SIM_0.csv", std::ios::in); //open the file for readonly (ios::in)
 
 	if (!log.is_open())
 	{

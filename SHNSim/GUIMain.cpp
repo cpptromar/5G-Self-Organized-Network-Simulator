@@ -3,6 +3,7 @@
 #include <fstream>
 #include "ErrorTracer.h"
 #include "FileIO.h"
+#include <iostream>
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
@@ -631,6 +632,7 @@ void setUpScatterplotWindow()
 	gtk_window_set_default_size(GTK_WINDOW(window), GUIDataContainer::defaultWindowWidth, GUIDataContainer::defaultWindowHeight);
 	gtk_window_set_title(GTK_WINDOW(window), "Post Simulation Analysis");
 
+
 	GtkWidget* mainContainer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	GtkWidget* buttonBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
@@ -747,7 +749,7 @@ void setUpDebugWindow()
 	GtkWidget* debugBtn = gtk_button_new_with_label("       Debug       ");
 	gtk_widget_set_name(debugBtn, "debugBtn");
 	g_signal_connect(debugBtn, "clicked", G_CALLBACK(debug), GTK_WINDOW(window));
-	gtk_box_pack_start(GTK_BOX(buttonBox), debugBtn, 0, 0, 5);
+	//gtk_box_pack_start(GTK_BOX(buttonBox), debugBtn, 0, 0, 5);	//this line can be commented to access the debug button. all the rest of its necessary code works. The button will execute the debug() function
 
 	GtkWidget* bckBtn = gtk_button_new_with_label("       Back       ");
 	gtk_widget_set_name(bckBtn, "Back");
@@ -1468,22 +1470,106 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 	return TRUE;
 }
 
-static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data) //-SJ
+static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data)
 {
-
+	int currentTime = gtk_spin_button_get_value_as_int((GtkSpinButton*)MiscWidgets.timeSpinBtn);
 	bool changeScale = false;
+
 	if (event->button == 1) //Left Mouse Click
 	{
-		double Y = event->y;
-		double X = event->x;
-
-		cout << "x:" << X << endl;
-		cout << "y:" << Y << endl;
-
-
+		cout << "x:" << event->x << endl;
+		cout << "y:" << event->y << endl;
 	}
 	
-	//gtk_widget_queue_draw(widget);
+	float selectedX = event->x;
+	float selectedY = event->y;
+	int numOfVars = 0;
+
+	FileIO::readLog_Init(0, numOfVars); //find out how many variables
+
+	string* varNames = new string[numOfVars]; //create array for variable names
+	FileIO::readLog_NextLine(0, varNames); //go get the variable names
+	float* lineData = new float[numOfVars];	 //create array for line data
+
+
+	//Find indexes for certain variables...
+	int xPtr = 0;
+	int yPtr = 0;
+	int bsIDptr = 0;
+	int timePtr = 0;
+	int ueIDptr = 0;
+
+	for (int i = 0; i < numOfVars; i++)
+	{
+		if (varNames[i] == "UE_LOC_X")
+			xPtr = i;
+		else if (varNames[i] == "UE_LOC_Y")
+			yPtr = i;
+		else if (varNames[i] == "BS_ID")
+			bsIDptr = i;
+		else if (varNames[i] == "Time")
+			timePtr = i;
+		else if (varNames[i] == "UE_ID")
+			ueIDptr = i;
+	}
+	int BScount = 0;
+
+
+	bool eof = false;
+	int myCtr = 0;
+
+	//read the very first entry for the given time and save the next position (which will be the next entry for the given time)
+	uint64_t nextPos = FileIO::readLog_LineAtPosition(0, lineData, FileIO::dict_time2pos[currentTime]);
+	float desiredX, desiredY;
+	float foundX, foundY;
+	bool matchFound = false;
+	do
+	{	
+		// get the UE location and convert to drawing coordinates
+		desiredX = roundf(GUIDataContainer::drawingCenterX + (lineData[xPtr] * GUIDataContainer::scaleFactor));
+		desiredY = roundf(GUIDataContainer::drawingCenterY - (lineData[yPtr] * GUIDataContainer::scaleFactor));
+		//check to see if it matches the location clicked...
+
+		if (desiredX > (selectedX - (selectedX / 100)) && desiredX < (selectedX + (selectedX / 100)))
+		{
+			if (desiredY > (selectedY - (selectedY / 100)) && desiredY < (selectedY + (selectedY / 100)))
+			{
+				matchFound = true;
+				foundX = lineData[xPtr];
+				foundY = lineData[yPtr];
+				break;
+			}
+		}
+
+
+		if (nextPos != NULL) //if it's not the eof
+			nextPos = FileIO::readLog_LineAtPosition(0, lineData, nextPos); //get next line for this time tick
+		else
+			eof = true;
+
+	} while (lineData[timePtr] == currentTime && !eof);
+
+	if (matchFound)
+	{
+		cout << "match found!" << endl << "coordinates are: " << endl;
+		cout << "foundX = " << foundX << endl << "foundY = " << foundY << endl;
+
+		
+		// show UE data via a context menu (see "Popup menu" at: https://zetcode.com/gui/gtk2/menusandtoolbars/)
+		string idTxt = "User ID :";
+		char* userIDstr = new char[idTxt.length() + sizeof(lineData[ueIDptr])];
+		sprintf(userIDstr, "%s\t%f", idTxt, lineData[ueIDptr]);
+		GtkWidget* menu_id = gtk_menu_item_new_with_label(userIDstr);
+		gtk_widget_show(menu_id);
+
+		GtkWidget* infoMenu = gtk_menu_new();
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), menu_id);
+
+		gtk_menu_popup(GTK_MENU(infoMenu), NULL, NULL, NULL, NULL, event->button, event->time);
+	}
+	else
+		cout << "no match found.." << endl;
+
 	return TRUE;
 }
 
@@ -1972,18 +2058,6 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 bool debug()
 {
 	cout << "I am in debug()!!!" << endl;
-
-	int numOfVars= 0;
-
-	FileIO::readLog_Init(0, numOfVars); //find out how many variables
-
-	string* varNames = new string[numOfVars]; //create array for variable names
-	FileIO::readLog_NextLine(0, varNames); //go get the variable names
-
-	float* lineData = new float[numOfVars];	 //create array for line data
-	FileIO::readLog_NextLine(0, lineData); //go get the next line data
-
-	
 
 
 	//this below code works
