@@ -38,9 +38,13 @@ struct
 	GtkWidget* RSRPthresh_range;
 } MiscWidgets;
 
+struct RGB
+{
+	double R, G, B;
+};
 
 // define structure to hold windows used for project
-struct
+struct 
 {
 	GtkWidget* DrawingWindow;
 	GtkWidget* SimParamWindow;
@@ -108,7 +112,7 @@ static void button_clicked(GtkWidget * widget, gpointer data);
 static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
-static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data); 
+static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* event, gpointer user_data); 
 static gboolean on_draw_event(GtkWidget * widget, cairo_t * cr, gpointer user_data);
 static gboolean do_drawScatterPlot(GtkWidget* widget, cairo_t* cr);
 static void window_size_allocate(GtkWidget* widget, GtkAllocation* allocation);

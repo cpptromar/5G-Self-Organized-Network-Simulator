@@ -4,16 +4,14 @@
 #include "ErrorTracer.h"
 #include "FileIO.h"
 #include <iostream>
+#include <ctime>
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
 
 using namespace std;
-
-
-	GtkWidget* alertLvlTxt, * congestionLvlTxt;
-
-
+GtkWidget* alertLvlTxt, * congestionLvlTxt;
+vector<RGB> colors;
 
 int main(int argc, char** argv)
 {
@@ -381,7 +379,7 @@ void setUpSimParamWindow()
 	
 	// pack self healing parameters into self-healing container
 	gtk_box_pack_start(GTK_BOX(selfHealingParamL), mobilityBuf, 0, 0, 15);
-	gtk_box_pack_start(GTK_BOX(selfHealingParamL), mobilityBufTxt, 0, 0, 15);
+	gtk_box_pack_start(GTK_BOX(selfHealingParamL), mobilityBufTxt, 0, 0, 0);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSize, 0, 0, 15);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamR), bufSizeTxt, 0, 0, 0);
 	gtk_box_pack_start(GTK_BOX(selfHealingParamL), comboLabel, 0, 0, 15);
@@ -453,6 +451,7 @@ void setUpSimParamWindow()
 	gtk_entry_set_text (GTK_ENTRY (simStartTxt), (gchar *)(std::to_string(GUIDataContainer::simStartNum).c_str()));
 	gtk_entry_set_text (GTK_ENTRY (simSaveNameTxt), (gchar *)(GUIDataContainer::simName.c_str()));
 	gtk_entry_set_text (GTK_ENTRY (bufSizeTxt), (gchar *)(std::to_string(GUIDataContainer::bufSizeInSeconds).c_str()));
+	gtk_entry_set_text(GTK_ENTRY(mobilityBufTxt), (gchar*)(std::to_string(GUIDataContainer::mobilityBufSizeInMinutes).c_str()));
 
 	// load color settings for the GUI from CSS file
 	GtkCssProvider* guiProvider = gtk_css_provider_new();
@@ -474,6 +473,7 @@ void setUpSimParamWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(bufSize), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(comboLabel), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(RSRPthresh), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(mobilityBuf), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 		// buttons		
 		gtk_style_context_add_provider(gtk_widget_get_style_context(backToS1Btn), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -490,6 +490,7 @@ void setUpSimParamWindow()
 		gtk_style_context_add_provider(gtk_widget_get_style_context(simStartTxt), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(simSaveNameTxt), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 		gtk_style_context_add_provider(gtk_widget_get_style_context(bufSizeTxt), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+		gtk_style_context_add_provider(gtk_widget_get_style_context(mobilityBufTxt), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
 		// title
 		gtk_style_context_add_provider(gtk_widget_get_style_context(networkParamTitle), GTK_STYLE_PROVIDER(guiProvider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -611,6 +612,17 @@ void setUpSimProgressWindow()
 
 void setUpScatterplotWindow()
 {
+	//generate random colors to use for different base stations when drawing scatterplot
+	//vector<RGB> colors; //This has to be global...
+	for (int i = 0; i < Simulator::getNumOfBSs(); i++)
+	{
+		// generate random numbers from 0.5 to 1 (rather than from 0 to 1, so that the colors aren't too dark..)
+		double r = ((double)rand() / RAND_MAX) * 0.5 + 0.5;
+		double g = ((double)rand() / RAND_MAX) * 0.5 + 0.5;
+		double b = ((double)rand() / RAND_MAX) * 0.5 + 0.5;
+		colors.push_back({ r, g, b });
+	}
+
 	GtkWidget* window, * darea;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -623,7 +635,7 @@ void setUpScatterplotWindow()
 
 	//g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event_test), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_test), NULL);
+	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_scatterplot), NULL);
 	//g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
 
 	gtk_widget_add_events(window, GDK_BUTTON_PRESS_MASK);
@@ -732,7 +744,7 @@ void setUpDebugWindow()
 
 	//g_signal_connect(G_OBJECT(darea), "draw", G_CALLBACK(on_draw_event_test), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_test), NULL);
+	g_signal_connect(window, "button-press-event", G_CALLBACK(mouse_clicked_scatterplot), NULL);
 	g_signal_connect(G_OBJECT(darea), "size-allocate", G_CALLBACK(window_size_allocate), NULL);
 	//g_signal_connect(window, "motion-notify-event", G_CALLBACK(mouse_moved), NULL);
 
@@ -1470,7 +1482,7 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 	return TRUE;
 }
 
-static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpointer user_data)
+static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* event, gpointer user_data)
 {
 	int currentTime = gtk_spin_button_get_value_as_int((GtkSpinButton*)MiscWidgets.timeSpinBtn);
 	bool changeScale = false;
@@ -1497,7 +1509,12 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 	int yPtr = 0;
 	int bsIDptr = 0;
 	int timePtr = 0;
+	int midPtr = 0;
+	int demandPtr = 0;
+	int realDRptr = 0;
 	int ueIDptr = 0;
+	int RSRPptr = 0;
+
 
 	for (int i = 0; i < numOfVars; i++)
 	{
@@ -1511,9 +1528,16 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 			timePtr = i;
 		else if (varNames[i] == "UE_ID")
 			ueIDptr = i;
-	}
-	int BScount = 0;
+		else if (varNames[i] == "UE_MID")
+			midPtr = i;
+		else if (varNames[i] == "DEMAND_DR (bits)")
+			demandPtr = i;
+		else if (varNames[i] == "REAL_DR (bits)")
+			realDRptr = i;
+		else if (varNames[i] == "RSRP (dBm)")
+			RSRPptr = i;
 
+	}
 
 	bool eof = false;
 	int myCtr = 0;
@@ -1541,7 +1565,6 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 			}
 		}
 
-
 		if (nextPos != NULL) //if it's not the eof
 			nextPos = FileIO::readLog_LineAtPosition(0, lineData, nextPos); //get next line for this time tick
 		else
@@ -1551,21 +1574,58 @@ static gboolean mouse_clicked_test(GtkWidget* widget, GdkEventButton* event, gpo
 
 	if (matchFound)
 	{
-		cout << "match found!" << endl << "coordinates are: " << endl;
-		cout << "foundX = " << foundX << endl << "foundY = " << foundY << endl;
-
-		
 		// show UE data via a context menu (see "Popup menu" at: https://zetcode.com/gui/gtk2/menusandtoolbars/)
+		char buffer[50];
+
 		string idTxt = "User ID :";
-		char* userIDstr = new char[idTxt.length() + sizeof(lineData[ueIDptr])];
-		sprintf(userIDstr, "%s\t%f", idTxt, lineData[ueIDptr]);
-		GtkWidget* menu_id = gtk_menu_item_new_with_label(userIDstr);
-		gtk_widget_show(menu_id);
+		sprintf(buffer, "%s\t\t\t%d", idTxt.c_str(), (int)lineData[ueIDptr]);	//we cast to int, because it doesn't have to be a float
+		GtkWidget* id = gtk_menu_item_new_with_label(buffer);
 
-		GtkWidget* infoMenu = gtk_menu_new();
-		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), menu_id);
+		string bsTxt = "Basestation ID :";
+		sprintf(buffer, "%s\t%d", bsTxt.c_str(), (int)lineData[bsIDptr]);
+		GtkWidget* bs = gtk_menu_item_new_with_label(buffer);
+		
+		string mobidTxt = "Mobility ID :";
+		sprintf(buffer, "%s\t\t%d", mobidTxt.c_str(), (int)lineData[midPtr]);
+		GtkWidget* mobid = gtk_menu_item_new_with_label(buffer);
 
-		gtk_menu_popup(GTK_MENU(infoMenu), NULL, NULL, NULL, NULL, event->button, event->time);
+		string locTxt = "Location (x,y) :";
+		sprintf(buffer, "%s\t\t(%.3f, %.3f)", locTxt.c_str(), lineData[xPtr], lineData[yPtr]);
+		GtkWidget* loc = gtk_menu_item_new_with_label(buffer);
+
+		string demTxt = "Demand (bits):";
+		sprintf(buffer, "%s\t\t\t%d", demTxt.c_str(), (int)lineData[demandPtr]);
+		GtkWidget* dem = gtk_menu_item_new_with_label(buffer);
+
+		string realTxt = "Real DR (bits):";
+		sprintf(buffer, "%s\t\t\t%d", realTxt.c_str(), (int)lineData[realDRptr]);
+		GtkWidget* real = gtk_menu_item_new_with_label(buffer);
+
+		string rsrpTxt = "RSRP (dBm) :";
+		sprintf(buffer, "%s\t\t%.3f", rsrpTxt.c_str(), lineData[RSRPptr]);
+		GtkWidget* rsrp = gtk_menu_item_new_with_label(buffer);
+
+		gtk_widget_show(id);
+		gtk_widget_show(bs);
+		gtk_widget_show(mobid);
+		gtk_widget_show(loc);
+		gtk_widget_show(dem);
+		gtk_widget_show(real);
+		gtk_widget_show(rsrp);
+
+		GtkWidget* infoMenu = gtk_menu_new();	// create context menu to hold UE info
+
+		//add info menu items to context menu
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), id);	
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), bs);
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), mobid);
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), loc);
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), dem);
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), real);
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), rsrp);
+		
+		//open menu at pointer
+		gtk_menu_popup_at_pointer(GTK_MENU(infoMenu), (GdkEvent*)event);
 	}
 	else
 		cout << "no match found.." << endl;
@@ -1938,20 +1998,15 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		GUIDataContainer::scaleFactor = 2 / ((double)GUIDataContainer::bsLen / (double)50);
 		GUIDataContainer::drawingCenterX = GUIDataContainer::drAreaWidth / 2;
 		GUIDataContainer::drawingCenterY = GUIDataContainer::drAreaHeight / 2;
-	}
-
-	// scaling factor was determined by running a few different sims with different lengths
-
+	} // scaling factor was determined by running a few different sims with different lengths
 
 
 	int numOfVars = 0;
 
-	FileIO::readLog_Init(0, numOfVars); //find out how many variables
-
-	string* varNames = new string[numOfVars]; //create array for variable names
-	FileIO::readLog_NextLine(0, varNames); //go get the variable names
-	float* lineData = new float[numOfVars];	 //create array for line data
-
+	FileIO::readLog_Init(0, numOfVars);			//find out how many variables
+	string* varNames = new string[numOfVars];	//create array for variable names
+	FileIO::readLog_NextLine(0, varNames);		//go get the variable names
+	float* lineData = new float[numOfVars];		//create array for line data
 
 	//Find indexes for certain variables...
 	int xPtr = 0;
@@ -1973,39 +2028,16 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		else if (varNames[i] == "UE_ID")
 			ueIDptr = i;
 	}
-	int BScount = 0;
-
 
 	bool eof = false;
-/*
-	while ((lineData[timePtr] != (float)time) && !eof) //if we are BEHIND the desired time...
-	{
-		//cout << "we don't want this line:" << endl;
-		//for (int i = 0; i < numOfVars; i++)
-		//{
-
-		//	if (lineData[i] < 0.0001 && lineData[i]>0)
-		//		printf("%.4e", lineData[i]);
-		//	else
-		//		printf("%.4f", lineData[i]);
-		//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
-		//		cout << ",";
-		//}
-		//cout << endl;
-		eof = FileIO::readLog_NextLine(0, lineData); //skip over that line
-	}
-
-	*/
-	int myCtr = 0;
 
 	//read the very first entry for the given time and save the next position (which will be the next entry for the given time)
 	uint64_t nextPos = FileIO::readLog_LineAtPosition(0, lineData, FileIO::dict_time2pos[time]); 
-	//if (lineData[timePtr] != (float)time)
-	//	cout	<< "lineData[timePtr] = " << lineData[timePtr] << endl 
-	//			<< "desired time = " << time << endl;
-	do
+	do 
 	{
 		//add dot for that UE
+		//give the BS's different colors!
+		
 		switch ((int)lineData[bsIDptr]) //give the BS's different colors!
 		{
 		case 0:
@@ -2029,8 +2061,8 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		case 6:
 			cairo_set_source_rgb(cr, 1, 0, 0);
 			break;
-		default:
-			cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+		default:	// use some of the randomly generated colors (generated in setUpScatterplotWindow())
+			cairo_set_source_rgb(cr, colors[(int)lineData[bsIDptr]].R, colors[(int)lineData[bsIDptr]].G, colors[(int)lineData[bsIDptr]].B);
 			break;
 		}
 
@@ -2046,65 +2078,15 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		else
 			eof = true;
 
-		//eof = FileIO::readLog_NextLine(0, lineData); //get the next line
-
 	} while (lineData[timePtr] == (float)time && !eof);
 
-
-	//cout << "I'm leaving drawScatterPlot()" << endl;
 	return TRUE;
 }
 
 bool debug()
 {
 	cout << "I am in debug()!!!" << endl;
-
-
-	//this below code works
-	//	//print the variable names in one line
-	//for (int i = 0; i < numOfVars; i++)
-	//{
-	//	cout << varNames[i];
-	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
-	//		cout << ",";
-	//}
-	//cout << endl;
-
-	//for (int i = 0; i < numOfVars; i++)
-	//{
-	//	
-	//	if (lineData[i] < 0.0001 && lineData[i]>0)
-	//		printf("%.4e", lineData[i]);
-	//	else
-	//		printf("%.4f", (double)lineData[i]);
-	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
-	//		cout << ",";
-	//}
-	//cout << endl;
-
-
-	//FileIO::readLog_NextLine(0, lineData); //go get the next line data
-
-	//for (int i = 0; i < numOfVars; i++)
-	//{
-	//	cout << varNames[i];
-	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
-	//		cout << ",";
-	//}
-	//cout << endl;
-
-	//for (int i = 0; i < numOfVars; i++)
-	//{
-
-	//	if (lineData[i] < 0.0001 && lineData[i]>0)
-	//		printf("%.4e", lineData[i]);
-	//	else
-	//		printf("%.4f", (double)lineData[i]);
-	//	if (i != numOfVars - 1)  //(don't put comma for last variable name)
-	//		cout << ",";
-	//}
-	//cout << endl;
-
+	
 	return true;
 }
 
