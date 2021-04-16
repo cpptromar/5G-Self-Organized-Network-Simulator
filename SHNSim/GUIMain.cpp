@@ -9,6 +9,7 @@
 #define M_PI  3.14159265358979323846264338327950288
 #endif
 
+//test edit!!
 using namespace std;
 GtkWidget* alertLvlTxt, * congestionLvlTxt;
 vector<RGB> colors;
@@ -527,11 +528,11 @@ void setUpPostMenuScreen()
 	GtkWidget* quitProg, * toAnalysis, * toScatter, * toLineGraph, * toData, * exportToCsv;
 	// instantiate buttons
 	quitProg = gtk_button_new_with_label("Quit");
-	toAnalysis = gtk_button_new_with_label("Analysis");
+	toAnalysis = gtk_button_new_with_label("Analysis (in Progress)");
 	toScatter = gtk_button_new_with_label("Scatter Plot");
-	toLineGraph = gtk_button_new_with_label("Congestion Level Graph");
-	toData = gtk_button_new_with_label("View Tabulated Data");
-	exportToCsv = gtk_button_new_with_label("Export to Excel");
+	toLineGraph = gtk_button_new_with_label("Congestion Level Graph (in Progress)");
+	toData = gtk_button_new_with_label("View Tabulated Data (in Progress)");
+	exportToCsv = gtk_button_new_with_label("Export to Excel (in Progress)");
 
 	// Set tooltips for buttons
 	gtk_widget_set_tooltip_text(quitProg, "Exit Program");
@@ -560,7 +561,7 @@ void setUpPostMenuScreen()
 	gtk_box_pack_start(GTK_BOX(btnContainer), toData, 1, 1, 10);
 	gtk_box_pack_start(GTK_BOX(btnContainer), toScatter, 1, 1, 10);
 	gtk_box_pack_start(GTK_BOX(btnContainer), toLineGraph, 1, 1, 10);
-	gtk_box_pack_start(GTK_BOX(btnContainer), exportToCsv, 1, 1, 10);
+	//gtk_box_pack_start(GTK_BOX(btnContainer), exportToCsv, 1, 1, 10);
 	gtk_box_pack_end(GTK_BOX(btnContainer), quitProg, 1, 1, 10);
 
 	// pack main containers into final master container
@@ -1487,11 +1488,11 @@ static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* eve
 	int currentTime = gtk_spin_button_get_value_as_int((GtkSpinButton*)MiscWidgets.timeSpinBtn);
 	bool changeScale = false;
 
-	if (event->button == 1) //Left Mouse Click
-	{
-		cout << "x:" << event->x << endl;
-		cout << "y:" << event->y << endl;
-	}
+	//if (event->button == 1) //Left Mouse Click
+	//{
+	//	cout << "x:" << event->x << endl;
+	//	cout << "y:" << event->y << endl;
+	//}
 	
 	float selectedX = event->x;
 	float selectedY = event->y;
@@ -1549,11 +1550,11 @@ static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* eve
 	bool matchFound = false;
 	do
 	{	
-		// get the UE location and convert to drawing coordinates
+		// get the UE location from CSV and convert to drawing coordinates
 		desiredX = roundf(GUIDataContainer::drawingCenterX + (lineData[xPtr] * GUIDataContainer::scaleFactor));
 		desiredY = roundf(GUIDataContainer::drawingCenterY - (lineData[yPtr] * GUIDataContainer::scaleFactor));
+		
 		//check to see if it matches the location clicked...
-
 		if (desiredX > (selectedX - (selectedX / 100)) && desiredX < (selectedX + (selectedX / 100)))
 		{
 			if (desiredY > (selectedY - (selectedY / 100)) && desiredY < (selectedY + (selectedY / 100)))
@@ -1594,11 +1595,11 @@ static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* eve
 		GtkWidget* loc = gtk_menu_item_new_with_label(buffer);
 
 		string demTxt = "Demand (bits):";
-		sprintf(buffer, "%s\t\t\t%d", demTxt.c_str(), (int)lineData[demandPtr]);
+		sprintf(buffer, "%s\t\t%d", demTxt.c_str(), (int)lineData[demandPtr]);
 		GtkWidget* dem = gtk_menu_item_new_with_label(buffer);
 
 		string realTxt = "Real DR (bits):";
-		sprintf(buffer, "%s\t\t\t%d", realTxt.c_str(), (int)lineData[realDRptr]);
+		sprintf(buffer, "%s\t\t%d", realTxt.c_str(), (int)lineData[realDRptr]);
 		GtkWidget* real = gtk_menu_item_new_with_label(buffer);
 
 		string rsrpTxt = "RSRP (dBm) :";
@@ -1628,7 +1629,13 @@ static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* eve
 		gtk_menu_popup_at_pointer(GTK_MENU(infoMenu), (GdkEvent*)event);
 	}
 	else
-		cout << "no match found.." << endl;
+	{
+		GtkWidget* noMatch = gtk_menu_item_new_with_label("No match found. Please try again.");
+		gtk_widget_show(noMatch);
+		GtkWidget* infoMenu = gtk_menu_new();	// create context menu to hold UE info
+		gtk_menu_shell_append(GTK_MENU_SHELL(infoMenu), noMatch);
+		gtk_menu_popup_at_pointer(GTK_MENU(infoMenu), (GdkEvent*)event);
+	}
 
 	return TRUE;
 }
@@ -1765,8 +1772,6 @@ bool addParams()
 		//comboBox
 		GUIDataContainer::algorithmVer = gtk_combo_box_get_active(GTK_COMBO_BOX(MiscWidgets.versionComboBox));	//get the active one...
 		GUIDataContainer::RSRPThreshold = gtk_range_get_value(GTK_RANGE(MiscWidgets.RSRPthresh_range));
-		cout << "Active ID = " << GUIDataContainer::algorithmVer << endl;
-		cout << "RSRP threshold = " << GUIDataContainer::RSRPThreshold << endl;
 
 		if(GUIDataContainer::bsLen < 5 || GUIDataContainer::bsLen > 20)
 		{
