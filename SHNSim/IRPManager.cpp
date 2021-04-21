@@ -402,7 +402,7 @@ void IRPManager::offloadUserKPIs() {
 		std::vector<size_t> OptimizingBSs;		// store BSs that need to be optimized (healthy and congested)
 
 		for (const auto& bss : IRPManager::networkStatuses) {
-			if (bss.bsStatus == IRP_BSStatus::normal)															//If the BaseStation is healthy
+			if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())		//If the BaseStation is healthy
 				OptimizingBSs.push_back(bss.bsID);
 			if (bss.bsStatus == IRP_BSStatus::congestion)														//Or if the BaseStation is congested
 				OptimizingBSs.push_back(bss.bsID);
