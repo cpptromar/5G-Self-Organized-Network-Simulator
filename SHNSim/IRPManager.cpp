@@ -293,6 +293,7 @@ void IRPManager::offloadUser()
 
 //New algorithm based on BaseStation Status and new KPIs
 void IRPManager::offloadUserKPIs() {
+	this->doneHealing = false;
 	// Heal the network first, then optimize afterwards
 	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();											// Calculate max distance to search for
 
@@ -395,14 +396,14 @@ void IRPManager::offloadUserKPIs() {
 	} //End Healing
 	
 	// Optimization
-	else { //doneHealing == true, start optimizing
+	if (this->doneHealing == true){ //doneHealing == true, start optimizing
 		//Get BaseStations
 		
 		//Group both helper base stations and congested base stations
 		std::vector<size_t> OptimizingBSs;		// store BSs that need to be optimized (healthy and congested)
 
 		for (const auto& bss : IRPManager::networkStatuses) {
-			if (bss.bsStatus == IRP_BSStatus::normal)															//If the BaseStation is healthy
+			if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())		//If the BaseStation is healthy
 				OptimizingBSs.push_back(bss.bsID);
 			if (bss.bsStatus == IRP_BSStatus::congestion)														//Or if the BaseStation is congested
 				OptimizingBSs.push_back(bss.bsID);

@@ -219,7 +219,10 @@ bool FileIO::fixDRTBLFile()
 	auto newDRTBL = std::ofstream{ drtblFP, std::ios::trunc };
 
 	for (auto& str : fileContainer)
-		newDRTBL << str << '\n';
+		if (str != fileContainer.back())
+			newDRTBL << str << '\n';
+		else
+			newDRTBL << str;
 
 	return true;
 }
