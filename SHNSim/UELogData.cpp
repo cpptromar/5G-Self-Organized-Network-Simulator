@@ -1,13 +1,14 @@
 #include "UELogData.h"
 
-UELogData::UELogData(uint32_t time, size_t bs_id, float bs_loc_x, float bs_loc_y, size_t ant_id, float ant_sec, size_t trx_id, float trx_x, float trx_y, 
+UELogData::UELogData(uint32_t time, size_t bs_id, size_t bs_status, float bs_loc_x, float bs_loc_y, size_t ant_id, float ant_sec, size_t trx_id, float trx_x, float trx_y, 
 	float trx_ang, size_t ue_id, size_t ue_mid, float ue_loc_x, float ue_loc_y, uint32_t max_dr, uint32_t demand_dr, uint32_t real_dr, float trans_pwr, float rec_pwr,
 	float rsrp, float rssi, float rsrq, float ddr)
 {
 	this->TIME = time;
+	this->BS_ID = bs_id;
+	this->BS_STATUS = bs_status;
 	this->BS_LOC_X = bs_loc_x;
 	this->BS_LOC_Y = bs_loc_y;
-	this->BS_ID = bs_id;
 	this->ANT_ID = ant_id;
 	this->ANT_SEC = ant_sec;
 	this->TRX_ID = trx_id;

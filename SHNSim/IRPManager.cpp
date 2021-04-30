@@ -122,6 +122,7 @@ void IRPManager::IRPDataCollection()
 				const auto& tr = ant.getConnectionInfo().getTransceivers()[ueTrPair.second];
 				const auto& usr = Simulator::getUE(ueTrPair.first);
 				const auto uer = bs.getUEDB().look_up(ueTrPair.first);
+				const auto bsStatus = (size_t)(this->networkStatuses[bs.getBSID()].bsStatus);
 				if (!uer)
 				{
 					ErrorTracer::error("IRPManager could not look up User Equipment but expected it to be in UEDB in IRPManager::IRPDataCollection()");
@@ -131,6 +132,7 @@ void IRPManager::IRPDataCollection()
 					const auto logData = UELogData(
 						Simulator::getEnvClock(),
 						bs.getBSID(),
+						bsStatus,
 						bs.getLoc().x,
 						bs.getLoc().y,
 						ant.getAntID(),

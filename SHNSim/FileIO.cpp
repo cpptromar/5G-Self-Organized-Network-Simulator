@@ -542,7 +542,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (FileIO::logRowCount == 0)
 	{
-		log << "Time,BS_ID,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
+		log << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
 		FileIO::incrementLogRowCount();
 	}
 
@@ -558,6 +558,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 	{
 		log << ue_ld.TIME << ','
 			<< ue_ld.BS_ID << ','
+			<< ue_ld.BS_STATUS << ','
 			<< ue_ld.BS_LOC_X << ','
 			<< ue_ld.BS_LOC_Y << ','
 			<< ue_ld.ANT_ID << ','
