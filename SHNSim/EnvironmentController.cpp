@@ -183,6 +183,10 @@ void EnvironmentController::UpdateUserLoc()
 				std::vector<int> BSmobileList;
 				BSmobileList.clear();
 
+				int totalAttractiveness = 0;
+				std::vector<int> AttractivenessList;
+				AttractivenessList.clear();
+
 				auto distBetweenUEandBS = float{};							// dist holder
 				auto newBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
 
@@ -201,12 +205,24 @@ void EnvironmentController::UpdateUserLoc()
 					{
 						newBS_ID = newBS.getBSID(); // store BS ID to BsmobileList vector
 						BSmobileList.push_back(newBS_ID);
+
+						totalAttractiveness = totalAttractiveness + newBS.getBaseStationAttractiveness();
+						AttractivenessList.push_back(newBS.getBaseStationAttractiveness());
 					}
 				}
 				//------------------------------Choose a random base station within range------------------------------
 
-				const auto BSrandNum = Simulator::rand() % BSmobileList.size();
-				newBS_ID = BSmobileList[BSrandNum];
+				auto BSrandNum = Simulator::rand() % totalAttractiveness;
+				for (int i = 0; i < BSmobileList.size(); i++)
+				{
+					if (BSrandNum < AttractivenessList[i])
+					{
+						newBS_ID = BSmobileList[i];
+						break;
+					}
+					BSrandNum = BSrandNum - AttractivenessList[i];
+				}
+				
 
 				//-----------------------------------------Update user location-----------------------------------------
 				//generate random point

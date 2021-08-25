@@ -18,7 +18,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < Simulator::getHealthyBSNumUsersPerAnt(); ue++)
+			for (auto ue = size_t{ 0 }; ue < (Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()); ue++)	
 			{
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -179,9 +179,17 @@ bool EnvironmentInitialization::generateNewENV()
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.
+
+	uint32_t AttractivenessArray[8] = { 10, 1, 1, 10, 8, 4, 1, 9 }; //hard coded for now
+	uint32_t PopulationDensityArray[8] = { 1, 2, 0, 1, 3, 1, 2, 3 }; // add to gui later
+
 	auto bsCount = size_t{ 0 };
-	for (const auto& bsLoc: BaseStationLocations)
-		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false });
+	int bscounta = 0;
+	int bscountp = 0;
+	for (const auto& bsLoc : BaseStationLocations)
+	{
+		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false, AttractivenessArray[bscounta++],PopulationDensityArray[bscountp++] });
+	}
 
 	Simulator::setIRPBufSizeInSeconds(GUIDataContainer::bufSizeInSeconds);
 	Simulator::setAlertState((float)(GUIDataContainer::alertState)/100.0f);
