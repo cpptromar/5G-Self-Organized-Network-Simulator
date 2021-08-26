@@ -144,6 +144,11 @@ void BaseStation::setFailedTrue()
 	this->failed = true;
 }
 
+void BaseStation::setFailedFalse()
+{
+	this->failed = false;
+}
+
 void BaseStation::setBaseStationAttractiveness(uint32_t newBaseStationAttractiveness)
 {
 	this->BaseStationAttractiveness = newBaseStationAttractiveness;

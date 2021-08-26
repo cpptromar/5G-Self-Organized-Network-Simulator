@@ -212,13 +212,13 @@ void EnvironmentController::UpdateUserLoc()
 				}
 				//------------------------------Choose a random base station within range------------------------------
 
-				auto BSrandNum = Simulator::rand() % totalAttractiveness;
+				int BSrandNum = Simulator::rand() % totalAttractiveness;
 				for (int i = 0; i < BSmobileList.size(); i++)
 				{
 					if (BSrandNum < AttractivenessList[i])
 					{
 						newBS_ID = BSmobileList[i];
-						break;
+						i = BSmobileList.size();
 					}
 					BSrandNum = BSrandNum - AttractivenessList[i];
 				}

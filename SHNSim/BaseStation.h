@@ -78,6 +78,8 @@ public:
 	//This sets the BS into failure mode, only used by the EnvironmentController
 	void setFailedTrue();
 
+	void setFailedFalse();
+
 	void setBaseStationAttractiveness(uint32_t NewBaseStationAttractiveness);
 
 	void setBaseStationPopulationDensity(uint32_t NewBaseStationpopulationDensity);

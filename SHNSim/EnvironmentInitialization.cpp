@@ -14,12 +14,15 @@
 	//Creates the UE records for BS in normal condition
 bool EnvironmentInitialization::setDefaultUsers()
 {
+	
 	for (auto& bs : Simulator::getBSList_m())
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < (Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()); ue++)	
+			for (auto ue = size_t{ 0 }; ue < bs.getBaseStationPopulationDensity(); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
+				std::cout << ue;
+				std::cout << "\n";
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
 				const auto rRadius = float{ radiusLimit(Simulator::randF() * Simulator::getBSRegionScalingFactor()) };
@@ -75,6 +78,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 				auto newUser = UserEquipment{ newLoc, currUserID, currMobilityID, possMaxDrsForUE, currentDemand };
 				Simulator::addUE(newUser);
 			}
+			
 		}
 	}
 
@@ -180,8 +184,8 @@ bool EnvironmentInitialization::generateNewENV()
 
 	//Initializes actual BaseStations.
 
-	uint32_t AttractivenessArray[8] = { 10, 1, 1, 10, 8, 4, 1, 9 }; //hard coded for now
-	uint32_t PopulationDensityArray[8] = { 1, 2, 0, 1, 3, 1, 2, 3 }; // add to gui later
+	uint32_t AttractivenessArray[8] = { 100, 1, 1, 1, 1, 1, 1, 1 }; //hard coded for now
+	uint32_t PopulationDensityArray[8] = { 1, 1, 50, 1, 1, 1, 1, 1 }; // add to gui later
 
 	auto bsCount = size_t{ 0 };
 	int bscounta = 0;
