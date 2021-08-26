@@ -39,10 +39,10 @@ bool EnvironmentController::checkBSFPValidity()
 		if(bsInfo.currentState > Simulator::AP_MaxCongestionState || bsInfo.endState > Simulator::AP_MaxCongestionState)
 			return ErrorTracer::error("\nBSFP(" + std::to_string(bsInfo.bsID) + ") INVALID DUE TO INCORRECT RISE/START TIMES in EnvironmentController::checkBSFPValidity()");
 
-		if (bsInfo.startTime < 0 || bsInfo.riseTime < 1)
+		if (bsInfo.startTime < 0 || bsInfo.riseTime < 1)														
 			return ErrorTracer::error("\nBSFP(" + std::to_string(bsInfo.bsID) + ") INVALID DUE TO INCORRECT RISE/START TIMES in EnvironmentController::checkBSFPValidity()");
 
-		if (bsInfo.endStatus == BSstatus::normal)
+		if (bsInfo.endStatus == BSstatus::normal)							
 		{
 			bsInfo.currentStatus = BSstatus::normal;
 			if (bsInfo.endState < 0 || bsInfo.endState >= Simulator::getDefaultCongestionState() - Simulator::AP_StateCushion)
@@ -65,27 +65,27 @@ bool EnvironmentController::checkBSFPValidity()
 	return true;
 }
 
-void EnvironmentController::calculateUEContrib()
+void EnvironmentController::calculateUEContrib()																// Calculates the UE Contribution into a global float variable
 {
-	EnvironmentController::averageUEStateContribution = float{ 1.0f };
-	for (const auto& ue : Simulator::getUEList())
+	EnvironmentController::averageUEStateContribution = float{ 1.0f };											// Sets the initial value of averageUEStateContribution to 1
+	for (const auto& ue : Simulator::getUEList())																// For loop to add demand from all the UE
 		EnvironmentController::averageUEStateContribution += ue.getDemand();
 
-	EnvironmentController::averageUEStateContribution /= Simulator::getNumOfUsers();
-	EnvironmentController::averageUEStateContribution /= Simulator::getBSMaxDR();
+	EnvironmentController::averageUEStateContribution /= Simulator::getNumOfUsers();							// Divide by the number of users
+	EnvironmentController::averageUEStateContribution /= Simulator::getBSMaxDR();								// Divide that value this time by BSMaxDR 
 }
 
-void EnvironmentController::updateCurrentStates()
+void EnvironmentController::updateCurrentStates()																// Updates the information of UE and BS states each tick 
 {
-	auto file_obj = std::ofstream{ FileIO::getProgramFP() + FileIO::getSimName() + ".EC.csv", std::ios::app };
-	file_obj << Simulator::getEnvClock() << ',';
-	for (auto& bsInfo : BSRegionControlInfo)
+	auto file_obj = std::ofstream{ FileIO::getProgramFP() + FileIO::getSimName() + ".EC.csv", std::ios::app };	// Establishes the file to be read
+	file_obj << Simulator::getEnvClock() << ',';																// Writes Time of the Simulation on .csv
+	for (auto& bsInfo : BSRegionControlInfo)																	// Goes through the set of failure parameters
 	{
-		if (bsInfo.currentStatus == BSstatus::failure)
+		if (bsInfo.currentStatus == BSstatus::failure)															// Sets current state if it is failing
 		{
 			bsInfo.currentState = 0.0f; //(float)BaseStationList[bsInfo.bsID].getDataRate() / (float)Simulator::getBSMaxDR();
 		}
-		else
+		else																									// Determines the state (not failure) by adding total demand and divide by BSMaxDR
 		{
 			auto totalDemand = float{ 0.0f };
 			for (const auto& ue : bsInfo.UEsInRegion)
@@ -93,32 +93,32 @@ void EnvironmentController::updateCurrentStates()
 			bsInfo.currentState = totalDemand / Simulator::getBSMaxDR();
 		}
 
-		file_obj << bsInfo.currentState << ',';
+		file_obj << bsInfo.currentState << ',';																	// Writes down the current state in .csv
 
 	}
-	file_obj << '\n';
-	file_obj.close();
+	file_obj << '\n';																							// Ends the line on .csv
+	file_obj.close();																							// Closes the .csv 
 }
 
-void EnvironmentController::channelFluctuation()
+void EnvironmentController::channelFluctuation()																// Function that changes the channel
 {
-	if (Simulator::randF() <= Simulator::AP_ProbChannelChanges)
+	if (Simulator::randF() <= Simulator::AP_ProbChannelChanges)													// Checks rand number with Arbitrary Parameter for randomness
 	{
-		Simulator::incrementCurrentChannel();
-		for(auto& ue : Simulator::getUEList_m())
+		Simulator::incrementCurrentChannel();																	// Increment the channel that has modulus to cycle through channels in circle
+		for(auto& ue : Simulator::getUEList_m())																// Change Demand of each UE based on the new channel													
 		{
 			const auto& maxDR = ue.getMaxDr();
-			if (ue.getDemand() > maxDR)
+			if (ue.getDemand() > maxDR)		
 				ue.setDemand(maxDR);
 		}
 	}
 }
 
-void EnvironmentController::DRFluctuation()
+void EnvironmentController::DRFluctuation()																		// Function that changes the data rates
 {
-	if (Simulator::randF() <= Simulator::AP_ProbAllUsersDRFluctuate)
+	if (Simulator::randF() <= Simulator::AP_ProbAllUsersDRFluctuate)											// Checks rand number and compares with Arbitrary Parameter for randomness
 	{
-		for (auto& ue : Simulator::getUEList_m())
+		for (auto& ue : Simulator::getUEList_m())																// Changes the Data Rate with some randomness
 		{
 			const auto DRFluctuation = static_cast<int>((Simulator::rand() % (2 * Simulator::AP_DemandFluctuation + 1)) - Simulator::AP_DemandFluctuation );
 			const auto&  maxDR = ue.getMaxDr();
@@ -256,14 +256,14 @@ void EnvironmentController::UpdateUserLoc()
 	}
 }
 
-void EnvironmentController::rampingState(BSFailureParams& bsfp, const int& timeRemaining)
+void EnvironmentController::rampingState(BSFailureParams& bsfp, const int& timeRemaining)	//Note: Look up rampingState in original paper from first group
 {
 	float diff = bsfp.endState - bsfp.currentState;
 
 	if (timeRemaining > 0)
 		diff /= timeRemaining;
 
-	modifyState(bsfp, diff);
+	modifyState(bsfp, diff);								
 }
 
 void EnvironmentController::restoreState(BSFailureParams& bsfp)
@@ -272,13 +272,13 @@ void EnvironmentController::restoreState(BSFailureParams& bsfp)
 	modifyState(bsfp, diff);
 }
 
-void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff)
+void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff) 				// Function to add or remove ue from BS and change the demands
 {
-	float remainingDiff = diff;
+	float remainingDiff = diff;																	// Calls self explanatory in this modifyState function
 
 	auto positiveSign = bool{ remainingDiff >= 0.0f };
 	const auto numUsers = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) / EnvironmentController::averageUEStateContribution) };
-	if (positiveSign)
+	if (positiveSign)															
 		EnvironmentController::addUsers(bsfp, numUsers, remainingDiff);
 	else
 		EnvironmentController::removeUsers(bsfp, numUsers, remainingDiff);
@@ -294,9 +294,9 @@ void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff
 
 void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32_t& amtData, float& diff)
 {
-	for (auto dataAdded = uint32_t{ 0 }; dataAdded < amtData; dataAdded++)
+	for (auto dataAdded = uint32_t{ 0 }; dataAdded < amtData; dataAdded++)	
 	{
-		if (bsfp.UEsInRegion.size() == 0)
+		if (bsfp.UEsInRegion.size() == 0)														
 			return;
 
 		const auto& user = bsfp.UEsInRegion[static_cast<size_t>(Simulator::rand() % bsfp.UEsInRegion.size())];
@@ -425,43 +425,45 @@ void EnvironmentController::removeUsers(BSFailureParams& bsfp, const uint32_t& n
 
 void EnvironmentController::ECUpdate()
 {
-	EnvironmentController::channelFluctuation();
-	EnvironmentController::DRFluctuation();
+																								// First two function used for randomness of data usage
+	EnvironmentController::channelFluctuation();												// Function that changes the channel 
+	EnvironmentController::DRFluctuation();														// Function that changes the data rates (DR)
 
 	if ((Simulator::getEnvClock() != 0))
-		if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 60)) == 0) //Based on the how often the user wants (in minutes), move user equipment location around.
-			EnvironmentController::UpdateUserLoc();
+		if ((Simulator::getEnvClock() % (Simulator::getmobilityBufSizeInMinutes() * 60)) == 0) // Based on the how often the user wants (in minutes), move user equipment location around.
+			EnvironmentController::UpdateUserLoc();								
 	
 	
-	updateCurrentStates();
+	updateCurrentStates();																		// Updates the information of the UE in the failing BS
 
-	for (auto& bsfp : BSRegionControlInfo)
-	{
-		if ((bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock()) && (bsfp.currentStatus == bsfp.endStatus))
+	for (auto& bsfp : BSRegionControlInfo)														// BSRegionControlInfo is vector of Failure Parameters
+	{																							// bsfp is therefore a vector of Failure Parameters from the for loop
+																								// Check BSFailureParams.h for info on the failure parameters
+		if ((bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock()) && (bsfp.currentStatus == bsfp.endStatus))	//The if statement means "(if the failing BS is set to reach a transition to an end state before the simulation ends) && (The current state value of the BS is equal to desired end state)"
 		{
 			if (
-				(bsfp.currentState > bsfp.endState + Simulator::AP_StateCushion
+				(bsfp.currentState > bsfp.endState + Simulator::AP_StateCushion					// AP = Abitrary Parameter
 				|| bsfp.currentState < bsfp.endState - Simulator::AP_StateCushion)
 				&& bsfp.endStatus != BSstatus::failure
 				)
-					restoreState(bsfp);
+					restoreState(bsfp);															// Adds/Removes users to help restore the state
 			else
 				continue;
 		}
-		else if (bsfp.startTime <= Simulator::getEnvClock())
+		else if (bsfp.startTime <= Simulator::getEnvClock())									// If BS started transition before or at the current clock time
 		{
-			if (bsfp.endStatus == BSstatus::failure)
+			if (bsfp.endStatus == BSstatus::failure)											// If the BS endstatus is failure
 			{
-				Simulator::getBS_m(bsfp.bsID).setFailedTrue();
-				bsfp.currentStatus = BSstatus::failure;
-				bsfp.currentState = 0.0f;
+				Simulator::getBS_m(bsfp.bsID).setFailedTrue();									// Set failed BS
+				bsfp.currentStatus = BSstatus::failure;											// Set current status to fail
+				bsfp.currentState = 0.0f;														// Set current state value for failure
 			}
-			else
+			else																				// If it began transition and is not in failed state
 			{
 				rampingState(bsfp, bsfp.startTime + bsfp.riseTime - Simulator::getEnvClock());
-				if (bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock())
+				if (bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock())					// If transition is set to finish at or before clock tick
 				{
-					bsfp.currentStatus = bsfp.endStatus;
+					bsfp.currentStatus = bsfp.endStatus;										// Change the current status to be end status
 
 					//if this is hit it means the EC could not induce the end state
 					//therefore the end state is set to whatever was acheivable, 
