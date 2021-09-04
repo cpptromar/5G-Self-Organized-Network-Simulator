@@ -1133,6 +1133,12 @@ static void button_clicked_exp(GtkWidget* widget, gpointer data)
 	goToSimParams();
 }
 
+static void button_clicked12(GtkWidget *widget, gpointer data)
+{
+	g_print("%s\n", gtk_entry_get_text(GTK_ENTRY(data)));
+	g_print("Base Station: %d\n", GUIDataContainer::selectedTile);
+}
+
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data)
 {
 	if (event->type == GDK_MOTION_NOTIFY)
@@ -1282,6 +1288,29 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
 				}
 				
+			
+				
+				GtkWidget *entry, *button, *hbox, *basestationLabel;
+				GtkWidget *cellparameters = gtk_window_new(GTK_WINDOW_TOPLEVEL); 		//create cellparameters, define as a new window
+				
+				//gtk_window_set_title(GTK_WINDOW(cellparameters), "Hello");					//none of these work?
+				//g_signal_connect(cellparameters,"delete-event",G_CALLBACK(gtk_main_quit),NULL); 
+				//g_signal_connect(cellparameters, "destroy",G_CALLBACK(gtk_main_quit),NULL);
+				basestationLabel = gtk_label_new(to_string(GUIDataContainer::selectedTile).c_str());
+				//gtk_label_set_text(GTK_LABEL(basestationLabel), to_string(GUIDataContainer::selectedTile).c_str());
+
+				entry = gtk_entry_new();
+				button = gtk_button_new_with_label("write text");
+				g_signal_connect(button,"clicked",G_CALLBACK(button_clicked12), entry);
+				hbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,0);
+				gtk_box_pack_start(GTK_BOX(hbox),entry,0,0,0);
+				gtk_box_pack_start(GTK_BOX(hbox),button,0,0,0);
+				gtk_box_pack_start(GTK_BOX(hbox),basestationLabel,0,0,0);
+
+				//gtk_window_set_position(GTK_WINDOW(cellparameters), GTK_WIN_POS_CENTER);					
+				gtk_container_set_border_width(GTK_CONTAINER(cellparameters), 10);
+				gtk_container_add(GTK_CONTAINER(cellparameters), hbox);
+				gtk_widget_show_all(cellparameters);
 			}
 		}
 	}
