@@ -19,10 +19,8 @@ bool EnvironmentInitialization::setDefaultUsers()
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < bs.getBaseStationPopulationDensity(); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
+			for (auto ue = size_t{ 0 }; ue < (Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
-				std::cout << ue;
-				std::cout << "\n";
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
 				const auto rRadius = float{ radiusLimit(Simulator::randF() * Simulator::getBSRegionScalingFactor()) };
@@ -184,8 +182,8 @@ bool EnvironmentInitialization::generateNewENV()
 
 	//Initializes actual BaseStations.
 
-	uint32_t AttractivenessArray[8] = { 100, 1, 1, 1, 1, 1, 1, 1 }; //hard coded for now
-	uint32_t PopulationDensityArray[8] = { 1, 1, 50, 1, 1, 1, 1, 1 }; // add to gui later
+	uint32_t AttractivenessArray[8] = { 10, 5, 15, 10, 1, 1, 1, 1 }; //hard coded for now
+	uint32_t PopulationDensityArray[8] = { 1, 1, 1, 1, 1, 1, 1, 1 }; // add to gui later
 
 	auto bsCount = size_t{ 0 };
 	int bscounta = 0;

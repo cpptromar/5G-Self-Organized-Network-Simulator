@@ -311,7 +311,7 @@ const size_t& Simulator::getNumberOfTransceivers()
 
 const float& Simulator::getDistanceBetweenTransceivers()
 {
-	return Simulator::distanceBetweenTransceivers;
+return Simulator::distanceBetweenTransceivers;
 }
 
 const uint32_t& Simulator::getBSMaxDR()
@@ -416,6 +416,7 @@ bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE_ID, const Coord<
 	//Change ACTUAL UE location
 	auto &UE = Simulator::getUE_m(UE_ID);
 	UE.setLoc(newloc);
+	
 	
 	//Change RECORDS version of UE location
 	if (Simulator::getBS_m(bsOrigin).moveUE(UE_ID, newloc))

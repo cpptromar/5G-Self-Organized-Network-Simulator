@@ -223,7 +223,7 @@ void EnvironmentController::UpdateUserLoc()
 					BSrandNum = BSrandNum - AttractivenessList[i];
 				}
 				
-
+			
 				//-----------------------------------------Update user location-----------------------------------------
 				//generate random point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -234,9 +234,13 @@ void EnvironmentController::UpdateUserLoc()
 				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
 				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(newBS_ID).getLoc().x, loc.y + Simulator::getBS(newBS_ID).getLoc().y };
 				
+				
+				
 				//Move user
-				if (newBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
+				if (newBS_ID < Simulator::getNumOfBSs() 
+					&& Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc) )
 				{
+					
 					prevAmount -= 1;
 				}
 
@@ -278,11 +282,11 @@ void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff
 
 	auto positiveSign = bool{ remainingDiff >= 0.0f };
 	const auto numUsers = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) / EnvironmentController::averageUEStateContribution) };
-	if (positiveSign)
+	/*if (positiveSign)
 		EnvironmentController::addUsers(bsfp, numUsers, remainingDiff);
 	else
 		EnvironmentController::removeUsers(bsfp, numUsers, remainingDiff);
-
+	*/
 	positiveSign = (remainingDiff >= 0.0f);
 	const auto amtData = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) * Simulator::getBSMaxDR()) };
 	if (positiveSign)
