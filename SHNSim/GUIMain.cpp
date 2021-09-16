@@ -307,7 +307,7 @@ void setUpSimParamWindow()
 	// ================= Version ComboBox
 	comboLabel = gtk_label_new("Algorithm Version");
 	verCombo = gtk_combo_box_text_new(); //https://developer.gnome.org/gnome-devel-demos/stable/combobox.c.html.en
-	const char* versions[] = {"[0] Old", "[1] New (2021)"};	//list the available algorithm versions... ORDER MATTERS!!!!
+	const char* versions[] = {"[0] Old", "[1] New (2021)", "[2] No Self-Healing"};	//list the available algorithm versions... ORDER MATTERS!!!!
 	for (int i = 0; i < sizeof(versions) / sizeof(versions[0]); i++)	//the division of sizeof()/sizeof() simply returns how many elements in array
 		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(verCombo), versions[i]);
 	gtk_combo_box_set_active(GTK_COMBO_BOX(verCombo), 1);	//set [1] to be default
@@ -863,7 +863,7 @@ void closeWindows()
 //Here is the code that provides the functionality of the GUI
 ////////////////////////////////////////////////////////////////////////
 
-// Initiates the simulation and once the progress bar has finished it move to a post menu screen for diagnostics
+// Initiates the simulation and once the progress bar has finished it moves to a post menu screen for diagnostics
 void runSim()
 {
 	// call a function to add values from entry boxes to parameter struct
