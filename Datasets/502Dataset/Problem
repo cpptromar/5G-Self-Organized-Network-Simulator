@@ -1,0 +1,2 @@
+Github does not allow you to upload files larger than 25mb, but each 1000 tick simulation is at least 40mb. 
+Datasets can either not be stored on Github or this limit will have to be raised somehow
