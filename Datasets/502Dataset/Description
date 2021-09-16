@@ -1,0 +1,11 @@
+These CSV files correlate to a specifc setup of the simulator. There are 7 base stations organized in the orginary congiguration
+Base Station 0 is failing and Stations 2, 5 are user congested
+The density of station 0 is 9 and Stations 2, 5 have densities of 7 while every other station has a density of 3
+This is to represent the justification for the Stations being congested
+
+In Uniform Attractiveness, all 7 base stations have the same attractiveness value
+In Healthy Attractiveness, the healthy base stations have an attravtiveness value tripe that of the congested/failing base stations
+In Congested Attractiveness, the congested/failing base stations have an attractiveness value triple that of the healthy base stations
+
+There is currently an error in the simulator where users that were initialized on a congested base station would, after moving, not reconnect to the proper basestation
+This error will be fixed in time, but this dataset is heavily affected by this error
