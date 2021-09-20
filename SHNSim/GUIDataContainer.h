@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include <vector>
 #include <iostream>
 #include <string>
@@ -24,6 +24,8 @@ struct GUIDataContainer
 	static std::vector<int> riseTime;
 	static std::vector<int> endState;	
 
+	static uint32_t AttractivenessArray[8]; 
+	static uint32_t PopulationDensityArray[8];
  	
 	// stage 2 parameters
 	static int bsLen;
@@ -40,6 +42,7 @@ struct GUIDataContainer
 	static uint32_t algorithmVer;													//algorithm version for self healing and whatnot...
 	static float RSRPThreshold;
 	static uint32_t mobilityBufSizeInMinutes;										//User mobility buffer size
+
 
 	// analysis window variables
 	static int spinnerTimeVal;

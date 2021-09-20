@@ -36,12 +36,13 @@ private:
 	std::vector<Antenna> BSAntennae;
 	UEDataBase userRecords;
 	std::vector<Transmission> outgoingTransmissions;
-
+	uint32_t BaseStationAttractiveness;
+	uint32_t BaseStationPopulationDensity;
 
 public:
 	//constructors & destructors *******************************
 	BaseStation() = delete;
-	BaseStation(const size_t& i, const Coord<float>& loc, const bool failed);
+	BaseStation(const size_t& i, const Coord<float>& loc, const bool failed, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity);
 
 	//initTransceivers initializes the antennae and transceivers, 
 	//this must be called when initializing a NEW BaseStation, which only happens in
@@ -59,6 +60,8 @@ public:
 	const Coord<float>& getLoc() const;
 	const bool& getFailed() const;
 	const uint32_t& getDataRate() const;
+	const uint32_t& getBaseStationAttractiveness() const;
+	const uint32_t& getBaseStationPopulationDensity() const;
 
 	//gives direct mutable access to the designated Antenna
 	Antenna& getAntenna(const size_t& ant);
@@ -74,6 +77,12 @@ public:
 
 	//This sets the BS into failure mode, only used by the EnvironmentController
 	void setFailedTrue();
+
+	void setFailedFalse();
+
+	void setBaseStationAttractiveness(uint32_t NewBaseStationAttractiveness);
+
+	void setBaseStationPopulationDensity(uint32_t NewBaseStationpopulationDensity);
 
 	//adds a UERecord to the BS
 	void addUERecord(const UERecord& uer);

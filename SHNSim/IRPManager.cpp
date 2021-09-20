@@ -102,6 +102,11 @@ void IRPManager::IRPManagerUpdate()
 		case 1:
 			IRPManager::offloadUserKPIs(); //Run ours?
 			break;
+		case 2:
+			std::cout << "No Self-Healing";
+			IRPManager::finishMovingUsers();
+			std::cout << "\n";
+			break;
 		default:
 			ErrorTracer::error("IRPManager::IRPManagerUpdate(): Error choosing algorithm");
 			break;
@@ -421,7 +426,9 @@ void IRPManager::offloadUserKPIs() {
 			auto RSRPUser = std::vector<std::pair<size_t, float>>();											//Make vector pair
 			RSRPUser.reserve(disabledBsRecords.size());															//Reserve memory for the vector
 			for (const auto& uer : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
+			{
 				RSRPUser.push_back(std::make_pair((*uer).userID, (*uer).getRSRP()));							//Add their ID and RSRP to the vector pair
+			}
 
 			//2. Sort User Equipment from worst RSRP (front) to best RSRP (back). This will let us prioritize users furthest away from the BaseStation first
 			std::sort(RSRPUser.begin(), RSRPUser.end(),															//Sort from beginning of vector pair to the end
@@ -471,4 +478,65 @@ void IRPManager::offloadUserKPIs() {
 			}//end of transferring all UEs outside of RSRP threshold range
 		}//Exit BaseStation Loop
 	}//Exit optimization section
+}
+
+void IRPManager::finishMovingUsers()
+{
+	std::vector<size_t> BaseStations;		// vector of all base stations
+
+	for (const auto& bs : IRPManager::networkStatuses) 
+	{
+			BaseStations.push_back(bs.bsID);	// add basestations to vector
+	}
+	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();
+
+	for (const auto& CurrentBaseStation : IRPManager::networkStatuses)
+	{
+		size_t CurrentBaseStation_ID = CurrentBaseStation.bsID;								//get base station ID
+
+		//1. Collect user information and make a vector list (RSRPUser)
+		const UEDataBase& BaseStationRecords = Simulator::getBS(CurrentBaseStation_ID).getUEDB();						//Get UEDataBase from the current BaseStation
+
+		auto Users = std::vector<size_t>();											//Make vector of all users
+		Users.reserve(BaseStationRecords.size());															//Reserve memory for the vector
+		for (const auto& uer : BaseStationRecords.readDB())													//For each UE in the DataBase found earlier,
+		{
+			Users.push_back((*uer).userID);							//Add their ID to the vector
+		}
+
+		while (Users.size() > 0)
+		{																	//Keep removing users from vector list until empty
+			//4a. Gather User information
+			const size_t UserID = Users.back();													//The User ID of this user
+
+																								
+			const Coord<float> offloadUserLoc = (*(BaseStationRecords.look_up(UserID))).loc;				//The Location of this user
+
+			//4b. Calculate which BaseStation is the closest to offload the UE to
+			float minDistBetweenUEandBS = { 100000 };													//Will be used later to keep track of the closest BaseStation
+			float distBetweenUEandBS = {};																//Actual distance between UE and BS
+			size_t closestBS_ID = { Simulator::getNumOfBSs() };											//BaseStation ID number of the closest BaseStation
+			Users.pop_back();																		//Remove user from sorted RSRP vector list
+
+			//4c. Compare the distance between each BaseStation and the current User Equipment (using iterators)
+			for (const auto& bs : BaseStations)														//For each BaseStation in the BS vector list
+			{
+				const Coord<float>& helperBSLoc = Simulator::getBS(bs).getLoc();						//Get location of the BS
+
+				//Distance formula = sqrt((y2-y1)^2 + (x2-x1)^2)										//Calculate distance between UE and BS
+				distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y))
+					+ ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
+
+				//If the helper BaseStation is within searching distance && it is closer than the previously found distance,
+				if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+				{
+					closestBS_ID = bs;																	//Store the ID of that BS
+					minDistBetweenUEandBS = distBetweenUEandBS;											//Store the distance between that BS and the current UE
+				}
+			}
+
+			//4d. Add the user to the to the closest BS and remove it from the original BS where it is at
+			Simulator::transferUE(CurrentBaseStation_ID, UserID, closestBS_ID, 0);									//Transfer UE
+		}
+	}
 }

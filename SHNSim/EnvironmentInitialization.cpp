@@ -4,21 +4,24 @@
 #include "EnvironmentInitialization.h"
 #include "Antenna.h"
 #include "GUIDataContainer.h"
+#include "GUIMain.h"
 #include "DataRateTable.h"
 #include "EnvironmentController.h"
 #include "FileIO.h"
 #include "ErrorTracer.h"
 #include <time.h>
 
+
 //Gets the normal amount of users
 	//Creates the UE records for BS in normal condition
 bool EnvironmentInitialization::setDefaultUsers()
 {
+	
 	for (auto& bs : Simulator::getBSList_m())
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < Simulator::getHealthyBSNumUsersPerAnt(); ue++)
+			for (auto ue = size_t{ 0 }; ue < (Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -75,6 +78,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 				auto newUser = UserEquipment{ newLoc, currUserID, currMobilityID, possMaxDrsForUE, currentDemand };
 				Simulator::addUE(newUser);
 			}
+			
 		}
 	}
 
@@ -179,9 +183,15 @@ bool EnvironmentInitialization::generateNewENV()
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.
+
 	auto bsCount = size_t{ 0 };
-	for (const auto& bsLoc: BaseStationLocations)
-		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false });
+	int bscounta = 0;
+	int bscountp = 0;
+	for (const auto& bsLoc : BaseStationLocations)
+	{
+		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false, GUIDataContainer::AttractivenessArray[bscounta++], GUIDataContainer::PopulationDensityArray[bscountp++] });
+	}
+
 
 	Simulator::setIRPBufSizeInSeconds(GUIDataContainer::bufSizeInSeconds);
 	Simulator::setAlertState((float)(GUIDataContainer::alertState)/100.0f);
@@ -247,6 +257,7 @@ bool EnvironmentInitialization::generateNewENV()
 	Simulator::getIRPManager_m().InitializeIRPManager();
 
 	return true;
+	
 }
 
 

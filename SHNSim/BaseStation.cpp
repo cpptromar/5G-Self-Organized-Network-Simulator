@@ -16,7 +16,7 @@ const float BaseStation::calculateTransmittedPower(const float& simulationBandwi
 	
 }
 
-BaseStation::BaseStation(const size_t& i, const Coord<float>& loc, const bool failed)
+BaseStation::BaseStation(const size_t& i, const Coord<float>& loc, const bool failed, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity)
 {
 	this->bsID = i;
 	this->loc = loc;
@@ -24,7 +24,8 @@ BaseStation::BaseStation(const size_t& i, const Coord<float>& loc, const bool fa
 	this->BSAntennae = std::vector<Antenna>(Simulator::getNumberOfAntennae());
 	this->userRecords = UEDataBase();
 	this->failed = failed;
-
+	this->BaseStationAttractiveness = BaseStationAttractiveness;
+	this->BaseStationPopulationDensity = BaseStationPopulationDensity;
 	initTransceivers();
 }
 
@@ -37,6 +38,9 @@ BaseStation::BaseStation(BaseStation&& rv) noexcept
 	this->BSAntennae = std::move(rv.BSAntennae);
 	this->userRecords = std::move(rv.userRecords);
 	this->outgoingTransmissions = std::move(rv.outgoingTransmissions);
+	this->BaseStationAttractiveness = std::move(rv.BaseStationAttractiveness);
+	this->BaseStationPopulationDensity = std::move(rv.BaseStationPopulationDensity);
+
 }
 
 void BaseStation::initTransceivers()
@@ -140,6 +144,21 @@ void BaseStation::setFailedTrue()
 	this->failed = true;
 }
 
+void BaseStation::setFailedFalse()
+{
+	this->failed = false;
+}
+
+void BaseStation::setBaseStationAttractiveness(uint32_t newBaseStationAttractiveness)
+{
+	this->BaseStationAttractiveness = newBaseStationAttractiveness;
+}
+
+void BaseStation::setBaseStationPopulationDensity(uint32_t newBaseStationPopulationDensity)
+{
+	this->BaseStationPopulationDensity = newBaseStationPopulationDensity;
+}
+
 const size_t& BaseStation::getBSID() const
 {
 	return this->bsID;
@@ -158,6 +177,14 @@ const bool& BaseStation::getFailed() const
 const uint32_t& BaseStation::getDataRate() const
 {
 	return this->dataRate;
+}
+const uint32_t& BaseStation::getBaseStationAttractiveness() const
+{
+	return this->BaseStationAttractiveness;
+}
+const uint32_t& BaseStation::getBaseStationPopulationDensity() const
+{
+	return this->BaseStationPopulationDensity;
 }
 
 //FLAG --needs proper failure containment

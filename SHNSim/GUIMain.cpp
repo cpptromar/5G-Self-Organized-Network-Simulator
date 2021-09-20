@@ -856,6 +856,7 @@ void closeWindows()
 	gtk_widget_hide_on_delete(WINDOWS.SimParamWindow);
 	gtk_widget_hide_on_delete(WINDOWS.AnalysisWindow);
 	gtk_widget_hide_on_delete(WINDOWS.ScatterplotWindow);
+	gtk_widget_hide_on_delete(WINDOWS.CellParameters);
 
 }
 
@@ -1135,8 +1136,34 @@ static void button_clicked_exp(GtkWidget* widget, gpointer data)
 
 static void button_clicked12(GtkWidget *widget, gpointer data)
 {
-	g_print("%s\n", gtk_entry_get_text(GTK_ENTRY(data)));
-	g_print("Base Station: %d\n", GUIDataContainer::selectedTile);
+	GUIDataContainer::AttractivenessArray[GUIDataContainer::selectedTile] = stoi(gtk_entry_get_text(GTK_ENTRY(data)));
+}
+
+static void button_clicked13(GtkWidget *widget, gpointer data)
+{
+	GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile] = stoi(gtk_entry_get_text(GTK_ENTRY(data)));
+}
+
+static void button_clicked14(GtkWidget *widget)
+{
+	GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
+				// rotate from healthy -> user congested -> demand congested -> failing
+				if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
+				{
+					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
+				}
+				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 1)
+				{
+					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
+				}
+				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 2)
+				{
+					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
+				}
+				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
+				{
+					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+				}
 }
 
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data)
@@ -1267,50 +1294,55 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 					changeScale = true;
 				}
 			}
-			else	// If inside the hexagon, cycle states
+			else	// If inside the hexagon, open cell parameter window in top left corner
 			{	
-				GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
-				// rotate from healthy -> user congested -> demand congested -> failing
-				if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 1)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 2)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
-				}
-				else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
-				{
-					GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
-				}
-				
-			
-				
-				GtkWidget *entry, *button, *hbox, *basestationLabel;
-				GtkWidget *cellparameters = gtk_window_new(GTK_WINDOW_TOPLEVEL); 		//create cellparameters, define as a new window
-				
-				//gtk_window_set_title(GTK_WINDOW(cellparameters), "Hello");					//none of these work?
-				//g_signal_connect(cellparameters,"delete-event",G_CALLBACK(gtk_main_quit),NULL); 
-				//g_signal_connect(cellparameters, "destroy",G_CALLBACK(gtk_main_quit),NULL);
-				basestationLabel = gtk_label_new(to_string(GUIDataContainer::selectedTile).c_str());
-				//gtk_label_set_text(GTK_LABEL(basestationLabel), to_string(GUIDataContainer::selectedTile).c_str());
+				//hide the previous cellparam window
+				gtk_widget_hide_on_delete(WINDOWS.CellParameters);
 
-				entry = gtk_entry_new();
-				button = gtk_button_new_with_label("write text");
-				g_signal_connect(button,"clicked",G_CALLBACK(button_clicked12), entry);
-				hbox=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,0);
-				gtk_box_pack_start(GTK_BOX(hbox),entry,0,0,0);
-				gtk_box_pack_start(GTK_BOX(hbox),button,0,0,0);
-				gtk_box_pack_start(GTK_BOX(hbox),basestationLabel,0,0,0);
-
-				//gtk_window_set_position(GTK_WINDOW(cellparameters), GTK_WIN_POS_CENTER);					
+				//Create all necessary widgets for top-left cell parameter box: 
+				GtkWidget *entryAttractiveness, *buttonAttractiveness, *hboxAttractiveness, *basestationLabel;
+				GtkWidget *entryDensity, *buttonDensity, *hboxDensity, *buttonState;
+				//create cellparameters, define as a new window
+				GtkWidget *cellparameters = gtk_window_new(GTK_WINDOW_TOPLEVEL); 		
 				gtk_container_set_border_width(GTK_CONTAINER(cellparameters), 10);
-				gtk_container_add(GTK_CONTAINER(cellparameters), hbox);
+
+				g_signal_connect(cellparameters, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
+
+				WINDOWS.CellParameters = cellparameters;
+
+				//define the label at the top
+				basestationLabel = gtk_label_new(("Base Station: " + to_string(GUIDataContainer::selectedTile)).c_str());
+				//basestationLabel = gtk_label_new("Base Station: ");
+
+				//set up the table containing the entry fields and submission buttons
+				GtkWidget *tableCellParameters = gtk_table_new(5,2,0);
+				entryAttractiveness = gtk_entry_new();
+				buttonAttractiveness = gtk_button_new_with_label("Attractiveness");
+				entryDensity = gtk_entry_new();
+				buttonDensity = gtk_button_new_with_label("Density");
+				buttonState = gtk_button_new_with_label("Cell State Toggle");
+
+				gtk_table_attach(GTK_TABLE(tableCellParameters),basestationLabel,0,2,0,1,GTK_FILL,GTK_FILL,0,15);
+				gtk_table_attach(GTK_TABLE(tableCellParameters),entryAttractiveness,0,1,1,2,GTK_FILL,GTK_FILL,0,0);
+				gtk_table_attach(GTK_TABLE(tableCellParameters),buttonAttractiveness,1,2,1,2,GTK_FILL,GTK_FILL,0,0);
+				gtk_table_attach(GTK_TABLE(tableCellParameters),entryDensity,0,1,2,3,GTK_FILL,GTK_FILL,0,0);
+				gtk_table_attach(GTK_TABLE(tableCellParameters),buttonDensity,1,2,2,3,GTK_FILL,GTK_FILL,0,0);
+				gtk_table_attach(GTK_TABLE(tableCellParameters),buttonState,0,2,3,4,GTK_FILL,GTK_FILL,0,0);
+				
+				gtk_entry_set_text (GTK_ENTRY (entryAttractiveness), (gchar *)(std::to_string(GUIDataContainer::AttractivenessArray[GUIDataContainer::selectedTile]).c_str()));
+				gtk_entry_set_text (GTK_ENTRY (entryDensity), (gchar *)(std::to_string(GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile]).c_str()));
+				
+				//Set up button clicks
+				g_signal_connect(buttonAttractiveness,"clicked",G_CALLBACK(button_clicked12), entryAttractiveness);
+				g_signal_connect(buttonDensity,"clicked",G_CALLBACK(button_clicked13), entryDensity);
+				g_signal_connect(buttonState, "clicked", G_CALLBACK(button_clicked14), NULL);
+
+				//Add the table to the window; show the window	
+				gtk_container_add(GTK_CONTAINER(cellparameters), tableCellParameters);
 				gtk_widget_show_all(cellparameters);
+
+				
+				
 			}
 		}
 	}
@@ -1794,6 +1826,8 @@ bool addParams()
 		GUIDataContainer::alertState = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.alertEntry)));
 		GUIDataContainer::congestionState = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.congestionEntry)));
 		GUIDataContainer::mobilityBufSizeInMinutes = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.mobilityBuffer)));
+
+		//attractiveness and density here?
 		
 		// string
 		GUIDataContainer::simName = gtk_entry_get_text(GTK_ENTRY(entryBoxes.simulationSaveName));

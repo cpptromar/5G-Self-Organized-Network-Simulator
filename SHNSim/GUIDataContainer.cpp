@@ -17,6 +17,8 @@ std::vector<int> GUIDataContainer::startTime;
 std::vector<int> GUIDataContainer::riseTime;
 std::vector<int> GUIDataContainer::endState;	
 
+uint32_t GUIDataContainer::AttractivenessArray[8] = {1, 1, 1, 1, 1, 1, 1, 1}; 
+uint32_t GUIDataContainer::PopulationDensityArray[8] = {1, 1, 1, 1, 1, 1, 1, 1};
 	
 // stage 2 parameters
 int GUIDataContainer::bsLen = 10;							//base station length in METERS?? Dr. Omar and Dr. Kets want it like this
@@ -33,6 +35,7 @@ int GUIDataContainer::alertState = 80;
 uint32_t GUIDataContainer::algorithmVer = 1;				//default to new version (2021 version)
 float GUIDataContainer::RSRPThreshold = -85.0f;				//default to -85 dBm
 uint32_t GUIDataContainer::mobilityBufSizeInMinutes = 5;	//default 5 minutes
+
 
 // analysis window variables
 int spinnerTimeVal = 0;

@@ -10,14 +10,20 @@
 
 #include "Setup.h"
 #include "GUIDataContainer.h"
+#include "Simulator.h"
+#include "BaseStation.h"
 #include "ErrorTracer.h"
 
 using namespace std;
 
 class GUIMain //class to hold functions that can be used in the simulator code so that it can interact with GUI code
 {
+private:
+	//Arrays for attractiveness & density
+
 public:
 	static void doProgressBar(double frac, bool fin); //updates progressbar
+
 };
 
 
@@ -54,6 +60,7 @@ struct
 	GtkWidget* ProgressWindow;
 	GtkWidget* AnalysisWindow;
 	GtkWidget* ScatterplotWindow;
+	GtkWidget* CellParameters;
 
 } WINDOWS;
 
