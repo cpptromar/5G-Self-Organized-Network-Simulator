@@ -7,7 +7,7 @@
 
 //This enum describes the perceived status of the BS from the POV of the IRP Manager.
 //This will probably be moved.
-enum class BSstatus { normal = 0, congestionDemand, congestionUsers, failure };
+enum class BSstatus { normal = 0, congestionUsers, congestionDemand, failure };
 
 
 /*	The BaseStation class function models a "cell tower". It contains a database with information about its connected users.
@@ -32,7 +32,7 @@ private:
 	size_t bsID;
 	Coord<float> loc;
 	uint32_t dataRate;
-	bool failed;
+	bool BS_Status;
 	std::vector<Antenna> BSAntennae;
 	UEDataBase userRecords;
 	std::vector<Transmission> outgoingTransmissions;
@@ -42,7 +42,7 @@ private:
 public:
 	//constructors & destructors *******************************
 	BaseStation() = delete;
-	BaseStation(const size_t& i, const Coord<float>& loc, const bool failed, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity);
+	BaseStation(const size_t& i, const Coord<float>& loc, const bool BS_Status, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity);
 
 	//initTransceivers initializes the antennae and transceivers, 
 	//this must be called when initializing a NEW BaseStation, which only happens in
@@ -58,7 +58,7 @@ public:
 	//Getters **************************************************
 	const size_t& getBSID() const;
 	const Coord<float>& getLoc() const;
-	const bool& getFailed() const;
+	const bool& getStatus() const;
 	const uint32_t& getDataRate() const;
 	const uint32_t& getBaseStationAttractiveness() const;
 	const uint32_t& getBaseStationPopulationDensity() const;

@@ -2,6 +2,7 @@
 #include "UserEquipment.h"
 #include "Antenna.h"
 #include "Simulator.h"
+#include "EnvironmentController.h"
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -16,14 +17,14 @@ const float BaseStation::calculateTransmittedPower(const float& simulationBandwi
 	
 }
 
-BaseStation::BaseStation(const size_t& i, const Coord<float>& loc, const bool failed, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity)
+BaseStation::BaseStation(const size_t& i, const Coord<float>& loc, const bool BS_Status, uint32_t BaseStationAttractiveness, uint32_t BaseStationPopulationDensity)
 {
 	this->bsID = i;
 	this->loc = loc;
 	this->dataRate = 0;
 	this->BSAntennae = std::vector<Antenna>(Simulator::getNumberOfAntennae());
 	this->userRecords = UEDataBase();
-	this->failed = failed;
+	this->BS_Status = BS_Status;
 	this->BaseStationAttractiveness = BaseStationAttractiveness;
 	this->BaseStationPopulationDensity = BaseStationPopulationDensity;
 	initTransceivers();
@@ -34,7 +35,7 @@ BaseStation::BaseStation(BaseStation&& rv) noexcept
 	this->bsID = std::exchange(rv.bsID, 0);
 	this->loc = std::move(rv.loc);
 	this->dataRate = std::exchange(rv.dataRate, 0);
-	this->failed = std::exchange(rv.failed, false);
+	this->BS_Status = std::exchange(rv.BS_Status, 0);
 	this->BSAntennae = std::move(rv.BSAntennae);
 	this->userRecords = std::move(rv.userRecords);
 	this->outgoingTransmissions = std::move(rv.outgoingTransmissions);
@@ -141,12 +142,12 @@ bool BaseStation::moveUE(const size_t& ue_id, const Coord<float>& newloc)
 
 void BaseStation::setFailedTrue()
 {
-	this->failed = true;
+	this->BS_Status = 2; //failed
 }
 
 void BaseStation::setFailedFalse()
 {
-	this->failed = false;
+	this->BS_Status = 0; //normal
 }
 
 void BaseStation::setBaseStationAttractiveness(uint32_t newBaseStationAttractiveness)
@@ -169,9 +170,9 @@ const Coord<float>& BaseStation::getLoc() const
 	return this->loc;
 }
 
-const bool& BaseStation::getFailed() const
+const bool& BaseStation::getStatus() const
 {
-	return this->failed;
+	return this->BS_Status;
 }
 
 const uint32_t& BaseStation::getDataRate() const
@@ -214,7 +215,7 @@ bool BaseStation::Update()
 {
 	this->dataRate = 0;
 
-	if (this->failed)
+	if (this->BS_Status) //base station is failing
 	{
 		
 		for (auto& uer : this->userRecords.readWriteDB())
@@ -295,9 +296,30 @@ bool BaseStation::Update()
 
 				if (Simulator::randF() <= Simulator::AP_ProbBitsDropped) //Depending on the probability set in Simulator, drop a certain amount of bits
 				{
-					bitsDropped = (Simulator::rand() % 13);		//Maximum of 13 bits dropped
+						//Maximum of 13 bits dropped
+					if (EnvironmentController::getCurrentBSStatus(this->bsID) == BSstatus::normal)
+					{
+						bitsDropped = (Simulator::rand() % 13);
+					}
+					else if (EnvironmentController::getCurrentBSStatus(this->bsID) == BSstatus::congestionDemand)
+					{
+						bitsDropped = (Simulator::rand() % 30);
+					}
+					else if (EnvironmentController::getCurrentBSStatus(this->bsID) == BSstatus::congestionUsers)
+					{
+						bitsDropped = (Simulator::rand() % 13);
+					}
+					else if (EnvironmentController::getCurrentBSStatus(this->bsID) == BSstatus::failure)
+					{
+						bitsDropped = (Simulator::rand() % 100);
+					}
+					else
+					{
+						bitsDropped = (Simulator::rand() % 13);
+					}
 				}
-				
+
+
 				//Must convert to integer because it can be negative sometimes
 				int bitsReceived = (*UER).bitsSent - bitsDropped;
 				

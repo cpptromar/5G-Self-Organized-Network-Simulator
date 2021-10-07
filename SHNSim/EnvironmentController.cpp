@@ -4,6 +4,7 @@
 #include <utility>
 #include <cmath>
 
+#include "BSFailureParams.h"
 #include "EnvironmentController.h"
 #include "UEDataBase.h"
 #include "DataRateTable.h"
@@ -282,7 +283,8 @@ void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff
 
 	auto positiveSign = bool{ remainingDiff >= 0.0f };
 	const auto numUsers = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) / EnvironmentController::averageUEStateContribution) };
-	/*if (positiveSign)
+	/*
+	if (positiveSign)
 		EnvironmentController::addUsers(bsfp, numUsers, remainingDiff);
 	else
 		EnvironmentController::removeUsers(bsfp, numUsers, remainingDiff);
@@ -305,7 +307,9 @@ void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32
 
 		const auto& user = bsfp.UEsInRegion[static_cast<size_t>(Simulator::rand() % bsfp.UEsInRegion.size())];
 		if (Simulator::getUE_m(user).incrementDemand())
+		{
 			diff -= 1.0f / Simulator::getBSMaxDR();
+		}
 	}
 }
 
@@ -481,7 +485,7 @@ void EnvironmentController::ECUpdate()
 }
 
 //FLAG
-const BSstatus& EnvironmentController::getCurrentBSStatus(const size_t& bs)
+const BSstatus& EnvironmentController::getCurrentBSStatus( const size_t& bs)
 {
 	return BSRegionControlInfo[bs].currentStatus;
 }
