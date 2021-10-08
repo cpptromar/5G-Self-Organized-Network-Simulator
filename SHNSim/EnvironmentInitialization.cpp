@@ -53,13 +53,13 @@ bool EnvironmentInitialization::setDefaultUsers()
 				}
 				else if (BaseStationStatus == BSstatus::congestionDemand)
 				{
-					 currentDemand = uint32_t{ dataRate - (Simulator::rand() % 10)};
+					currentDemand = uint32_t{ dataRate };
 				}
 				else
 				{
 					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
 				}
-				std::cout << currentDemand << "  " << dataRate << "  \n";
+				//std::cout << currentDemand << "  " << dataRate << "  \n";
 
 				const auto newRecord = UERecord{ 
 					currUserID, 
@@ -106,6 +106,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 //FLAG CHECK DIVISION
 bool EnvironmentInitialization::setBSMaxDataRate()
 {
+	
 	//total data rates of the normal BSs
 	auto bsNetDataRate = uint32_t{ 0 };
 	//iterates through UEs
@@ -116,8 +117,10 @@ bool EnvironmentInitialization::setBSMaxDataRate()
 	bsNetDataRate /= Simulator::getNumOfBSs();
 
 	//sets the max bs data rate to be that everage plus padding to ensure normal operation for normal base stations
-	Simulator::setBSMaxDR(static_cast<uint32_t>(bsNetDataRate/Simulator::getDefaultNormalState()));
+	Simulator::setBSMaxDR(static_cast<uint32_t>(bsNetDataRate /Simulator::getDefaultNormalState()));
 	
+	
+
 	return true;
 }
 
@@ -198,9 +201,13 @@ bool EnvironmentInitialization::generateNewENV()
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.
+	
+	//uint32_t AttractivenessArray[8] = { ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1) }; //hard coded for now
+	//uint32_t PopulationDensityArray[8] = { ((Simulator::rand() % 10) +1), (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1 }; // add to gui later
 
-	uint32_t AttractivenessArray[8] = { 3, 1, 3, 5, 5, 1, 1, 1 }; //hard coded for now
-	uint32_t PopulationDensityArray[8] = { 5, 5, 5, 5, 5, 5, 5, 5 }; // add to gui later
+	uint32_t AttractivenessArray[8] = { 1,1,1,1,1,1,1,1 };
+	uint32_t PopulationDensityArray[8] = { 5,5,5,5,5,5,5,5 };
+
 
 	auto bsCount = size_t{ 0 };
 	int bscounta = 0;

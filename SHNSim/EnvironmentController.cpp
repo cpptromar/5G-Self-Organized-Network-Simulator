@@ -289,13 +289,15 @@ void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff
 	else
 		EnvironmentController::removeUsers(bsfp, numUsers, remainingDiff);
 	*/
+
 	positiveSign = (remainingDiff >= 0.0f);
 	const auto amtData = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) * Simulator::getBSMaxDR()) };
+	/*
 	if (positiveSign)
 		EnvironmentController::incrementDemands(bsfp, amtData, remainingDiff);
 	else
 		EnvironmentController::decrementDemands(bsfp, amtData, remainingDiff);
-
+*/
 }
 
 void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32_t& amtData, float& diff)

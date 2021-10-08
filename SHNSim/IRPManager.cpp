@@ -75,17 +75,23 @@ void IRPManager::dataAnalysis()
 		file_obj << bss.bsStateDemand << ',';
 		bss.bsStateSent = static_cast<float>(totalBitsSent[index]) / static_cast<float>(this->Buffer.size() * Simulator::getBSMaxDR());
 
+		//std::cout << "\nTotal UE demand at station " << index << ": " << totalUEDemand[index] << ", BS Max Datarate " << Simulator::getBSMaxDR() << '\n';
+		//std::cout << "State demand == " << bss.bsStateDemand << '\n';
 		if (bss.bsStateSent <= Simulator::AP_StateCushion)
 		{
 			bss.bsStatus = IRP_BSStatus::failure;
 		}
-		else if (bss.bsStateDemand > Simulator::getDefaultCongestionState()) //90% of maximum datarate
+		else if (BaseStationNumberofUsers > (NumberofTranscievers))
+		{
+			bss.bsStatus = IRP_BSStatus::congestionUsers;
+		}
+		else if (bss.bsStateDemand >= Simulator::getDefaultCongestionState()) //90% of maximum datarate
 		{
 			bss.bsStatus = IRP_BSStatus::congestionDemand;
 		}
-		else if (BaseStationNumberofUsers > (NumberofTranscievers ))
+		else if (bss.bsStateDemand < Simulator::getDefaultCongestionState() && bss.bsStateDemand >= Simulator::getAlertState()) //almost congested
 		{
-			bss.bsStatus = IRP_BSStatus::congestionUsers;
+			bss.bsStatus = IRP_BSStatus::almostcongested;
 		}
 		else
 		{
@@ -118,9 +124,8 @@ void IRPManager::IRPManagerUpdate()
 			IRPManager::offloadUserKPIs(); //Run ours?
 			break;
 		case 2:
-			std::cout << "No Self-Healing";
-			IRPManager::finishMovingUsers();
-			std::cout << "\n";
+			//std::cout << "No Self-Healing" << '\n';
+			IRPManager::finishMovingUsers();	
 			break;
 		default:
 			ErrorTracer::error("IRPManager::IRPManagerUpdate(): Error choosing algorithm");
