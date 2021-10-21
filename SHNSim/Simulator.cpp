@@ -460,6 +460,7 @@ bool Simulator::environmentTick()
 
 	Simulator::NetworkManager.IRPManagerUpdate();
 
+
 	return true;
 }
 

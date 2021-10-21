@@ -200,6 +200,10 @@ void IRPManager::PRINTDEBUG()
 		{
 			std::cout << "normal";
 		}
+		else if (bsStat.bsStatus == IRP_BSStatus::almostcongested)
+		{
+			std::cout << "almostcongested";
+		}
 		else if (bsStat.bsStatus == IRP_BSStatus::congestionDemand)
 		{
 			std::cout << "congestionDemand";

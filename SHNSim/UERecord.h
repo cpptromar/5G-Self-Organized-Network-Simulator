@@ -16,7 +16,7 @@ struct UERecord
 	float ddr;
 
 	UERecord() = delete;
-	UERecord(const size_t& uid, const size_t& mid, const Coord<float>& loc, const size_t& at, const size_t& ct, const float& cSNR, const uint32_t& d, const uint32_t& bts,
+	UERecord(const size_t& uid, const size_t& mid, const Coord<float>& loc,const size_t& at, const size_t& ct, const float& cSNR, const uint32_t& d, const uint32_t& bts,
 		     const float& ps, const float& rsrp, const float& rssi, const float& rsrq, const float& ddr);
 	UERecord(const UERecord&) = default;
 	UERecord(UERecord&&) noexcept = default;
@@ -24,4 +24,6 @@ struct UERecord
 
 	const float& getRSRP();
 	const float& getDDR();
+
+
 };

@@ -206,7 +206,7 @@ bool EnvironmentInitialization::generateNewENV()
 	//uint32_t PopulationDensityArray[8] = { ((Simulator::rand() % 10) +1), (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1 }; // add to gui later
 
 	uint32_t AttractivenessArray[8] = { 1,1,1,1,1,1,1,1 };
-	uint32_t PopulationDensityArray[8] = { 5,5,5,5,5,5,5,5 };
+	uint32_t PopulationDensityArray[8] = { 10,5,8,5,5,5,8,5 };
 
 
 	auto bsCount = size_t{ 0 };
