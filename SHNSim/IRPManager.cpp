@@ -65,17 +65,38 @@ void IRPManager::dataAnalysis()
 	auto index = size_t{ 0 };
 	for (auto& bss : this->networkStatuses)
 	{
-		bss.bsStateDemand = static_cast<float>(totalUEDemand[index]) / static_cast<float>(this->Buffer.size() * Simulator::getBSMaxDR());
+		BaseStation currentBaseStation = Simulator::getBS(bss.bsID);
+		int BaseStationNumberofUsers = currentBaseStation.getUEDB().size();
+		int NumberofAntennas = currentBaseStation.getAntennaVec().size();
+		int NumberofTranscievers = currentBaseStation.getAntenna(0).getConnectionInfo().getTransceivers().size();
+		
 
+		bss.bsStateDemand = static_cast<float>((totalUEDemand[index]) / (static_cast<float>(this->Buffer.size()) * Simulator::getBSMaxDR()));
 		file_obj << bss.bsStateDemand << ',';
 		bss.bsStateSent = static_cast<float>(totalBitsSent[index]) / static_cast<float>(this->Buffer.size() * Simulator::getBSMaxDR());
 
+		//std::cout << "\nTotal UE demand at station " << index << ": " << totalUEDemand[index] << ", BS Max Datarate " << Simulator::getBSMaxDR() << '\n';
+		//std::cout << "State demand == " << bss.bsStateDemand << '\n';
 		if (bss.bsStateSent <= Simulator::AP_StateCushion)
+		{
 			bss.bsStatus = IRP_BSStatus::failure;
-		else if (bss.bsStateDemand > Simulator::getDefaultCongestionState())
-			bss.bsStatus = IRP_BSStatus::congestion;
+		}
+		else if (BaseStationNumberofUsers > (NumberofTranscievers))
+		{
+			bss.bsStatus = IRP_BSStatus::congestionUsers;
+		}
+		else if (bss.bsStateDemand >= Simulator::getDefaultCongestionState()) //90% of maximum datarate
+		{
+			bss.bsStatus = IRP_BSStatus::congestionDemand;
+		}
+		else if (bss.bsStateDemand < Simulator::getDefaultCongestionState() && bss.bsStateDemand >= Simulator::getAlertState()) //almost congested
+		{
+			bss.bsStatus = IRP_BSStatus::almostcongested;
+		}
 		else
+		{
 			bss.bsStatus = IRP_BSStatus::normal;
+		}
 
 		index++;
 	}
@@ -101,6 +122,10 @@ void IRPManager::IRPManagerUpdate()
 			break;
 		case 1:
 			IRPManager::offloadUserKPIs(); //Run ours?
+			break;
+		case 2:
+			//std::cout << "No Self-Healing" << '\n';
+			IRPManager::finishMovingUsers();	
 			break;
 		default:
 			ErrorTracer::error("IRPManager::IRPManagerUpdate(): Error choosing algorithm");
@@ -172,11 +197,25 @@ void IRPManager::PRINTDEBUG()
 	{
 		std::cout << "\nBS#: " << index << ':';
 		if (bsStat.bsStatus == IRP_BSStatus::normal)
+		{
 			std::cout << "normal";
-		else if (bsStat.bsStatus == IRP_BSStatus::congestion)
-			std::cout << "congestion";
+		}
+		else if (bsStat.bsStatus == IRP_BSStatus::almostcongested)
+		{
+			std::cout << "almostcongested";
+		}
+		else if (bsStat.bsStatus == IRP_BSStatus::congestionDemand)
+		{
+			std::cout << "congestionDemand";
+		}
+		else if (bsStat.bsStatus == IRP_BSStatus::congestionUsers)
+		{
+			std::cout << "congestionUsers";
+		}
 		else if (bsStat.bsStatus == IRP_BSStatus::failure)
+		{
 			std::cout << "failure";
+		}
 		index++;
 	}
 }
@@ -193,15 +232,26 @@ void IRPManager::checkStatus()
 		// if the eNodeB is below the alarm threshold, add it as a helper BS
 		// otherwise add it to the disabled list
 		if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())
+		{
 			this->helperBSs.push_back(bss.bsID);
+			
+		}
 
 		// if the current eNodeB is congested, add it to the back of the disabled list
-		if (bss.bsStatus == IRP_BSStatus::congestion)
+		if (bss.bsStatus == IRP_BSStatus::congestionDemand)
+		{
 			this->disabledBSs.push_back(bss.bsID);
-
+		}
+		if (bss.bsStatus == IRP_BSStatus::congestionUsers)
+		{
+			this->disabledBSs.push_back(bss.bsID);
+		}
 		// if the eNodeB is failing, add it to the front of the disabled list
 		if (bss.bsStatus == IRP_BSStatus::failure)
+		{
 			this->disabledBSs.insert(disabledBSs.begin(), bss.bsID);
+		}
+
 	}
 }
 
@@ -299,19 +349,26 @@ void IRPManager::offloadUserKPIs() {
 	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();											// Calculate max distance to search for
 
 	// Healing
-	if (this->doneHealing == false) {
+	if (this->doneHealing == false) 
+	{
+		
 		// Perform healing on every unhealthy BaseStation
 
 		float allBSAmountsToRemove = { 0.0f };																	//Create a percentage to check if the basestations are done healing
 
-		for (const auto& unhealthyBS : disabledBSs) {
+		for (const auto& unhealthyBS : disabledBSs) 
+		{
 			//Offload users from failing BaseStation first, then congested BaseStations second
 			float amountToRemove = { 0.0f };																	//Create a percentage float to keep offloading users until the BS is uncongested
 
 			if (this->networkStatuses.at(unhealthyBS).bsStatus == IRP_BSStatus::failure)						//If BS is failing, offload all users
+			{
 				amountToRemove = float{ this->networkStatuses.at(unhealthyBS).bsStateDemand * percentDecrease };
+			}
 			else																								//BS is congested, so offload until uncongested
+			{
 				amountToRemove = float{ (this->networkStatuses.at(unhealthyBS).bsStateDemand - Simulator::getDefaultNormalState()) * percentDecrease };
+			}
 
 			//Checking if all basestations are done healing
 			allBSAmountsToRemove += amountToRemove;																//Add current BaseStation's amountToRemove to the total
@@ -343,6 +400,7 @@ void IRPManager::offloadUserKPIs() {
 				//Error checking
 				if (disabledBsRecords.size() < 1)																//If the disabledBsRecords is empty
 				{
+					std::cout << "\n removal attempt failed \n";
 					removalAttemptFailed++;																		//Add to failures
 					continue;																					//Skip trying to offload user
 				}
@@ -378,7 +436,8 @@ void IRPManager::offloadUserKPIs() {
 				//Exiting this loop
 				//3b2. Add the user to the to the closest BS and remove it from the original BS where it is at
 				if (closestBS_ID < Simulator::getNumOfBSs() &&													//Check if the BSID is valid
-					Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0)) {								//Call transferUE
+					Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0))									//Call transferUE
+				{																								
 					amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();					//Modify amountToRemove
 				}
 
@@ -399,21 +458,30 @@ void IRPManager::offloadUserKPIs() {
 	// Optimization
 	else { //doneHealing == true, start optimizing
 		//Get BaseStations
-		
+	
 		//Group both helper base stations and congested base stations
 		std::vector<size_t> OptimizingBSs;		// store BSs that need to be optimized (healthy and congested)
 
-		for (const auto& bss : IRPManager::networkStatuses) {
+		for (const auto& bss : IRPManager::networkStatuses) 
+		{
 			if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())		//If the BaseStation is healthy
+			{
 				OptimizingBSs.push_back(bss.bsID);
-			if (bss.bsStatus == IRP_BSStatus::congestion)														//Or if the BaseStation is congested
+			}
+			if (bss.bsStatus == IRP_BSStatus::congestionDemand)														//Or if the BaseStation is demand congested
+			{
 				OptimizingBSs.push_back(bss.bsID);
-
+			}
+			if (bss.bsStatus == IRP_BSStatus::congestionUsers)														//Or if the BaseStation is user congested
+			{
+				OptimizingBSs.push_back(bss.bsID);
+			}
 			//Don't check failing BaseStations because all users will be offloaded by the time optimization is occurring,
 			//therefore, having an empty UEDB with no users to optimize
 		}
 
-		for (const size_t& CurrBS_ID : OptimizingBSs) {															//For each BaseStation (non-failing only since all the users will be offloaded already)
+		for (const size_t& CurrBS_ID : OptimizingBSs) 															//For each BaseStation (non-failing only since all the users will be offloaded already)
+		{
 			
 			//1. Collect user information and make a vector list (RSRPUser)
 			const UEDataBase& disabledBsRecords = Simulator::getBS(CurrBS_ID).getUEDB();						//Get UEDataBase from the current BaseStation
@@ -421,7 +489,9 @@ void IRPManager::offloadUserKPIs() {
 			auto RSRPUser = std::vector<std::pair<size_t, float>>();											//Make vector pair
 			RSRPUser.reserve(disabledBsRecords.size());															//Reserve memory for the vector
 			for (const auto& uer : disabledBsRecords.readDB())													//For each UE in the DataBase found earlier,
+			{
 				RSRPUser.push_back(std::make_pair((*uer).userID, (*uer).getRSRP()));							//Add their ID and RSRP to the vector pair
+			}
 
 			//2. Sort User Equipment from worst RSRP (front) to best RSRP (back). This will let us prioritize users furthest away from the BaseStation first
 			std::sort(RSRPUser.begin(), RSRPUser.end(),															//Sort from beginning of vector pair to the end
@@ -471,4 +541,65 @@ void IRPManager::offloadUserKPIs() {
 			}//end of transferring all UEs outside of RSRP threshold range
 		}//Exit BaseStation Loop
 	}//Exit optimization section
+}
+
+void IRPManager::finishMovingUsers()
+{
+	std::vector<size_t> BaseStations;		// vector of all base stations
+
+	for (const auto& bs : IRPManager::networkStatuses) 
+	{
+			BaseStations.push_back(bs.bsID);	// add basestations to vector
+	}
+	float maxSearchDist = 4.5f * Simulator::getBSRegionScalingFactor();
+
+	for (const auto& CurrentBaseStation : IRPManager::networkStatuses)
+	{
+		size_t CurrentBaseStation_ID = CurrentBaseStation.bsID;								//get base station ID
+
+		//1. Collect user information and make a vector list (RSRPUser)
+		const UEDataBase& BaseStationRecords = Simulator::getBS(CurrentBaseStation_ID).getUEDB();						//Get UEDataBase from the current BaseStation
+
+		auto Users = std::vector<size_t>();											//Make vector of all users
+		Users.reserve(BaseStationRecords.size());															//Reserve memory for the vector
+		for (const auto& uer : BaseStationRecords.readDB())													//For each UE in the DataBase found earlier,
+		{
+			Users.push_back((*uer).userID);							//Add their ID to the vector
+		}
+
+		while (Users.size() > 0)
+		{																	//Keep removing users from vector list until empty
+			//4a. Gather User information
+			const size_t UserID = Users.back();													//The User ID of this user
+
+																								
+			const Coord<float> offloadUserLoc = (*(BaseStationRecords.look_up(UserID))).loc;				//The Location of this user
+
+			//4b. Calculate which BaseStation is the closest to offload the UE to
+			float minDistBetweenUEandBS = { 100000 };													//Will be used later to keep track of the closest BaseStation
+			float distBetweenUEandBS = {};																//Actual distance between UE and BS
+			size_t closestBS_ID = { Simulator::getNumOfBSs() };											//BaseStation ID number of the closest BaseStation
+			Users.pop_back();																		//Remove user from sorted RSRP vector list
+
+			//4c. Compare the distance between each BaseStation and the current User Equipment (using iterators)
+			for (const auto& bs : BaseStations)														//For each BaseStation in the BS vector list
+			{
+				const Coord<float>& helperBSLoc = Simulator::getBS(bs).getLoc();						//Get location of the BS
+
+				//Distance formula = sqrt((y2-y1)^2 + (x2-x1)^2)										//Calculate distance between UE and BS
+				distBetweenUEandBS = sqrt(((offloadUserLoc.y - helperBSLoc.y) * (offloadUserLoc.y - helperBSLoc.y))
+					+ ((offloadUserLoc.x - helperBSLoc.x) * (offloadUserLoc.x - helperBSLoc.x)));
+
+				//If the helper BaseStation is within searching distance && it is closer than the previously found distance,
+				if (distBetweenUEandBS <= maxSearchDist && distBetweenUEandBS < minDistBetweenUEandBS)
+				{
+					closestBS_ID = bs;																	//Store the ID of that BS
+					minDistBetweenUEandBS = distBetweenUEandBS;											//Store the distance between that BS and the current UE
+				}
+			}
+
+			//4d. Add the user to the to the closest BS and remove it from the original BS where it is at
+			Simulator::transferUE(CurrentBaseStation_ID, UserID, closestBS_ID, 0);									//Transfer UE
+		}
+	}
 }

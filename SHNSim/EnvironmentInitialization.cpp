@@ -18,7 +18,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < Simulator::getHealthyBSNumUsersPerAnt(); ue++)
+			for (auto ue = size_t{ 0 }; ue < floor((Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity())/5); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -35,13 +35,31 @@ bool EnvironmentInitialization::setDefaultUsers()
 
 				//Generate a random mobility ID for the current user [0 = Stationary, 1 = Walking, 2 = Driving (car)]
 				const auto currMobilityID = (Simulator::rand() % 3);
+				
+				const auto BaseStationID = bs.getBSID();
+				const auto BaseStationStatus = (BSstatus)(GUIDataContainer::status[BaseStationID]);
 
 				//tranceiver set to the UE
 				const auto currentTranceiver = bs.getAntenna(ant.getAntID()).getConnectionInfo_m().addUser(currUserID);
 				if (!currentTranceiver.first)
 					continue;
-
-				const auto currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1))};
+				
+				uint32_t currentDemand = 0;
+				if (BaseStationStatus == BSstatus::normal ||
+					BaseStationStatus == BSstatus::congestionUsers ||
+					BaseStationStatus == BSstatus::failure)
+				{
+					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
+				}
+				else if (BaseStationStatus == BSstatus::congestionDemand)
+				{
+					currentDemand = uint32_t{ dataRate };
+				}
+				else
+				{
+					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
+				}
+				//std::cout << currentDemand << "  " << dataRate << "  \n";
 
 				const auto newRecord = UERecord{ 
 					currUserID, 
@@ -75,6 +93,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 				auto newUser = UserEquipment{ newLoc, currUserID, currMobilityID, possMaxDrsForUE, currentDemand };
 				Simulator::addUE(newUser);
 			}
+			
 		}
 	}
 
@@ -87,6 +106,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 //FLAG CHECK DIVISION
 bool EnvironmentInitialization::setBSMaxDataRate()
 {
+	
 	//total data rates of the normal BSs
 	auto bsNetDataRate = uint32_t{ 0 };
 	//iterates through UEs
@@ -97,8 +117,10 @@ bool EnvironmentInitialization::setBSMaxDataRate()
 	bsNetDataRate /= Simulator::getNumOfBSs();
 
 	//sets the max bs data rate to be that everage plus padding to ensure normal operation for normal base stations
-	Simulator::setBSMaxDR(static_cast<uint32_t>(bsNetDataRate/Simulator::getDefaultNormalState()));
+	Simulator::setBSMaxDR(static_cast<uint32_t>(bsNetDataRate /Simulator::getDefaultNormalState()));
 	
+	
+
 	return true;
 }
 
@@ -179,9 +201,19 @@ bool EnvironmentInitialization::generateNewENV()
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.
+	
+	//uint32_t AttractivenessArray[8] = { ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1) }; //hard coded for now
+	//uint32_t PopulationDensityArray[8] = { ((Simulator::rand() % 10) +1), (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1 }; // add to gui later
+
+
+
 	auto bsCount = size_t{ 0 };
-	for (const auto& bsLoc: BaseStationLocations)
-		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false });
+	int bscounta = 0;
+	int bscountp = 0;
+	for (const auto& bsLoc : BaseStationLocations)
+	{
+		Simulator::addBS(BaseStation{ bsCount++, bsLoc, false, GUIDataContainer::AttractivenessArray[bscounta++], GUIDataContainer::PopulationDensityArray[bscountp++] });
+	}
 
 	Simulator::setIRPBufSizeInSeconds(GUIDataContainer::bufSizeInSeconds);
 	Simulator::setAlertState((float)(GUIDataContainer::alertState)/100.0f);

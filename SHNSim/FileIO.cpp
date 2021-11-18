@@ -298,8 +298,14 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 		const auto& y = bs.getLoc().y;
 		file_obj.write(FileIO::chPtrConv(&y), sizeof(y));
 
-		const auto& failed = bs.getFailed();
+		const auto& failed = bs.getStatus();
 		file_obj.write(FileIO::chPtrConv(&failed), sizeof(failed));
+
+		const auto& BaseStationAttractiveness = bs.getBaseStationAttractiveness();
+		file_obj.write(FileIO::chPtrConv(&BaseStationAttractiveness), sizeof(BaseStationAttractiveness));
+
+		const auto& BaseStationPopulationDensity = bs.getBaseStationPopulationDensity();
+		file_obj.write(FileIO::chPtrConv(&BaseStationPopulationDensity), sizeof(BaseStationPopulationDensity));
 
 		for (const auto& ant : bs.getAntennaVec())
 		{
@@ -446,10 +452,17 @@ bool FileIO::readSaveFileIntoSim()
 		auto y = float{ 0 };
 		file_obj.read(FileIO::chPtrConv_m(&y), sizeof(y));
 
-		auto failed = bool{ false };
+		auto failed =  false;
 		file_obj.read(FileIO::chPtrConv_m(&failed), sizeof(failed));
+		
+		auto BaseStationAttractiveness = uint32_t{ 0 };
+		file_obj.read(FileIO::chPtrConv_m(&BaseStationAttractiveness), sizeof(BaseStationAttractiveness));
 
-		auto newBS = BaseStation{ bs, Coord<float>{ x, y }, failed };
+		auto BaseStationPopulationDensity = uint32_t{ 0 };
+		file_obj.read(FileIO::chPtrConv_m(&BaseStationPopulationDensity), sizeof(BaseStationPopulationDensity));
+		
+
+		auto newBS = BaseStation{ bs, Coord<float>{ x, y }, failed, BaseStationAttractiveness, BaseStationPopulationDensity};
 
 		for (auto i = size_t{ 0 }; i < Simulator::getNumberOfAntennae(); i++)
 		{
