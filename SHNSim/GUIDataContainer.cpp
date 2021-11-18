@@ -17,8 +17,8 @@ std::vector<int> GUIDataContainer::startTime;
 std::vector<int> GUIDataContainer::riseTime;
 std::vector<int> GUIDataContainer::endState;	
 
-uint32_t GUIDataContainer::AttractivenessArray[8] = {1, 1, 1, 1, 1, 1, 1, 1}; 
-uint32_t GUIDataContainer::PopulationDensityArray[8] = {5, 5, 5, 5, 5, 5, 5, 5};
+uint32_t GUIDataContainer::AttractivenessArray[20] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; 
+uint32_t GUIDataContainer::PopulationDensityArray[20] = {5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5};
 	
 // stage 2 parameters
 int GUIDataContainer::bsLen = 10;							//base station length in METERS?? Dr. Omar and Dr. Kets want it like this
