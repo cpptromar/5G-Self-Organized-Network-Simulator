@@ -24,8 +24,8 @@ struct GUIDataContainer
 	static std::vector<int> riseTime;
 	static std::vector<int> endState;	
 
-	static uint32_t AttractivenessArray[8]; 
-	static uint32_t PopulationDensityArray[8];
+	static uint32_t AttractivenessArray[20]; 
+	static uint32_t PopulationDensityArray[20];
  	
 	// stage 2 parameters
 	static int bsLen;
