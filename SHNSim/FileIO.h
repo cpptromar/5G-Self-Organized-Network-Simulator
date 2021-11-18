@@ -13,13 +13,12 @@ private:
 	static uint32_t	logRowCount;
 	static std::string programPath;
 	static std::string dataRateTableFilePath;
+	static std::string currentTickCSVFilePath;
 	static std::string logFilePath;
 	static std::string simulationSaveName;
 	static uint32_t lineCounter; //used for reading line-by-line the saved CSV file
 	
-	//For more info on these two lines, look here: https://stackoverflow.com/questions/41319180/what-does-reinterpret-castchar-st-and-1static-castint-mean
-	template<typename T> inline static const char* chPtrConv(T* p) { return reinterpret_cast<const char*>(p); }
-	template<typename T> inline static char* chPtrConv_m(T* p) { return reinterpret_cast<char*>(p); }
+	
 
 	static void setSimSaveFromFP(const std::string& fp);
 	static void setDRTBLFP(const std::string& drtblFP);
@@ -30,13 +29,22 @@ private:
 	static void resetLogRowCount();
 
 public:
+
+	//For more info on these two lines, look here: https://stackoverflow.com/questions/41319180/what-does-reinterpret-castchar-st-and-1static-castint-mean
+	template<typename T> inline static const char* chPtrConv(T* p) { return reinterpret_cast<const char*>(p); }
+	template<typename T> inline static char* chPtrConv_m(T* p) { return reinterpret_cast<char*>(p); }
+
 	static const uint32_t AP_MaxLogLines;
 	static const std::string defaultDRTBLName;
+	static const std::string defaultCurrentTickCSV;
+	static const std::string defaultMachineLearningInputCSV;
 	static const std::string DRTBLSignature;
 	static std::map<std::int32_t, std::int64_t> dict_time2pos; //this is a dictionary for the position of time ticks in the log
 
 
 	static const std::string& getDRTBLFP();
+	static const std::string& getCurrentTickCSVFP();
+	static const std::string& getMachineLearningInputFP();
 	static const std::string& getProgramFP();
 	static const std::string getSimSaveFP();
 	static const std::string& getSimName();
@@ -51,6 +59,7 @@ public:
 	static bool readSaveFileIntoSim();
 
 	static bool appendLog(const uint32_t& sim);
+	static bool writeCurrentTick(const uint32_t& simNum);
 	static bool readLog_Init(const uint32_t& sim, int &numOfVars);
 	static bool readLog_NextLine(const uint32_t& simNum, std::string* varNames);
 	static bool readLog_NextLine(const uint32_t& sim, float* lineData);

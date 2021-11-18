@@ -34,6 +34,7 @@ public:
 	void PRINTDEBUG();
 
 	void checkStatus(); 	// check whether a BS should be a helper or if it is disabled
+	bool assignStatus();	// read from a csv produced by the machine learngin algorithm as to whether a BS should be helper or disabled.
 	void offloadUser(); 	// specifies the user that should be offloaded, the source BS to offload from, and the destination BS to offload to
 	void offloadUserKPIs();	// new self-healing algorithm based on KPIs instead of only BS status
 	void finishMovingUsers(); // moves users to which ever base station is closest to them, ignores all self-healing

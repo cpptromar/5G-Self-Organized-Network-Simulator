@@ -78,6 +78,7 @@ uint32_t Simulator::mobilityBufSizeInMinutes = 5;			//5 minutes default = 300 ti
 //KPI Thresholds
 float Simulator::RSRPThreshold = -85.0f;					//-85 dBm
 uint32_t Simulator::algorithmVer = 1;						//Default to NEW algorithm [2021 version] (0 is old, 1 is new)
+bool Simulator::usingMachineLearning = false;				//Default to no machine learning
 
 void Simulator::setNumOfChannels(const size_t& nChannels)
 {
@@ -241,6 +242,10 @@ void Simulator::setRSRPThreshold(const float& threshold)
 void Simulator::setalgorithmVer(const uint32_t& version) {
 	Simulator::algorithmVer = version;
 }
+void Simulator::setMachineLearning(const bool& machineLearning)
+{
+	Simulator::usingMachineLearning = machineLearning;
+}
 
 const size_t& Simulator::getNumOfChannels()
 {
@@ -384,6 +389,10 @@ const uint32_t& Simulator::getalgorithmVer()
 	return Simulator::algorithmVer;
 }
 
+const bool& Simulator::getMachineLearning()
+{
+	return Simulator::usingMachineLearning;
+}
 const float Simulator::randF()
 {
 	return Simulator::rng_real_distribution(Simulator::rng_engine);
@@ -504,6 +513,7 @@ bool Simulator::runSimulation()
 			//adds to log
 			if (!FileIO::appendLog(sim))
 				return ErrorTracer::error("\nFileIO::appendLog failed in Simulator::runSimulation()");
+			FileIO::writeCurrentTick(sim);
 
 			progFrac = (double)envClock / (double)simulationLength;
 

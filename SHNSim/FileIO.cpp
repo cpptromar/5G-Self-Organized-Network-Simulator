@@ -12,8 +12,10 @@
 #include "Antenna.h"
 #include "DebugMain.h"
 
-const uint32_t FileIO::AP_MaxLogLines = static_cast<uint32_t>(1e6);
+const uint32_t FileIO::AP_MaxLogLines = static_cast<uint32_t>(1000000);
 const std::string FileIO::defaultDRTBLName = std::string{ "DRTBL.csv" };
+const std::string FileIO::defaultCurrentTickCSV = std::string{ "CurrentTick.csv" };
+const std::string FileIO::defaultMachineLearningInputCSV = std::string{ "MachineLearningInput.csv" };
 const std::string FileIO::DRTBLSignature = std::string{ "Q29ubm9yIENhcnI=" };
 std::map<std::int32_t, std::int64_t> FileIO::dict_time2pos;
 
@@ -37,6 +39,14 @@ const std::string& FileIO::getProgramFP()
 const std::string& FileIO::getDRTBLFP()
 {
 	return FileIO::dataRateTableFilePath;
+}
+const std::string& FileIO::getCurrentTickCSVFP()
+{
+	return FileIO::defaultCurrentTickCSV;
+}
+const std::string& FileIO::getMachineLearningInputFP()
+{
+	return FileIO::defaultMachineLearningInputCSV;
 }
 
 const std::string FileIO::getSimSaveFP()
@@ -485,10 +495,10 @@ bool FileIO::readSaveFileIntoSim()
 		{
 			auto userID = size_t{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&userID), sizeof(userID));
-
+			
 			auto mobilityID = size_t{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&mobilityID), sizeof(mobilityID));
-
+			
 			auto x = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&x), sizeof(x));
 
@@ -600,8 +610,63 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	}
 
-
 	log.close();
+
+	return true;
+}
+bool FileIO::writeCurrentTick(const uint32_t& simNum)
+{
+
+	auto CurrentTickCSV = std::ofstream{ FileIO::getCurrentTickCSVFP(), std::ios::in };
+	
+	CurrentTickCSV << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
+	
+	if (Simulator::getIRPManager().getBuffer().size() < 1)
+		return ErrorTracer::error("Network Manager buffer empty when attempting to access log.");
+
+	// keep track of where the different time ticks are in the log..
+	int numofUsers = 0;
+	for (const auto& ue_ld : Simulator::getIRPManager().getBuffer().getLastTick())
+	{
+		numofUsers = numofUsers + 1;
+	}
+	
+	// It does the loop for each ue in Simulator::getIRPManager().getBuffer().getLastTick() - SJ 
+	int i = 0;
+	for (const auto& ue_ld : Simulator::getIRPManager().getBuffer().getLastTick())
+	{
+		if (i < numofUsers)
+		{
+			CurrentTickCSV << ue_ld.TIME << ','
+				<< ue_ld.BS_ID << ','
+				<< ue_ld.BS_STATUS << ','
+				<< ue_ld.BS_LOC_X << ','
+				<< ue_ld.BS_LOC_Y << ','
+				<< ue_ld.ANT_ID << ','
+				<< ue_ld.ANT_SEC << ','
+				<< ue_ld.TRX_ID << ','
+				<< ue_ld.TRX_X << ','
+				<< ue_ld.TRX_Y << ','
+				<< ue_ld.TRX_ANG << ','
+				<< ue_ld.UE_ID << ','
+				<< ue_ld.UE_MID << ','
+				<< ue_ld.UE_LOC_X << ','
+				<< ue_ld.UE_LOC_Y << ','
+				<< ue_ld.MAX_DR << ','
+				<< ue_ld.DEMAND_DR << ','
+				<< ue_ld.REAL_DR << ','
+				<< ue_ld.TRANS_PWR << ','
+				<< ue_ld.REC_PWR << ','
+				<< ue_ld.RSRP << ','
+				<< ue_ld.RSSI << ','
+				<< ue_ld.RSRQ << ','
+				<< ue_ld.DDR << '\n';
+			i = i + 1;
+		}
+			
+	}
+
+	CurrentTickCSV.close();
 
 	return true;
 }

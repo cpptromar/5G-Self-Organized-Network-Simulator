@@ -6,6 +6,7 @@
 #include "GUIDataContainer.h"
 #include "UserEquipment.h"
 #include "UELogData.h"
+#include "ErrorTracer.h"
 
 #include <iterator>
 #include <utility>
@@ -110,10 +111,19 @@ void IRPManager::IRPManagerUpdate()
 
 	if (Simulator::getEnvClock() % Simulator::getIRPBufSizeInSeconds() == 0)
 	{
-		IRPManager::dataAnalysis();
-
+		//pause 
+		if (Simulator::getMachineLearning() == true)
+		{
+			// Call pre-processing for CurrentTick.csv
+			// Machine Learning decides on statuses
+			IRPManager::assignStatus();
+		}
+		else
+		{
+			IRPManager::dataAnalysis();
+		}
 		// Self-Healing functions
-		IRPManager::checkStatus();
+			IRPManager::checkStatus();
 
 		//Choose algorithm based on user input
 		switch (Simulator::getalgorithmVer()) {
@@ -231,7 +241,7 @@ void IRPManager::checkStatus()
 	{
 		// if the eNodeB is below the alarm threshold, add it as a helper BS
 		// otherwise add it to the disabled list
-		if (bss.bsStatus == IRP_BSStatus::normal && bss.bsStateDemand <= Simulator::getAlertState())
+		if (bss.bsStatus == IRP_BSStatus::normal)
 		{
 			this->helperBSs.push_back(bss.bsID);
 			
@@ -253,6 +263,60 @@ void IRPManager::checkStatus()
 		}
 
 	}
+}
+
+bool IRPManager::assignStatus()
+{
+	std::cout << "We made it into assignStatus()" << '\n';
+	auto MLInput = std::ifstream{ FileIO::getMachineLearningInputFP(), std::ios::in };
+	std::cout << "The file should be open here" << '\n';
+	if (!MLInput)
+	{
+		return ErrorTracer::error("\nCOULD NOT OPEN FILE MachineLearnignInput.csv in IRPManager.assignStatus()");
+	}
+
+	std::vector<int> AssignedStatus;
+	std::string buffer;
+
+	while (getline(MLInput, buffer, '\n'))
+	{
+		std::cout << "trying to read each line" << '\n';
+		std::cout << buffer << '\n';
+		AssignedStatus.push_back(std::stoi(buffer));
+	}
+
+	for ( auto& bss : this->networkStatuses)
+	{
+		std::cout << "We've finished reading the file" << '\n';
+		if ( AssignedStatus[static_cast<int>(bss.bsID)] == 0 )// labeled as normal
+		{
+			bss.bsStatus = IRP_BSStatus::normal;
+
+		}
+		if (AssignedStatus[static_cast<int>(bss.bsID)] == 1)// labeled as almost congested
+		{
+			bss.bsStatus = IRP_BSStatus::almostcongested;
+
+		}
+		if (AssignedStatus[static_cast<int>(bss.bsID)] == 2)// labeled as user congested
+		{
+			bss.bsStatus = IRP_BSStatus::congestionUsers;
+
+		}
+		if (AssignedStatus[static_cast<int>(bss.bsID)] == 3)// labeled as demand congested
+		{
+			bss.bsStatus = IRP_BSStatus::congestionDemand;
+
+		}
+		if (AssignedStatus[static_cast<int>(bss.bsID)] == 4)// labeled as failure
+		{
+			bss.bsStatus = IRP_BSStatus::failure;
+
+		}
+
+	}
+	//MLInput.close();
+	return true;
 }
 
 void IRPManager::offloadUser()

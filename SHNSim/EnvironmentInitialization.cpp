@@ -197,7 +197,7 @@ bool EnvironmentInitialization::generateNewENV()
 	//Self-Healing/Optimization parameters
 	Simulator::setalgorithmVer(GUIDataContainer::algorithmVer);
 	Simulator::setRSRPThreshold(GUIDataContainer::RSRPThreshold);
-
+	Simulator::setMachineLearning(false);
 	std::vector<Coord<float>> BaseStationLocations = EnvironmentInitialization::setBSCoords(GUIDataContainer::neighbors, GUIDataContainer::count);
 
 	//Initializes actual BaseStations.
@@ -205,8 +205,8 @@ bool EnvironmentInitialization::generateNewENV()
 	//uint32_t AttractivenessArray[8] = { ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1) }; //hard coded for now
 	//uint32_t PopulationDensityArray[8] = { ((Simulator::rand() % 10) +1), (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1 }; // add to gui later
 
-	uint32_t AttractivenessArray[8] = { 1,1,1,1,1,1,1,1 };
-	uint32_t PopulationDensityArray[8] = { 10,5,8,5,5,5,8,5 };
+	uint32_t AttractivenessArray[20] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+	uint32_t PopulationDensityArray[20] = { 10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5 };
 
 
 	auto bsCount = size_t{ 0 };

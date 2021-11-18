@@ -7,8 +7,8 @@
 
 int main(int argc, char** argv)			
 {		
-	if (!Setup::DEBUGentryPoint(argc, argv))
+	//if (!Setup::DEBUGentryPoint(argc, argv))
 		return 1;
 	
-	return 0;									
+	//return 0;									
 }		

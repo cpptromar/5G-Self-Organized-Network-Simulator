@@ -46,7 +46,7 @@ private:
 	static uint32_t		mobilityBufSizeInMinutes;
 	static float		RSRPThreshold;
 	static uint32_t		algorithmVer;
-
+	static bool			usingMachineLearning;
 	///////////////////////////////////////////////////////////////////////////////////
 	/*                            CORE FUNCTIONALITY                                 */
 	///////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +95,7 @@ protected:
 	static void setmobilityBufSizeInMinutes(const uint32_t& mobBufSize);
 	static void setRSRPThreshold(const float& threshold);
 	static void setalgorithmVer(const uint32_t& version);
+	static void setMachineLearning(const bool& machineLearning);
 
 public:
 	///////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +171,7 @@ public:
 	static const uint32_t&	getmobilityBufSizeInMinutes();
 	static const float&		getRSRPThreshold();
 	static const uint32_t&	getalgorithmVer();
+	static const bool&		getMachineLearning();
 
 	static const float		randF();
 	static const uint32_t	rand();
