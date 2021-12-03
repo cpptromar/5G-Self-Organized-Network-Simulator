@@ -86,11 +86,11 @@ void IRPManager::dataAnalysis()
 		{
 			bss.bsStatus = IRP_BSStatus::congestionUsers;
 		}
-		else if (bss.bsStateDemand >= Simulator::getDefaultCongestionState()) //90% of maximum datarate
+		else if (bss.bsStateDemand >= Simulator::getDefaultCongestionState()) //90% of maximum datarate by default
 		{
 			bss.bsStatus = IRP_BSStatus::congestionDemand;
 		}
-		else if (bss.bsStateDemand < Simulator::getDefaultCongestionState() && bss.bsStateDemand >= Simulator::getAlertState()) //almost congested
+		else if (bss.bsStateDemand < Simulator::getDefaultCongestionState() && bss.bsStateDemand >= Simulator::getAlertState()) //80% of max datarate by default
 		{
 			bss.bsStatus = IRP_BSStatus::almostcongested;
 		}
@@ -111,17 +111,17 @@ void IRPManager::IRPManagerUpdate()
 
 	if (Simulator::getEnvClock() % Simulator::getIRPBufSizeInSeconds() == 0)
 	{
-		//pause 
-		if (Simulator::getMachineLearning() == true)
-		{
+
+		/*if (Simulator::getMachineLearning() == true)		// not implemented always returns false
+		{													// possible work for future groups
 			// Call pre-processing for CurrentTick.csv
 			// Machine Learning decides on statuses
 			IRPManager::assignStatus();
 		}
 		else
-		{
+		{}*/
+
 			IRPManager::dataAnalysis();
-		}
 		// Self-Healing functions
 			IRPManager::checkStatus();
 
@@ -134,7 +134,6 @@ void IRPManager::IRPManagerUpdate()
 			IRPManager::offloadUserKPIs(); //Run ours?
 			break;
 		case 2:
-			//std::cout << "No Self-Healing" << '\n';
 			IRPManager::finishMovingUsers();	
 			break;
 		default:
@@ -265,11 +264,9 @@ void IRPManager::checkStatus()
 	}
 }
 
-bool IRPManager::assignStatus()
+bool IRPManager::assignStatus() //not currently used. Can read a csv to assign the statuses of each base station
 {
-	std::cout << "We made it into assignStatus()" << '\n';
 	auto MLInput = std::ifstream{ FileIO::getMachineLearningInputFP(), std::ios::in };
-	std::cout << "The file should be open here" << '\n';
 	if (!MLInput)
 	{
 		return ErrorTracer::error("\nCOULD NOT OPEN FILE MachineLearnignInput.csv in IRPManager.assignStatus()");
@@ -280,14 +277,11 @@ bool IRPManager::assignStatus()
 
 	while (getline(MLInput, buffer, '\n'))
 	{
-		std::cout << "trying to read each line" << '\n';
-		std::cout << buffer << '\n';
 		AssignedStatus.push_back(std::stoi(buffer));
 	}
 
 	for ( auto& bss : this->networkStatuses)
 	{
-		std::cout << "We've finished reading the file" << '\n';
 		if ( AssignedStatus[static_cast<int>(bss.bsID)] == 0 )// labeled as normal
 		{
 			bss.bsStatus = IRP_BSStatus::normal;
@@ -315,7 +309,7 @@ bool IRPManager::assignStatus()
 		}
 
 	}
-	//MLInput.close();
+	MLInput.close();
 	return true;
 }
 
@@ -546,7 +540,6 @@ void IRPManager::offloadUserKPIs() {
 
 		for (const size_t& CurrBS_ID : OptimizingBSs) 															//For each BaseStation (non-failing only since all the users will be offloaded already)
 		{
-			
 			//1. Collect user information and make a vector list (RSRPUser)
 			const UEDataBase& disabledBsRecords = Simulator::getBS(CurrBS_ID).getUEDB();						//Get UEDataBase from the current BaseStation
 			
@@ -607,8 +600,8 @@ void IRPManager::offloadUserKPIs() {
 	}//Exit optimization section
 }
 
-void IRPManager::finishMovingUsers()
-{
+void IRPManager::finishMovingUsers() //all this does is assign the user to the BS that it is closest to
+{									 // this is used to generate datasets with no self healing applied at all, but still complete user movements
 	std::vector<size_t> BaseStations;		// vector of all base stations
 
 	for (const auto& bs : IRPManager::networkStatuses) 

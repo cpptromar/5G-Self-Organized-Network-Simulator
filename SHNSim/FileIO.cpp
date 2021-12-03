@@ -40,10 +40,12 @@ const std::string& FileIO::getDRTBLFP()
 {
 	return FileIO::dataRateTableFilePath;
 }
+
 const std::string& FileIO::getCurrentTickCSVFP()
 {
 	return FileIO::defaultCurrentTickCSV;
 }
+
 const std::string& FileIO::getMachineLearningInputFP()
 {
 	return FileIO::defaultMachineLearningInputCSV;
@@ -614,6 +616,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	return true;
 }
+
 bool FileIO::writeCurrentTick(const uint32_t& simNum)
 {
 

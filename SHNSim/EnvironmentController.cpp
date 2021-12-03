@@ -277,8 +277,8 @@ void EnvironmentController::restoreState(BSFailureParams& bsfp)
 	modifyState(bsfp, diff);
 }
 
-void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff)
-{
+void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff) // no longer is use all, same for 4 functions are commented out below
+{																					// modifying number of users and demand values is now done in Initialization
 	float remainingDiff = diff;
 
 	auto positiveSign = bool{ remainingDiff >= 0.0f };
@@ -298,8 +298,8 @@ void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff
 	else
 		EnvironmentController::decrementDemands(bsfp, amtData, remainingDiff);
 */
-}
-
+} 
+/*
 void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32_t& amtData, float& diff)
 {
 	for (auto dataAdded = uint32_t{ 0 }; dataAdded < amtData; dataAdded++)
@@ -432,7 +432,7 @@ void EnvironmentController::removeUsers(BSFailureParams& bsfp, const uint32_t& n
 			return;
 	}
 }
-
+*/
 void EnvironmentController::ECUpdate()
 {
 	EnvironmentController::channelFluctuation();
@@ -454,7 +454,7 @@ void EnvironmentController::ECUpdate()
 				|| bsfp.currentState < bsfp.endState - Simulator::AP_StateCushion)
 				&& bsfp.endStatus != BSstatus::failure
 				)
-					restoreState(bsfp);
+					restoreState(bsfp);				//no longer in use
 			else
 				continue;
 		}
@@ -468,7 +468,7 @@ void EnvironmentController::ECUpdate()
 			}
 			else
 			{
-				rampingState(bsfp, bsfp.startTime + bsfp.riseTime - Simulator::getEnvClock());
+				rampingState(bsfp, bsfp.startTime + bsfp.riseTime - Simulator::getEnvClock());		//no longer in use, unsure of what the original purpose was
 				if (bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock())
 				{
 					bsfp.currentStatus = bsfp.endStatus;

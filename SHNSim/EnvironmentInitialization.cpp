@@ -44,14 +44,14 @@ bool EnvironmentInitialization::setDefaultUsers()
 				if (!currentTranceiver.first)
 					continue;
 				
-				uint32_t currentDemand = 0;
+				uint32_t currentDemand = 0;			//Each user will have a random datarate between 1 and the max datarate
 				if (BaseStationStatus == BSstatus::normal ||
 					BaseStationStatus == BSstatus::congestionUsers ||
 					BaseStationStatus == BSstatus::failure)
 				{
 					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
 				}
-				else if (BaseStationStatus == BSstatus::congestionDemand)
+				else if (BaseStationStatus == BSstatus::congestionDemand) // if the cell is congested each user will have the max datarate
 				{
 					currentDemand = uint32_t{ dataRate };
 				}
@@ -59,7 +59,6 @@ bool EnvironmentInitialization::setDefaultUsers()
 				{
 					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
 				}
-				//std::cout << currentDemand << "  " << dataRate << "  \n";
 
 				const auto newRecord = UERecord{ 
 					currUserID, 
@@ -202,12 +201,11 @@ bool EnvironmentInitialization::generateNewENV()
 
 	//Initializes actual BaseStations.
 	
-	//uint32_t AttractivenessArray[8] = { ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1), ((Simulator::rand() % 10) + 1) }; //hard coded for now
-	//uint32_t PopulationDensityArray[8] = { ((Simulator::rand() % 10) +1), (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1, (Simulator::rand() % 10) + 1 }; // add to gui later
-
-	uint32_t AttractivenessArray[20] = { 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
-	uint32_t PopulationDensityArray[20] = { 10,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5 };
-
+	uint32_t AttractivenessArray[20] = { 1,1,1,10,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1 };
+	uint32_t PopulationDensityArray[20] = { 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5 };
+	//The current GUI implementation of Density and Attractiveness DOES NOT WORK
+	//You will need to edit the values in these arrays then make output, make clean ./output again
+	//This needs to be changed in the GUI_Main
 
 	auto bsCount = size_t{ 0 };
 	int bscounta = 0;

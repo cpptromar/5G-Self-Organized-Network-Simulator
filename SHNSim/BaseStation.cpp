@@ -142,7 +142,8 @@ bool BaseStation::moveUE(const size_t& ue_id, const Coord<float>& newloc)
 
 void BaseStation::setFailedTrue()
 {
-	this->BS_Status = 2; //failed
+	this->BS_Status = 1; //failure
+	//BS_Status needs to be changed to an int and follow the enum values
 }
 
 void BaseStation::setFailedFalse()
@@ -179,10 +180,12 @@ const uint32_t& BaseStation::getDataRate() const
 {
 	return this->dataRate;
 }
+
 const uint32_t& BaseStation::getBaseStationAttractiveness() const
 {
 	return this->BaseStationAttractiveness;
 }
+
 const uint32_t& BaseStation::getBaseStationPopulationDensity() const
 {
 	return this->BaseStationPopulationDensity;
@@ -215,7 +218,7 @@ bool BaseStation::Update()
 {
 	this->dataRate = 0;
 
-	if (this->BS_Status) //base station is failing
+	if (this->BS_Status) //base station status is not normal
 	{
 		
 		for (auto& uer : this->userRecords.readWriteDB())
