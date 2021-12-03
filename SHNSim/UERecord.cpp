@@ -25,3 +25,4 @@ const float& UERecord::getRSRP() {
 const float& UERecord::getDDR() {
 	return this->ddr;
 }
+

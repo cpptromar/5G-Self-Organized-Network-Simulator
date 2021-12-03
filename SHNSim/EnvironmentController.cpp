@@ -4,6 +4,7 @@
 #include <utility>
 #include <cmath>
 
+#include "BSFailureParams.h"
 #include "EnvironmentController.h"
 #include "UEDataBase.h"
 #include "DataRateTable.h"
@@ -183,6 +184,10 @@ void EnvironmentController::UpdateUserLoc()
 				std::vector<int> BSmobileList;
 				BSmobileList.clear();
 
+				int totalAttractiveness = 0;
+				std::vector<int> AttractivenessList;
+				AttractivenessList.clear();
+
 				auto distBetweenUEandBS = float{};							// dist holder
 				auto newBS_ID = size_t{ Simulator::getNumOfBSs() };		// destination to remove user to, initialized to an invalid BSID
 
@@ -201,13 +206,25 @@ void EnvironmentController::UpdateUserLoc()
 					{
 						newBS_ID = newBS.getBSID(); // store BS ID to BsmobileList vector
 						BSmobileList.push_back(newBS_ID);
+
+						totalAttractiveness = totalAttractiveness + newBS.getBaseStationAttractiveness();
+						AttractivenessList.push_back(newBS.getBaseStationAttractiveness());
 					}
 				}
 				//------------------------------Choose a random base station within range------------------------------
 
-				const auto BSrandNum = Simulator::rand() % BSmobileList.size();
-				newBS_ID = BSmobileList[BSrandNum];
-
+				int BSrandNum = Simulator::rand() % totalAttractiveness;
+				for (int i = 0; i < BSmobileList.size(); i++)
+				{
+					if (BSrandNum < AttractivenessList[i])
+					{
+						newBS_ID = BSmobileList[i];
+						i = BSmobileList.size();
+					}
+					BSrandNum = BSrandNum - AttractivenessList[i];
+				}
+				
+			
 				//-----------------------------------------Update user location-----------------------------------------
 				//generate random point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -218,9 +235,13 @@ void EnvironmentController::UpdateUserLoc()
 				const auto loc = Coord<float>{ static_cast<float>(radius * cos(phase)), static_cast<float>(radius * sin(phase)) };
 				const auto newLoc = Coord<float>{ loc.x + Simulator::getBS(newBS_ID).getLoc().x, loc.y + Simulator::getBS(newBS_ID).getLoc().y };
 				
+				
+				
 				//Move user
-				if (newBS_ID < Simulator::getNumOfBSs() && Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc))
+				if (newBS_ID < Simulator::getNumOfBSs() 
+					&& Simulator::moveUE(BaseStation.getBSID(), usrID, newLoc) )
 				{
+					
 					prevAmount -= 1;
 				}
 
@@ -256,26 +277,29 @@ void EnvironmentController::restoreState(BSFailureParams& bsfp)
 	modifyState(bsfp, diff);
 }
 
-void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff)
-{
+void EnvironmentController::modifyState(BSFailureParams& bsfp, const float& diff) // no longer is use all, same for 4 functions are commented out below
+{																					// modifying number of users and demand values is now done in Initialization
 	float remainingDiff = diff;
 
 	auto positiveSign = bool{ remainingDiff >= 0.0f };
 	const auto numUsers = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) / EnvironmentController::averageUEStateContribution) };
+	/*
 	if (positiveSign)
 		EnvironmentController::addUsers(bsfp, numUsers, remainingDiff);
 	else
 		EnvironmentController::removeUsers(bsfp, numUsers, remainingDiff);
+	*/
 
 	positiveSign = (remainingDiff >= 0.0f);
 	const auto amtData = uint32_t{ static_cast<uint32_t>(std::abs(remainingDiff) * Simulator::getBSMaxDR()) };
+	/*
 	if (positiveSign)
 		EnvironmentController::incrementDemands(bsfp, amtData, remainingDiff);
 	else
 		EnvironmentController::decrementDemands(bsfp, amtData, remainingDiff);
-
-}
-
+*/
+} 
+/*
 void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32_t& amtData, float& diff)
 {
 	for (auto dataAdded = uint32_t{ 0 }; dataAdded < amtData; dataAdded++)
@@ -285,7 +309,9 @@ void EnvironmentController::incrementDemands(BSFailureParams& bsfp, const uint32
 
 		const auto& user = bsfp.UEsInRegion[static_cast<size_t>(Simulator::rand() % bsfp.UEsInRegion.size())];
 		if (Simulator::getUE_m(user).incrementDemand())
+		{
 			diff -= 1.0f / Simulator::getBSMaxDR();
+		}
 	}
 }
 
@@ -406,7 +432,7 @@ void EnvironmentController::removeUsers(BSFailureParams& bsfp, const uint32_t& n
 			return;
 	}
 }
-
+*/
 void EnvironmentController::ECUpdate()
 {
 	EnvironmentController::channelFluctuation();
@@ -428,7 +454,7 @@ void EnvironmentController::ECUpdate()
 				|| bsfp.currentState < bsfp.endState - Simulator::AP_StateCushion)
 				&& bsfp.endStatus != BSstatus::failure
 				)
-					restoreState(bsfp);
+					restoreState(bsfp);				//no longer in use
 			else
 				continue;
 		}
@@ -442,7 +468,7 @@ void EnvironmentController::ECUpdate()
 			}
 			else
 			{
-				rampingState(bsfp, bsfp.startTime + bsfp.riseTime - Simulator::getEnvClock());
+				rampingState(bsfp, bsfp.startTime + bsfp.riseTime - Simulator::getEnvClock());		//no longer in use, unsure of what the original purpose was
 				if (bsfp.startTime + bsfp.riseTime <= Simulator::getEnvClock())
 				{
 					bsfp.currentStatus = bsfp.endStatus;
@@ -461,7 +487,7 @@ void EnvironmentController::ECUpdate()
 }
 
 //FLAG
-const BSstatus& EnvironmentController::getCurrentBSStatus(const size_t& bs)
+const BSstatus& EnvironmentController::getCurrentBSStatus( const size_t& bs)
 {
 	return BSRegionControlInfo[bs].currentStatus;
 }
