@@ -113,7 +113,7 @@ void exitProg();
 static void getScreenHeight();
 static void drawHex(cairo_t*);
 static bool drawScatterPlot(cairo_t*, int time, int simNum);
-static void button_clicked(GtkWidget * widget, gpointer data);
+static void next_button_clicked(GtkWidget * widget, gpointer data);
 static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);

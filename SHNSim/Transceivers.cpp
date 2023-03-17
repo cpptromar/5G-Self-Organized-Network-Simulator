@@ -1,6 +1,6 @@
 #include <cmath>
 #include <numeric>
-
+#include <cstddef>
 #include "Transceivers.h"
 #include "UserEquipment.h"
 #include "Simulator.h"
@@ -12,7 +12,7 @@ Transceiver::Transceiver(const size_t& trID, const Coord<float>& loc, const floa
 {
 	this->trLoc = Coord<float>{ loc };
 	this->tranceiverID = trID;
-	this->theta = float{ 0 };
+	this->theta = aTheta;
 	this->antTheta = aTheta;
 }
 
@@ -33,7 +33,7 @@ const float& Transceiver::getAntTheta() const
 
 const float& Transceiver::getTheta() const
 {
-	return this->theta;
+	return this->antTheta;
 }
 
 

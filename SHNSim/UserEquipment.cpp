@@ -1,5 +1,6 @@
 #include "UserEquipment.h"
 #include "Simulator.h"
+#include <cstddef>
 
 UserEquipment::UserEquipment(const Coord<float>& loc, const size_t& ID, const size_t& m, std::vector<uint32_t>& possMaxDrs, const uint32_t& initDemand)
 {

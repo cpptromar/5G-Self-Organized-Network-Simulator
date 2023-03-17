@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <stdint.h> // needed to use uint32_t on Linux
+#include <cstddef>
 #include "Coord.h"
 
 class Transceiver

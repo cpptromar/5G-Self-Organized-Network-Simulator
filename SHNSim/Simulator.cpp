@@ -436,9 +436,9 @@ bool Simulator::moveUE(const size_t& bsOrigin, const size_t& UE_ID, const Coord<
 
 float Simulator::generateSNR(float distanceSquared)
 {
-	const auto distanceToLowerBoundSquared = pow(3 * Simulator::BSRegionScalingFactor, 2);
-	const auto range = (Simulator::AP_SNRUpperBound - Simulator::AP_SNRLowerBound);
-	return range / (((range - 1) / distanceToLowerBoundSquared) * distanceSquared + 1) + (Simulator::AP_SNRLowerBound);
+	const auto distanceToLowerBoundSquared = pow(3 * Simulator::BSRegionScalingFactor, 2);									//(3*15) ^ 2
+	const auto range = (Simulator::AP_SNRUpperBound - Simulator::AP_SNRLowerBound);											// 12 - (-12)
+	return range / (((range - 1) / distanceToLowerBoundSquared) * distanceSquared + 1) + (Simulator::AP_SNRLowerBound);		// 24/(3*15)^2 * distanceSquared + 1 + 24
 	
 }
 

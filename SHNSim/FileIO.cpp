@@ -3,7 +3,7 @@
 #include <sstream>
 #include <utility>
 #include <map>
-
+#include <cstddef>
 #include "ErrorTracer.h"
 #include "Simulator.h"
 #include "FileIO.h"
@@ -22,7 +22,7 @@ std::map<std::int32_t, std::int64_t> FileIO::dict_time2pos;
 std::string FileIO::programPath = std::string{};
 std::string FileIO::dataRateTableFilePath = std::string{};
 std::string FileIO::simulationSaveName = std::string{ "ERROR" };
-bool FileIO::splitLogFiles = bool{ false };
+bool FileIO::splitLogFiles = bool{ true };
 char FileIO::filePathSlash = char{ '/' };
 uint32_t FileIO::logCount = uint32_t{ 0 };
 uint32_t FileIO::logRowCount = uint32_t{ 0 };
@@ -377,6 +377,22 @@ bool FileIO::writeInitalSimulationState(const std::string& addendum = "")
 
 			const auto& ddr = (*uer).ddr;
 			file_obj.write(FileIO::chPtrConv(&ddr), sizeof(ddr));
+
+			const auto& avth = (*uer).avth;
+			file_obj.write(FileIO::chPtrConv(&avth), sizeof(avth));
+
+			const auto& ret = (*uer).ret;
+			file_obj.write(FileIO::chPtrConv(&ret), sizeof(ret));
+
+			const auto& dist = (*uer).dist;
+			file_obj.write(FileIO::chPtrConv(&dist), sizeof(dist));
+
+			const auto& dist95 = (*uer).dist95;
+			file_obj.write(FileIO::chPtrConv(&dist95), sizeof(dist95));
+
+			const auto& trxangle = (*uer).trxangle;
+			file_obj.write(FileIO::chPtrConv(&trxangle), sizeof(trxangle));
+
 			
 		}
 	}
@@ -537,7 +553,22 @@ bool FileIO::readSaveFileIntoSim()
 			auto ddr = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&ddr), sizeof(ddr));
 
-			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps, rsrp, rssi, rsrq, ddr};
+			auto avth = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&avth), sizeof(avth));
+
+			auto ret = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&ret), sizeof(ret));
+
+			auto dist = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&dist), sizeof(dist));
+
+			int dist95 = uint32_t{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&dist95), sizeof(dist95));
+
+			auto trxangle = float{ 0 };
+			file_obj.read(FileIO::chPtrConv_m(&trxangle), sizeof(trxangle));
+
+			auto newRecord = UERecord{ userID, mobilityID, Coord<float>{x, y}, ant, tr, snr, demand, bts, ps, rsrp, rssi, rsrq, ddr, avth, ret, dist, dist95, trxangle};
 			newBS.addUERecord(newRecord);
 		}
 		Simulator::addBS(newBS);
@@ -567,7 +598,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 
 	if (FileIO::logRowCount == 0)
 	{
-		log << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
+		log << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%), SNR, AVTH, RET, DIST, DIST95\n"; // added the name for the column holding the bs number
 		FileIO::incrementLogRowCount();
 	}
 
@@ -591,7 +622,7 @@ bool FileIO::appendLog(const uint32_t& simNum)
 			<< ue_ld.TRX_ID << ','
 			<< ue_ld.TRX_X << ','
 			<< ue_ld.TRX_Y << ','
-			<< ue_ld.TRX_ANG << ','
+			<< ue_ld.TRXANGLE << ','
 			<< ue_ld.UE_ID << ','
 			<< ue_ld.UE_MID << ','
 			<< ue_ld.UE_LOC_X << ','
@@ -604,7 +635,12 @@ bool FileIO::appendLog(const uint32_t& simNum)
 			<< ue_ld.RSRP << ','
 			<< ue_ld.RSSI << ','
 			<< ue_ld.RSRQ << ','
-			<< ue_ld.DDR << '\n';
+			<< ue_ld.DDR << ','
+			<< ue_ld.SNR << ','
+			<< ue_ld.AVTH << ','
+			<< ue_ld.RET << ','
+			<< ue_ld.DIST << ','
+			<< ue_ld.DIST95 << '\n';
 		if (FileIO::splitLogFiles)
 		{
 			FileIO::incrementLogRowCount();
@@ -622,7 +658,7 @@ bool FileIO::writeCurrentTick(const uint32_t& simNum)
 
 	auto CurrentTickCSV = std::ofstream{ FileIO::getCurrentTickCSVFP(), std::ios::in };
 	
-	CurrentTickCSV << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%)\n"; // added the name for the column holding the bs number
+	CurrentTickCSV << "Time,BS_ID,BS_STATUS,BS_LOC_X,BS_LOC_Y,ANT_ID,ANT_SEC,TRX_ID,TRX_X,TRX_Y,TRX_ANG,UE_ID,UE_MID,UE_LOC_X,UE_LOC_Y,MAX_DR (bits),DEMAND_DR (bits),REAL_DR (bits),BS_Trans_PWR (W),UE_Rec_PWR (W),RSRP (dBm),RSSI (dBm),RSRQ (dB),DDR (%), SNR, AVTH, RET, DIST, DIST95\n"; // added the name for the column holding the bs number
 	
 	if (Simulator::getIRPManager().getBuffer().size() < 1)
 		return ErrorTracer::error("Network Manager buffer empty when attempting to access log.");
@@ -650,7 +686,7 @@ bool FileIO::writeCurrentTick(const uint32_t& simNum)
 				<< ue_ld.TRX_ID << ','
 				<< ue_ld.TRX_X << ','
 				<< ue_ld.TRX_Y << ','
-				<< ue_ld.TRX_ANG << ','
+				<< ue_ld.TRXANGLE << ','
 				<< ue_ld.UE_ID << ','
 				<< ue_ld.UE_MID << ','
 				<< ue_ld.UE_LOC_X << ','
@@ -663,7 +699,14 @@ bool FileIO::writeCurrentTick(const uint32_t& simNum)
 				<< ue_ld.RSRP << ','
 				<< ue_ld.RSSI << ','
 				<< ue_ld.RSRQ << ','
-				<< ue_ld.DDR << '\n';
+				<< ue_ld.DDR << ','
+				<< ue_ld.SNR << ','
+				<< ue_ld.AVTH << ','
+				<< ue_ld.RET << ','
+				<< ue_ld.DIST << ','
+				<< ue_ld.DIST95 << '\n';
+
+
 			i = i + 1;
 		}
 			
@@ -892,7 +935,7 @@ std::uint64_t FileIO::readLog_LineAtPosition(const uint32_t& simNum, float* line
 		}
 	}	
 	else //if getline(log, line) said it's the end of file (EOF) (i.e. it returns false)
-		return NULL; //return NULL if it's the EOF
+		return 0; //return NULL if it's the EOF
 
 	endPosition = log.tellg();	//save the ending position
 

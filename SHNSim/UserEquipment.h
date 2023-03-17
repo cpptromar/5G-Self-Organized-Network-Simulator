@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "Coord.h"
 #include <vector>
+#include <cstddef>
 
 
 class UserEquipment

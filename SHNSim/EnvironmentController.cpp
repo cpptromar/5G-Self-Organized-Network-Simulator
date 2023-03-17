@@ -248,7 +248,7 @@ void EnvironmentController::UpdateUserLoc()
 				if (prevAmount == userMobilities.size())
 				{
 					removalAttemptFailed++;
-					ErrorTracer::error("EnvironmentController: Error changing (x,y) location of UE \n");
+					//ErrorTracer::error("EnvironmentController: Error changing (x,y) location of UE, or connection was dropped \n");
 				}
 			}
 			else  //Else, don't move them, but still update the counter

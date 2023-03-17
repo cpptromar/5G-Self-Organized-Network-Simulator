@@ -18,7 +18,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < floor((Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity())/5); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
+			for (auto ue = size_t{ 0 }; ue < floor((Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()) / 5); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
 				//gets a randomly point
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
@@ -26,7 +26,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 				const auto rPhase = float{ 2.0f * (Simulator::randF() - 0.5f) * Simulator::PI / Simulator::getNumberOfAntennae() + ant.getAngle() * Simulator::PI / 180.0f };
 				const auto loc = Coord<float>{ static_cast<float>(rRadius * cos(rPhase)), static_cast<float>(rRadius * sin(rPhase)) };
 
-				const auto distanceSquared = float{static_cast<float>(pow(loc.x, static_cast<int>(2)) + pow(loc.y, static_cast<int>(2)))};
+				const auto distanceSquared = float{ static_cast<float>(pow(loc.x, static_cast<int>(2)) + pow(loc.y, static_cast<int>(2))) };
 				const auto SNR = Simulator::generateSNR(distanceSquared);
 				const auto dataRate = DataRateTable::getDataRate(SNR, Simulator::getCurrentChannel());
 
@@ -35,7 +35,7 @@ bool EnvironmentInitialization::setDefaultUsers()
 
 				//Generate a random mobility ID for the current user [0 = Stationary, 1 = Walking, 2 = Driving (car)]
 				const auto currMobilityID = (Simulator::rand() % 3);
-				
+
 				const auto BaseStationID = bs.getBSID();
 				const auto BaseStationStatus = (BSstatus)(GUIDataContainer::status[BaseStationID]);
 
@@ -43,22 +43,17 @@ bool EnvironmentInitialization::setDefaultUsers()
 				const auto currentTranceiver = bs.getAntenna(ant.getAntID()).getConnectionInfo_m().addUser(currUserID);
 				if (!currentTranceiver.first)
 					continue;
-				
+
 				uint32_t currentDemand = 0;			//Each user will have a random datarate between 1 and the max datarate
-				if (BaseStationStatus == BSstatus::normal ||
-					BaseStationStatus == BSstatus::congestionUsers ||
-					BaseStationStatus == BSstatus::failure)
-				{
-					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
-				}
-				else if (BaseStationStatus == BSstatus::congestionDemand) // if the cell is congested each user will have the max datarate
-				{
+
+				if (BaseStationStatus == BSstatus::congestionDemand) // if the cell is congested each user will have the max datarate
 					currentDemand = uint32_t{ dataRate };
-				}
 				else
-				{
-					 currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
-				}
+					currentDemand = uint32_t{ (Simulator::rand() % (dataRate + 1)) };
+
+				//***UE KPI INITIALIZATION FOR FAULT CASES***//
+				uint32_t retainability = EnvironmentInitialization::setRetainability(BaseStationStatus);
+
 
 				const auto newRecord = UERecord{ 
 					currUserID, 
@@ -71,6 +66,11 @@ bool EnvironmentInitialization::setDefaultUsers()
 					0, 
 					0,
 					0,
+					0,
+					0,
+					0,
+					0,
+					retainability,
 					0,
 					0,
 					0
@@ -121,6 +121,55 @@ bool EnvironmentInitialization::setBSMaxDataRate()
 	
 
 	return true;
+}
+
+int EnvironmentInitialization::setRetainability(BSstatus BaseStationStatus)
+{
+	uint32_t retainability = (Simulator::rand() % 100);
+	//conditional block to assign retainability (1 = successful, 0 = dropped) chances based on pdf
+	if (BaseStationStatus == BSstatus::excessiveDowntilt)
+	{
+		if (retainability > 50)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	else if (BaseStationStatus == BSstatus::reductionInPower)
+	{
+		if (retainability > 2)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	else if (BaseStationStatus == BSstatus::coverageHole)
+	{
+		if (retainability > 7)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	else if (BaseStationStatus == BSstatus::tooLateHandover)
+	{
+		if (retainability > 4)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	else if (BaseStationStatus == BSstatus::intercellInterference)
+	{
+		if (retainability > 6)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	else
+	{
+		if (retainability > 1)
+			retainability = 1;
+		else
+			retainability = 0;
+	}
+	return retainability;
 }
 
 //FLAG ARRAY ACCESS

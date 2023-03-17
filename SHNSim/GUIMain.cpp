@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	// initialize gtk	
 	gtk_init(&argc, &argv);
 
-	// get screen dimensions
+	// get screen dimensions 
 	getDimensions();
 
 
@@ -77,8 +77,8 @@ void setUpDrawingWindow()
 	GUIDataContainer::selectedTile = 0;
 	GUIDataContainer::highlightedSide = 0;
 
-	GUIDataContainer::screenHeight = (SCREEN.HEIGHT - 32);
-	GUIDataContainer::screenWidth = (SCREEN.WIDTH - 32);
+	GUIDataContainer::screenHeight = (SCREEN.HEIGHT - 200);
+	GUIDataContainer::screenWidth = (SCREEN.WIDTH - 200);
 	GUIDataContainer::defaultWindowHeight = GUIDataContainer::screenHeight * 0.75;	//	set default window size to 0.75 of the screen size
 	GUIDataContainer::defaultWindowWidth = GUIDataContainer::screenWidth * 0.75;	//	so it's not full screen...
 	GUIDataContainer::windowHeight = GUIDataContainer::defaultWindowHeight;		// these will be used to keep track of changes 
@@ -126,7 +126,7 @@ void setUpDrawingWindow()
 
 	//=====================================================================================//
 
-	g_signal_connect(button, "clicked", G_CALLBACK(button_clicked), NULL);
+	g_signal_connect(button, "clicked", G_CALLBACK(next_button_clicked), NULL);
 	//g_signal_connect(newButton, "clicked", G_CALLBACK(button_clicked_exp), NULL);
 	g_signal_connect(debugbtn, "clicked", G_CALLBACK(goToDebug), NULL);
 	g_signal_connect(updateBsParamsBtn, "clicked", G_CALLBACK(updateBsParams), NULL);
@@ -601,7 +601,7 @@ void setUpSimProgressWindow()
 	GtkWidget* buttonQuit;
 	window = GTK_WIDGET(gtk_builder_get_object(builder, "windowProgress"));
 	gtk_widget_hide(GTK_WIDGET(window)); //hide on default
-	g_signal_connect(window, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(window, "destroy", G_CALLBACK(gdk_window_destroy), NULL);
 
 	buttonQuit = GTK_WIDGET(gtk_builder_get_object(builder, "buttonQuit"));
 	g_signal_connect(buttonQuit, "clicked", G_CALLBACK(gtk_main_quit), NULL); //instead of gtk_main_quit, go to a closing function (future work)
@@ -993,6 +993,24 @@ static void drawHex(cairo_t * cr)
 			case 3:	// Fail
 				cairo_set_source_rgb(cr, 150.0 / 255.0, 0, 0);
 				break;
+			case 4: // Excessive Uptilt
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 255.0, 255.0);
+				break;
+			case 5: // Excessive Downtilt
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 0, 255.0);
+				break;
+			case 6: // Reduction in Cell Power
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 50.0 / 255.0, 0);
+				break;
+			case 7: // Coverage Hole
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 175.0 / 255.0, 0);
+				break;
+			case 8: // TLHO
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 78.0 / 255.0, 0);
+				break;
+			case 9: // II
+				cairo_set_source_rgb(cr, 150.0 / 255.0, 255.0 / 255.0, 0);
+				break;
 			default:
 				cairo_set_source_rgb(cr, 1, 1, 1);
 			}
@@ -1012,6 +1030,24 @@ static void drawHex(cairo_t * cr)
 				break;
 			case 3:	// Fail
 				cairo_set_source_rgb(cr, 200.0 / 255.0, 0, 0);
+				break;
+			case 4: // Excessive Uptilt
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 255.0, 255.0);
+				break;
+			case 5: // Excessive Downtilt
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 0, 255.0);
+				break;
+			case 6: // Reduction in Cell Power
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 50.0 / 255.0, 0);
+				break;
+			case 7: // Coverage Hole
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 175.0 / 255.0, 0);
+				break;
+			case 8: // TLHO
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 78.0 / 255.0, 0);
+				break;
+			case 9: // II
+				cairo_set_source_rgb(cr, 200.0 / 255.0, 255.0 / 255.0, 0);
 				break;
 			default:
 				cairo_set_source_rgb(cr, 1, 1, 1);
@@ -1121,7 +1157,7 @@ static void drawHex(cairo_t * cr)
 	}
 }
 // These buttons are on the first drawing window 
-static void button_clicked(GtkWidget * widget, gpointer data)
+static void next_button_clicked(GtkWidget * widget, gpointer data)
 {
 	getNeighbors();
 	goToSimParams();
@@ -1145,8 +1181,8 @@ static void button_clicked13(GtkWidget* widget, gpointer data)
 
 static void button_clicked14(GtkWidget* widget)
 {
-	GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 4;
-	// rotate from healthy -> user congested -> demand congested -> failing
+	GUIDataContainer::status[GUIDataContainer::selectedTile] = (GUIDataContainer::status[GUIDataContainer::selectedTile] + 1) % 10;
+	// rotate from healthy -> user congested -> demand congested -> failing -> excessive uptilt -> excessive downtilt -> reduction cell power -> coverage hole -> TLHO -> II
 	if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 0)
 	{
 		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 50;
@@ -1160,6 +1196,30 @@ static void button_clicked14(GtkWidget* widget)
 		GUIDataContainer::endState[GUIDataContainer::selectedTile] = GUIDataContainer::congestionState;
 	}
 	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 3)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 4;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 4)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 5)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 6)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 7)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 8)
+	{
+		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 9)
 	{
 		GUIDataContainer::endState[GUIDataContainer::selectedTile] = 0;
 	}
@@ -1177,6 +1237,8 @@ static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_
 
 		gtk_widget_queue_draw(widget);
 	}
+
+	return true;
 }
 
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data)
@@ -1311,28 +1373,31 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 				GtkWidget* cellparameters = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 				gtk_container_set_border_width(GTK_CONTAINER(cellparameters), 10);
 
-				g_signal_connect(cellparameters, "delete-event", G_CALLBACK(gtk_main_quit), NULL);
 
 				WINDOWS.CellParameters = cellparameters;
-
+				
 				//define the label at the top
 				basestationLabel = gtk_label_new(("Base Station: " + to_string(GUIDataContainer::selectedTile)).c_str());
 				//basestationLabel = gtk_label_new("Base Station: ");
 
 				//set up the table containing the entry fields and submission buttons
-				GtkWidget* tableCellParameters = gtk_table_new(5, 2, 0);
+				GtkWidget* gridCellParameters = gtk_grid_new();
+				gtk_grid_set_row_spacing(GTK_GRID(gridCellParameters), 15);
+				gtk_grid_set_column_spacing(GTK_GRID(gridCellParameters), 15);
+				gtk_grid_set_column_homogeneous(GTK_GRID(gridCellParameters), TRUE);
+
 				entryAttractiveness = gtk_entry_new();
 				buttonAttractiveness = gtk_button_new_with_label("Attractiveness");
 				entryDensity = gtk_entry_new();
 				buttonDensity = gtk_button_new_with_label("Density");
 				buttonState = gtk_button_new_with_label("Cell State Toggle");
 
-				gtk_table_attach(GTK_TABLE(tableCellParameters), basestationLabel, 0, 2, 0, 1, GTK_FILL, GTK_FILL, 0, 15);
-				gtk_table_attach(GTK_TABLE(tableCellParameters), entryAttractiveness, 0, 1, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
-				gtk_table_attach(GTK_TABLE(tableCellParameters), buttonAttractiveness, 1, 2, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
-				gtk_table_attach(GTK_TABLE(tableCellParameters), entryDensity, 0, 1, 2, 3, GTK_FILL, GTK_FILL, 0, 0);
-				gtk_table_attach(GTK_TABLE(tableCellParameters), buttonDensity, 1, 2, 2, 3, GTK_FILL, GTK_FILL, 0, 0);
-				gtk_table_attach(GTK_TABLE(tableCellParameters), buttonState, 0, 2, 3, 4, GTK_FILL, GTK_FILL, 0, 0);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), basestationLabel, 0, 0, 2, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), entryAttractiveness, 0, 1, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonAttractiveness, 1, 1, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), entryDensity, 0, 2, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonDensity, 1, 2, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonState, 0, 3, 2, 1);
 
 				gtk_entry_set_text(GTK_ENTRY(entryAttractiveness), (gchar*)(std::to_string(GUIDataContainer::AttractivenessArray[GUIDataContainer::selectedTile]).c_str()));
 				gtk_entry_set_text(GTK_ENTRY(entryDensity), (gchar*)(std::to_string(GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile]).c_str()));
@@ -1341,9 +1406,10 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 				g_signal_connect(buttonAttractiveness, "clicked", G_CALLBACK(button_clicked12), entryAttractiveness);
 				g_signal_connect(buttonDensity, "clicked", G_CALLBACK(button_clicked13), entryDensity);
 				g_signal_connect(buttonState, "clicked", G_CALLBACK(button_clicked14), NULL);
+				//g_signal_connect(WINDOWS.CellParameters, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
 
 				//Add the table to the window; show the window	
-				gtk_container_add(GTK_CONTAINER(cellparameters), tableCellParameters);
+				gtk_container_add(GTK_CONTAINER(cellparameters), gridCellParameters);
 				gtk_widget_show_all(cellparameters);
 				
 			}
@@ -1539,6 +1605,30 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 	{
 		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Failing"); // 3 = Failing
 	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 4)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Excessive Uptilt"); // 4 = Excessive Uptilt
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 5)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Excessive Downtilt"); // 5 = Excessive Downtilt
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 6)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Reduction in Cell Power"); // 6 = Reduction in Cell Power
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 7)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Coverage Hole"); // 7 = Coverage
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 8)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Too Late Handover"); // 8 = Too Late Handover
+	}
+	else if (GUIDataContainer::status[GUIDataContainer::selectedTile] == 9)
+	{
+		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Intercell Interference"); // 7 = Coverage
+	}
 	else
 	{
 		gtk_label_set_text(GTK_LABEL(realTime.endStatusDisplayLbl), "Normal"); // 0 = Normal
@@ -1631,7 +1721,7 @@ static gboolean mouse_clicked_scatterplot(GtkWidget* widget, GdkEventButton* eve
 			}
 		}
 
-		if (nextPos != NULL) //if it's not the eof
+		if (nextPos != 0) //if it's not the eof
 			nextPos = FileIO::readLog_LineAtPosition(0, lineData, nextPos); //get next line for this time tick
 		else
 			eof = true;
@@ -1912,17 +2002,19 @@ void getDimensions()
 	// create screenGeo object that contains window length and width
 	GdkRectangle screenGeo;
 	GdkDisplay* gdkDisplay = gdk_display_get_default();
-	GdkMonitor* monitor = gdk_display_get_primary_monitor(gdkDisplay);
-	gdk_monitor_get_geometry(monitor, &screenGeo);
+	GdkScreen* gdkScreen = gdk_display_get_default_screen(gdkDisplay);
+	GdkMonitor* gdkMonitor = gdk_display_get_monitor(gdkDisplay, 0);
+	gdk_monitor_get_geometry(gdkMonitor, &screenGeo);
 
 	// Add screen dimensions to screen struct object to be used across the project
 	SCREEN.WIDTH = screenGeo.width;
 	SCREEN.HEIGHT = screenGeo.height;
-	
+
 	// Use the modified CSS file if the screen is lower resolution
-	if(SCREEN.WIDTH < 1920)
+	if (SCREEN.WIDTH < 1920)
 		StyleSheets.cssPath = "SHNSim_SmallScreen.css";
 }
+
 
 GtkWidget* UserMessage(GtkWindow* window, string message)
 {	
@@ -1980,10 +2072,13 @@ void displayInformation(GtkWidget* widget, GtkWindow* window)
 {
 	
 	string msg = "1st Window:\n   (1) Left Click to add eNodeB\n   (2) Left Click on numbers to change eNodeB condition\n   (3) Right Click on eNodeB to delete it";
-	msg += "\n\nColor Code:\n   Green = Healthy\n   Yellow = User Congested\n   Orange = Demand Congested\n   Red = Failing";
+	msg += "\n\nColor Code:\n   Green = Healthy   Yellow = User Congested   Orange = Demand Congested   Red = Failing\n";
+	msg += "   Light Blue = Excessive Uptilt   Purple = Excessive Downtilt   Red = Reduction in Cell Power\n";
+	msg += "   Yellow = Coverage Hole   Orange = Too Late Handover Neon Green = Intercell Interference\n";
 	msg += "\n\n** See accompanying report for parameter descriptions and more details**";
 	
 	UserMessage(window, msg);
+
 	
 }
 
@@ -2033,6 +2128,18 @@ void updateBsParams()
 				GUIDataContainer::status[GUIDataContainer::selectedTile] = 2;
 			if(STATUS == "Failing")
 				GUIDataContainer::status[GUIDataContainer::selectedTile] = 3;
+			if(STATUS == "Excessive Uptilt")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 4;
+			if(STATUS == "Excessive Downtilt")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 5;
+			if(STATUS == "Reduction in Cell Power")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 6;
+			if(STATUS == "Coverage Hole")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 7;
+			if (STATUS == "Too Late Handover")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 8;
+			if (STATUS == "Intercell Interference")
+				GUIDataContainer::status[GUIDataContainer::selectedTile] = 9;
 			
 			UserMessage(GTK_WINDOW(WINDOWS.DrawingWindow), "       Updated       ");
 		}
@@ -2144,7 +2251,7 @@ bool drawScatterPlot(cairo_t* cr, int time, int simNum)
 		cairo_fill(cr);
 
 
-		if (nextPos != NULL) //if it's not the eof
+		if (nextPos != 0) //if it's not the eof
 			nextPos = FileIO::readLog_LineAtPosition(0, lineData, nextPos); //get next line for this time tick
 		else
 			eof = true;

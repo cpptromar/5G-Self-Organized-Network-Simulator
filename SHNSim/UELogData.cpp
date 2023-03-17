@@ -1,8 +1,9 @@
 #include "UELogData.h"
+#include <cstddef>
 
 UELogData::UELogData(uint32_t time, size_t bs_id, size_t bs_status, float bs_loc_x, float bs_loc_y, size_t ant_id, float ant_sec, size_t trx_id, float trx_x, float trx_y, 
 	float trx_ang, size_t ue_id, size_t ue_mid, float ue_loc_x, float ue_loc_y, uint32_t max_dr, uint32_t demand_dr, uint32_t real_dr, float trans_pwr, float rec_pwr,
-	float rsrp, float rssi, float rsrq, float ddr)
+	float rsrp, float rssi, float rsrq, float ddr, float snr, float avth, float ret, float dist, int dist95, float trxangle)
 {
 	this->TIME = time;
 	this->BS_ID = bs_id;
@@ -28,4 +29,10 @@ UELogData::UELogData(uint32_t time, size_t bs_id, size_t bs_status, float bs_loc
 	this->RSSI = rssi;
 	this->RSRQ = rsrq;
 	this->DDR = ddr;
+	this->SNR = snr;
+	this->AVTH = avth;
+	this->RET = ret;
+	this->DIST = dist;
+	this->DIST95 = dist95;
+	this->TRXANGLE = trxangle;
 }

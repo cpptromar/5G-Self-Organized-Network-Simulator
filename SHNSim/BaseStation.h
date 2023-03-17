@@ -7,7 +7,7 @@
 
 //This enum describes the perceived status of the BS from the POV of the IRP Manager.
 //This will probably be moved.
-enum class BSstatus { normal = 0, congestionUsers, congestionDemand, failure };
+enum class BSstatus { normal = 0, congestionUsers, congestionDemand, failure, excessiveUptilt, excessiveDowntilt, reductionInPower, coverageHole, tooLateHandover, intercellInterference};
 
 
 /*	The BaseStation class function models a "cell tower". It contains a database with information about its connected users.

@@ -8,4 +8,5 @@ private:
 	static void initializeNumTransceivers();
 public:
 	static bool generateNewENV();
+	static int setRetainability(BSstatus);
 };

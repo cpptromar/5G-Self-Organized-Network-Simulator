@@ -188,7 +188,13 @@ void IRPManager::IRPDataCollection()
 						(*uer).rsrp,
 						(*uer).rssi,
 						(*uer).rsrq,
-						(*uer).ddr
+						(*uer).ddr,
+						(*uer).currentSNR,
+						(*uer).avth,
+						(*uer).ret,
+						(*uer).dist,
+						(*uer).dist95,
+						(*uer).trxangle
 					);	
 					td.push_back(logData);
 				}
@@ -493,9 +499,24 @@ void IRPManager::offloadUserKPIs() {
 
 				//Exiting this loop
 				//3b2. Add the user to the to the closest BS and remove it from the original BS where it is at
-				if (closestBS_ID < Simulator::getNumOfBSs() &&													//Check if the BSID is valid
+				if (closestBS_ID < Simulator::getNumOfBSs() &&
+					 networkStatuses.at(unhealthyBS).bsStatus == IRP_BSStatus::congestionUsers) // CURRENTLY IN USE FOR HOSR FAULT CASE, WILL CHANGE BSStatus later for its unique state "HOSR"
+				{
+					int handover = rand() % 100; 
+					
+					if (handover > 80)																			// percentage at which handover will succeed on time, hardcoded to 80% according to PDF graph of article
+					{
+						Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0);
+						amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();
+					}
+					else
+					{
+						ErrorTracer::error("IRPManager::offloadUserKPIs(): TLHO has been triggered *DEBUG USAGE*");
+					}
+				}
+				else if (closestBS_ID < Simulator::getNumOfBSs() &&													//Check if the BSID is valid
 					Simulator::transferUE(unhealthyBS, usrID, closestBS_ID, 0))									//Call transferUE
-				{																								
+				{
 					amountToRemove -= static_cast<float>(userDemand) / Simulator::getBSMaxDR();					//Modify amountToRemove
 				}
 
