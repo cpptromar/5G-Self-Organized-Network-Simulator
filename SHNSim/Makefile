@@ -33,7 +33,7 @@ GUIDataContainer.o: GUIDataContainer.cpp
 	g++ -g -c GUIDataContainer.cpp `pkg-config --cflags --libs gtk+-3.0`
 
 GUIMain.o: GUIMain.cpp GUIMain.h
-	g++ -g -c GUIMain.cpp `pkg-config --cflags --libs gtk+-3.0` -I/mnt/c/Users/rober/OneDrive/Desktop/EGR\ 4820/5G\ Sim/5G-Self-Organized-Network-Simulator-Spring2022/5G-Self-Organized-Network-Simulator-Spring2022/5G-Self-Organized-Network-Simulator-Spring2022/SHNSim/curl/include -I/mnt/c/Users/rober/OneDrive/Desktop/EGR\ 4820/5G\ Sim/5G-Self-Organized-Network-Simulator-Spring2022/5G-Self-Organized-Network-Simulator-Spring2022/5G-Self-Organized-Network-Simulator-Spring2022/SHNSim/cjson/include
+	g++ -g -c GUIMain.cpp `pkg-config --cflags --libs gtk+-3.0` -I./curl/include -I./cjson/include
 	
 IRPManager.o: IRPManager.cpp IRPManager.h
 	g++ -g -c IRPManager.cpp `pkg-config --cflags --libs gtk+-3.0`
