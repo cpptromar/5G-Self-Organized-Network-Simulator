@@ -26,6 +26,7 @@ int GUIDataContainer::antNum = 3;							//in the process of changing this to sec
 int GUIDataContainer::transNum = 100;	
 int GUIDataContainer::uePerAnt = 15;
 int GUIDataContainer::simLen = 1000;
+int GUIDataContainer::area = 0;
 int GUIDataContainer::GUIDataContainer::simNum = 1;
 int GUIDataContainer::simStartNum = 0;
 std::string GUIDataContainer::simName = "TEST";

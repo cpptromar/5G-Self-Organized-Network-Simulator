@@ -81,6 +81,12 @@
     <ClInclude Include="ErrorTracer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DrawingTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="API.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Antenna.cpp">
@@ -144,6 +150,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ErrorTracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawingTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="API.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

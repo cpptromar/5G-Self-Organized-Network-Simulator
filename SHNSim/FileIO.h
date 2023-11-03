@@ -2,7 +2,6 @@
 #include "Simulator.h"
 #include "UELogData.h"
 #include <cstring>
-#include <cstddef>
 #include <map> //maps are like dictionaries in C++
 
 class FileIO : private Simulator

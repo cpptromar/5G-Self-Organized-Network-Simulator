@@ -1,6 +1,5 @@
 #include "Antenna.h"
 #include <utility>
-#include <cstddef>
 // Here is test
 Antenna::Antenna(const size_t& antid, const float& angle, const Coord<float>& loc)
 {

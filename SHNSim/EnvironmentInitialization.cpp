@@ -18,9 +18,10 @@ bool EnvironmentInitialization::setDefaultUsers()
 	{
 		for (const auto& ant : bs.getAntennaVec())
 		{
-			for (auto ue = size_t{ 0 }; ue < floor((Simulator::getHealthyBSNumUsersPerAnt() * bs.getBaseStationPopulationDensity()) / 5); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
+			for (auto ue = size_t{ 0 }; ue < floor(((GUIDataContainer::PopulationDensityArray[bs.getBSID()] * GUIDataContainer::area) / GUIDataContainer::antNum)); ue++) //Simulator::getHealthyBSNumUsersPerAnt()
 			{
 				//gets a randomly point
+				std::cout << "Basestation Density: " << GUIDataContainer::PopulationDensityArray[bs.getBSID()] << ", Users Per Ant: " << GUIDataContainer::antNum << std::endl;
 				const auto& radiusLimit = [](const auto& a) {return ((a < Simulator::AP_MinUserDistFromBS) ? Simulator::AP_MinUserDistFromBS : a); };
 				const auto rRadius = float{ radiusLimit(Simulator::randF() * Simulator::getBSRegionScalingFactor()) };
 				const auto rPhase = float{ 2.0f * (Simulator::randF() - 0.5f) * Simulator::PI / Simulator::getNumberOfAntennae() + ant.getAngle() * Simulator::PI / 180.0f };

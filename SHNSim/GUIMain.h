@@ -111,9 +111,10 @@ void exitProg();
 
 // functions used in drawing window
 static void getScreenHeight();
+static void next_button_clicked(GtkWidget* widget, gpointer data);
 static void drawHex(cairo_t*);
 static bool drawScatterPlot(cairo_t*, int time, int simNum);
-static void next_button_clicked(GtkWidget * widget, gpointer data);
+static void button_clicked(GtkWidget * widget, gpointer data);
 static void button_clicked_exp(GtkWidget* widget, gpointer data);
 static gboolean mouse_moved(GtkWidget * widget, GdkEvent * event, gpointer user_data);
 static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpointer user_data);
@@ -126,8 +127,9 @@ static float distance(double x1, double y1, double x2, double y2);
 static int side(double x1, double y1, double x2, double y2);
 static bool deletionValid(int tile);
 static void getNeighbors();
-
+extern int populationdeninkm;
 // Utility function(s)
+int GetPopulationDensity(const std::string& stateInput);
 void getDimensions();
 GtkWidget* UserMessage(GtkWindow* window, string message);
 void displayInformation(GtkWidget* widget, GtkWindow* window);

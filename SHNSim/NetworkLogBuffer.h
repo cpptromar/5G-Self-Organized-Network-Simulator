@@ -1,8 +1,8 @@
 #pragma once
 #include <stdint.h> // needed to use uint32_t type in Linux
+#include <cstddef>
 #include "UELogData.h"
 #include <list>
-#include <cstddef>
 
 class NetworkLogBuffer 
 {

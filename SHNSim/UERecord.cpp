@@ -1,5 +1,4 @@
 #include "UERecord.h"
-#include <cstddef>
 
 UERecord::UERecord(const size_t& uid, const size_t& mid, const Coord<float>& loc, const size_t& at, const size_t& ct, const float& cSNR, const uint32_t& d, const uint32_t& bts, const float& ps,
 				   const float& rsrp, const float& rssi, const float& rsrq, const float& ddr, const float& avth, const float& ret, const float& dist, const int& dist95, const float& trxangle)

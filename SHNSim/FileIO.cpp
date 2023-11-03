@@ -3,7 +3,7 @@
 #include <sstream>
 #include <utility>
 #include <map>
-#include <cstddef>
+
 #include "ErrorTracer.h"
 #include "Simulator.h"
 #include "FileIO.h"
@@ -562,7 +562,7 @@ bool FileIO::readSaveFileIntoSim()
 			auto dist = float{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&dist), sizeof(dist));
 
-			int dist95 = uint32_t{ 0 };
+			auto dist95 = uint32_t{ 0 };
 			file_obj.read(FileIO::chPtrConv_m(&dist95), sizeof(dist95));
 
 			auto trxangle = float{ 0 };
@@ -935,7 +935,7 @@ std::uint64_t FileIO::readLog_LineAtPosition(const uint32_t& simNum, float* line
 		}
 	}	
 	else //if getline(log, line) said it's the end of file (EOF) (i.e. it returns false)
-		return 0; //return NULL if it's the EOF
+		return NULL; //return NULL if it's the EOF
 
 	endPosition = log.tellg();	//save the ending position
 

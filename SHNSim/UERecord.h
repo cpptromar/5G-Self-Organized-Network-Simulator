@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <cstddef>
 #include <vector>
 #include "Coord.h"
 #include <utility>
-#include <cstddef>
 
 struct UERecord
 {

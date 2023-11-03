@@ -523,6 +523,7 @@ void IRPManager::offloadUserKPIs() {
 				if (amountToRemove == prevAmountToRemove) {	 													//If transferUE didn't work,
 					removalAttemptFailed++;																		//Add 1 to amount of removal attempts
 					ErrorTracer::error("IRPManager::offloadUserKPIs(): Error transferring UE to new eNodeB");	//Use an ErrorTracer to notify the simulator via the console window
+					//std::cout << '\n' << "Max Data Rate = " << Simulator::getBSMaxDR() << std::endl;
 				}
 			} //End amountToRemove loop
 		} //End BaseStation loop
@@ -531,7 +532,7 @@ void IRPManager::offloadUserKPIs() {
 		if (allBSAmountsToRemove <= 0) {																		//If all BaseStations are done healing (no more amount to remove)
 			this->doneHealing = true;																			//Set doneHealing to true so that optimization will occur next time
 		}
-
+		
 	} //End Healing
 	
 	// Optimization

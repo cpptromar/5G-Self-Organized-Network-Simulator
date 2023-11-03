@@ -3,7 +3,7 @@
 #include <stdint.h> // needed to use uint32_t on Linux
 #include "NetworkLogBuffer.h"
 #include "BaseStation.h"
-
+#include <cstddef>
 #include "GUIDataContainer.h" // retreive size of eNodeB
 #include "ErrorTracer.h"
 

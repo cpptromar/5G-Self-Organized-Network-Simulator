@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <cstddef>
 #include "Coord.h"
 #include <vector>
-#include <cstddef>
 
 
 class UserEquipment

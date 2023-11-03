@@ -18,8 +18,8 @@
 
 const float Simulator::PI = 3.14159265F;
 const uint32_t Simulator::AP_userTriesPerInput = 5;
-const uint32_t Simulator::AP_smallestSideLength = 5;
-const uint32_t Simulator::AP_largestSideLength = 20;
+const uint32_t Simulator::AP_smallestSideLength = 1;
+const uint32_t Simulator::AP_largestSideLength = 30;
 const size_t Simulator::AP_fewestAntennae = 3;
 const size_t Simulator::AP_mostAntennae = 9;
 const size_t Simulator::AP_fewestTransceivers = 1;

@@ -172,7 +172,6 @@ public:
 	static const float&		getRSRPThreshold();
 	static const uint32_t&	getalgorithmVer();
 	static const bool&		getMachineLearning();
-
 	static const float		randF();
 	static const uint32_t	rand();
 

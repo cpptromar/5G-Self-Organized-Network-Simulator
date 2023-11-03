@@ -1,5 +1,4 @@
 #include "UELogData.h"
-#include <cstddef>
 
 UELogData::UELogData(uint32_t time, size_t bs_id, size_t bs_status, float bs_loc_x, float bs_loc_y, size_t ant_id, float ant_sec, size_t trx_id, float trx_x, float trx_y, 
 	float trx_ang, size_t ue_id, size_t ue_mid, float ue_loc_x, float ue_loc_y, uint32_t max_dr, uint32_t demand_dr, uint32_t real_dr, float trans_pwr, float rec_pwr,

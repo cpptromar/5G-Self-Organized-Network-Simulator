@@ -28,6 +28,7 @@ struct GUIDataContainer
  	
 	// stage 2 parameters
 	static int bsLen;
+	static int area;
 	static int antNum;
 	static int transNum;
 	static int uePerAnt;

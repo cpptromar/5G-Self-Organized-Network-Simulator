@@ -24,7 +24,7 @@ bool ErrorTracer::programExit()
 {
 	if (ErrorTracer::errorOccurred)
 	{
-		std::cout << '\n' << ErrorTracer::errorMessage << std::endl;
+		std::cout << '\n' << ErrorTracer::errorMessage << std::endl << std::flush;
 		std::cout << "Press ENTER to continue...";
 		std::cin.ignore(std::numeric_limits <std::streamsize> ::max(), '\n');
 

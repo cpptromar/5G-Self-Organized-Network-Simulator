@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Antenna.h" />
+    <ClInclude Include="API.h" />
     <ClInclude Include="BaseStation.h" />
     <ClInclude Include="BSFailureParams.h" />
     <ClInclude Include="Coord.h" />
@@ -47,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Antenna.cpp" />
+    <ClCompile Include="API.cpp" />
     <ClCompile Include="BaseStation.cpp" />
     <ClCompile Include="BSFailureParams.cpp" />
     <ClCompile Include="DataRateTable.cpp" />
@@ -129,7 +131,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\Users\rober\OneDrive\Desktop\EGR 4820\5G Sim\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\SHNSim\cjson\include;C:\Users\rober\OneDrive\Desktop\EGR 4820\5G Sim\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\SHNSim\curl\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\Users\rober\OneDrive\Desktop\EGR 4820\5G Sim\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\5G-Self-Organized-Network-Simulator-Spring2022\SHNSim\curl\lib</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -138,6 +143,9 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\acema\Desktop\Senior Project Paper  stuff\vcpkg-master\installed\x86-windows\include;C:\Users\acema\Desktop\vcpkg-master\installed\x86-windows\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;libcurl_a.lib;Ws2_32.lib;Crypt32.lib;Wldap32.lib;Normaliz.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

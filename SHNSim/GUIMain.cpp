@@ -1,10 +1,23 @@
 #include "GUIMain.h"
 #include "Coord.h"
+#include "GUIDataContainer.h"
 #include <fstream>
 #include "ErrorTracer.h"
 #include "FileIO.h"
 #include <iostream>
+#include <cmath>
+#include <string>
 #include <ctime>
+#include <gtk/gtk.h>
+
+#define CURL_STATICLIB
+
+#include <map>
+#include <curl/curl.h>
+#include <sstream>
+#include <algorithm>
+#include <nlohmann/json.hpp>
+
 #ifndef M_PI
 #define M_PI  3.14159265358979323846264338327950288
 #endif
@@ -13,6 +26,22 @@
 using namespace std;
 GtkWidget* alertLvlTxt, * congestionLvlTxt;
 vector<RGB> colors;
+
+int populationdeninkm;
+
+const char* states[] = {
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", 
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", 
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", 
+    "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", 
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", 
+    "New Hampshire", "New Jersey", "New Mexico", "New York", 
+    "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", 
+    "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", 
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", 
+    "West Virginia", "Wisconsin", "Wyoming"
+};
+
 
 int main(int argc, char** argv)
 {
@@ -69,9 +98,33 @@ void GUIMain::doProgressBar(double frac, bool fin)
 	while (gtk_events_pending()) gtk_main_iteration(); //update UI changes
 }
 
+
+
 void setUpDrawingWindow()
 {
 	GtkWidget *window, *darea, *button, *updateBsParamsBtn, *debugbtn, * newButton;
+
+
+
+	// New code
+
+	GtkWidget *stateDropdown = gtk_combo_box_text_new();
+
+	for (int i = 0; i < 50; i++) {
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(stateDropdown), states[i]);
+	}
+
+	//End New Code
+
+
+
+
+
+
+
+
+
+
 
 	GUIDataContainer::count = 0;
 	GUIDataContainer::selectedTile = 0;
@@ -126,7 +179,7 @@ void setUpDrawingWindow()
 
 	//=====================================================================================//
 
-	g_signal_connect(button, "clicked", G_CALLBACK(next_button_clicked), NULL);
+	g_signal_connect(button, "clicked", G_CALLBACK(next_button_clicked), stateDropdown);
 	//g_signal_connect(newButton, "clicked", G_CALLBACK(button_clicked_exp), NULL);
 	g_signal_connect(debugbtn, "clicked", G_CALLBACK(goToDebug), NULL);
 	g_signal_connect(updateBsParamsBtn, "clicked", G_CALLBACK(updateBsParams), NULL);
@@ -170,6 +223,12 @@ void setUpDrawingWindow()
 	GtkWidget* realTimeParamBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
 	// Add labels and entry boxes into param box container
+
+
+	gtk_box_pack_start(GTK_BOX(realTimeParamBox), stateDropdown, 0, 0, 5); //New line of code for the state dropdown menu
+
+
+
 	gtk_box_pack_start(GTK_BOX(realTimeParamBox), infoBtn, 0, 0, 15);
 	
 	gtk_box_pack_start(GTK_BOX(realTimeParamBox), generalLevelsTitle, 0, 0, 5);
@@ -277,7 +336,7 @@ void setUpSimParamWindow()
 
 
 	// instantiate input labels, textboxes, and buttons
-	bsSide = gtk_label_new("BS Side Length (5 < d < 20)");
+	bsSide = gtk_label_new("BS Side Length (1 < d < 30)");
 	bsSideTxt = gtk_entry_new();
 	numAntenna = gtk_label_new("Number of Sectors (1 < n < 3)"); //changed name from antenna to sector 2021-02-26
 	numAntennaTxt = gtk_entry_new();
@@ -1157,11 +1216,33 @@ static void drawHex(cairo_t * cr)
 	}
 }
 // These buttons are on the first drawing window 
-static void next_button_clicked(GtkWidget * widget, gpointer data)
+static void next_button_clicked(GtkWidget* widget, gpointer data)
 {
+	// Retrieve the selected state
+	GtkWidget* combo = GTK_WIDGET(data);
+	gchar* selectedStateChar = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(combo));
+
+	if (selectedStateChar)
+	{
+		std::string selectedState = std::string(selectedStateChar); // Convert gchar* to std::string
+		int populationdeninmiles = GetPopulationDensity(selectedState); // Call function
+		//const double SqMiTOSqkm = 2.58999;
+		//populationdeninkm = static_cast<int>(populationdeninmiles * SqMiTOSqkm + 0.5);
+		//std::cout << "Population Density in KM = " << populationdeninkm << std::endl;
+		g_print("Selected State: %s, Population Density: %d\n", selectedStateChar, populationdeninmiles);
+
+		for (int i = 0; i < sizeof(GUIDataContainer::PopulationDensityArray) / sizeof(GUIDataContainer::PopulationDensityArray[0]); i++)
+		{
+			GUIDataContainer::PopulationDensityArray[i] = populationdeninmiles;
+		}
+
+		g_free(selectedStateChar);
+	}
+
 	getNeighbors();
 	goToSimParams();
 }
+
 
 static void button_clicked_exp(GtkWidget* widget, gpointer data)
 {
@@ -1169,14 +1250,45 @@ static void button_clicked_exp(GtkWidget* widget, gpointer data)
 	goToSimParams();
 }
 
+static void okay_button_clicked(GtkWidget* widget, gpointer data)
+{
+	GtkWidget* window = GTK_WIDGET(data);
+	gtk_widget_hide(window);
+}
+
+static void cancel_button_clicked(GtkWidget* widget, gpointer data)
+{
+	GtkWidget* window = GTK_WIDGET(data);
+	gtk_widget_hide(window);
+}
+
 static void button_clicked12(GtkWidget* widget, gpointer data)
 {
 	GUIDataContainer::AttractivenessArray[GUIDataContainer::selectedTile] = stoi(gtk_entry_get_text(GTK_ENTRY(data)));
+	std::cout << "First Clicked Worked" << std::endl;
 }
 
 static void button_clicked13(GtkWidget* widget, gpointer data)
 {
-	GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile] = stoi(gtk_entry_get_text(GTK_ENTRY(data)));
+	//////////////////////////////////////////////////////
+	// Retrieve the selected state
+	GtkWidget* combo = GTK_WIDGET(data);
+	gchar* selectedStateChar = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(combo));
+
+	if (selectedStateChar)
+	{
+		std::string selectedState = std::string(selectedStateChar); // Convert gchar* to std::string
+		int populationdeninmiles = GetPopulationDensity(selectedState); // Call function
+		//const double SqMiTOSqkm = 2.58999;
+		//populationdeninkm = static_cast<int>(populationdeninmiles * SqMiTOSqkm + 0.5);
+		GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile] = populationdeninmiles;
+		//std::cout << "Population Density in KM = " << populationdeninkm << std::endl;
+		g_print("Selected State: %s, Population Density: %d\n", selectedStateChar, populationdeninmiles);
+
+		g_free(selectedStateChar);
+	}
+	//////////////////////////////////////////////////////
+	std::cout << "Second Clicked Worked" << std::endl;
 }
 
 static void button_clicked14(GtkWidget* widget)
@@ -1368,11 +1480,25 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 
 				//Create all necessary widgets for top-left cell parameter box: 
 				GtkWidget* entryAttractiveness, * buttonAttractiveness, * hboxAttractiveness, * basestationLabel;
-				GtkWidget* entryDensity, * buttonDensity, * hboxDensity, * buttonState;
+				GtkWidget* entryDensity, * buttonDensity, * hboxDensity, * buttonState, * buttonOk, * buttonCancel;
+				
+				// Code for State dropdown
+				GtkWidget* locationLabel = gtk_label_new("Choose the US State this base station is located in:");
+				gtk_label_set_line_wrap(GTK_LABEL(locationLabel), TRUE);
+				gtk_label_set_max_width_chars(GTK_LABEL(locationLabel), 30);
+				//
+
 				//create cellparameters, define as a new window
 				GtkWidget* cellparameters = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 				gtk_container_set_border_width(GTK_CONTAINER(cellparameters), 10);
 
+				// New Dropdown for basestation
+				GtkWidget* stateDropdown1 = gtk_combo_box_text_new();
+
+				for (int i = 0; i < 50; i++) {
+					gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(stateDropdown1), states[i]);
+				}
+				//
 
 				WINDOWS.CellParameters = cellparameters;
 				
@@ -1387,26 +1513,38 @@ static gboolean mouse_clicked(GtkWidget * widget, GdkEventButton * event, gpoint
 				gtk_grid_set_column_homogeneous(GTK_GRID(gridCellParameters), TRUE);
 
 				entryAttractiveness = gtk_entry_new();
-				buttonAttractiveness = gtk_button_new_with_label("Attractiveness");
+				buttonAttractiveness = gtk_label_new("Attractiveness:");
 				entryDensity = gtk_entry_new();
-				buttonDensity = gtk_button_new_with_label("Density");
+				buttonDensity = gtk_label_new("Density:");
 				buttonState = gtk_button_new_with_label("Cell State Toggle");
+				buttonOk = gtk_button_new_with_label("Okay");
+				buttonCancel = gtk_button_new_with_label("Cancel");
 
+				gtk_label_set_xalign(GTK_LABEL(buttonAttractiveness), 0.0); // 0.0 for left alignment, 1.0 for right
+				gtk_label_set_xalign(GTK_LABEL(buttonDensity), 0.0);
+				gtk_label_set_xalign(GTK_LABEL(locationLabel), 0.0);
+
+				
 				gtk_grid_attach(GTK_GRID(gridCellParameters), basestationLabel, 0, 0, 2, 1);
-				gtk_grid_attach(GTK_GRID(gridCellParameters), entryAttractiveness, 0, 1, 1, 1);
-				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonAttractiveness, 1, 1, 1, 1);
-				gtk_grid_attach(GTK_GRID(gridCellParameters), entryDensity, 0, 2, 1, 1);
-				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonDensity, 1, 2, 1, 1);
-				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonState, 0, 3, 2, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), entryAttractiveness, 1, 1, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonAttractiveness, 0, 1, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), entryDensity, 1, 2, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonDensity, 0, 2, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), locationLabel, 0, 3, 2, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), stateDropdown1, 0, 4, 2, 1); //New line of code for the state dropdown menu
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonState, 0, 5, 2, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonOk, 1, 6, 1, 1);
+				gtk_grid_attach(GTK_GRID(gridCellParameters), buttonCancel, 0, 6, 1, 1);
 
 				gtk_entry_set_text(GTK_ENTRY(entryAttractiveness), (gchar*)(std::to_string(GUIDataContainer::AttractivenessArray[GUIDataContainer::selectedTile]).c_str()));
 				gtk_entry_set_text(GTK_ENTRY(entryDensity), (gchar*)(std::to_string(GUIDataContainer::PopulationDensityArray[GUIDataContainer::selectedTile]).c_str()));
 
 				//Set up button clicks
-				g_signal_connect(buttonAttractiveness, "clicked", G_CALLBACK(button_clicked12), entryAttractiveness);
-				g_signal_connect(buttonDensity, "clicked", G_CALLBACK(button_clicked13), entryDensity);
+				g_signal_connect(buttonOk, "clicked", G_CALLBACK(button_clicked12), entryAttractiveness);
+				g_signal_connect(buttonOk, "clicked", G_CALLBACK(button_clicked13), stateDropdown1);
 				g_signal_connect(buttonState, "clicked", G_CALLBACK(button_clicked14), NULL);
-				//g_signal_connect(WINDOWS.CellParameters, "delete-event", G_CALLBACK(gtk_widget_hide_on_delete), NULL);
+				g_signal_connect(buttonOk, "clicked", G_CALLBACK(okay_button_clicked), cellparameters);
+				g_signal_connect(buttonCancel, "clicked", G_CALLBACK(cancel_button_clicked), cellparameters);
 
 				//Add the table to the window; show the window	
 				gtk_container_add(GTK_CONTAINER(cellparameters), gridCellParameters);
@@ -1910,6 +2048,12 @@ bool addParams()
 	{
 		// int
 		GUIDataContainer::bsLen = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.baseStationSide)));
+		
+		int apothem = static_cast<int>(GUIDataContainer::bsLen / (2 * tan(M_PI / 6)));
+		std::cout << "Apothem = " << apothem << std::endl;
+		GUIDataContainer::area = (6 * apothem * GUIDataContainer::bsLen) / 2;
+		std::cout << "Area = " << GUIDataContainer::area << std::endl;
+		
 		GUIDataContainer::antNum = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.antennaNumber)));
 		GUIDataContainer::transNum = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.transceiverNum)));
 		GUIDataContainer::uePerAnt = stoi(gtk_entry_get_text(GTK_ENTRY(entryBoxes.userEquipPerAntenna)));
@@ -1929,7 +2073,7 @@ bool addParams()
 //		GUIDataContainer::usingMachineLearning = gtk_combo_box_get_active(GTK_COMBO_BOX(MiscWidgets.versionComboBox));	//get the active one
 		GUIDataContainer::RSRPThreshold = gtk_range_get_value(GTK_RANGE(MiscWidgets.RSRPthresh_range));
 
-		if(GUIDataContainer::bsLen < 5 || GUIDataContainer::bsLen > 20)
+		if(GUIDataContainer::bsLen < 1 || GUIDataContainer::bsLen > 30)
 		{
 			UserMessage(GTK_WINDOW(WINDOWS.SimParamWindow), "Invalid Basestation length");
 			return false;
@@ -2271,4 +2415,125 @@ bool debug()
 gboolean stopScroll(GtkWidget* wid, GdkEvent* event, void* data)
 {
 	return TRUE;
+}
+
+std::map<std::string, std::string> stateNamesToFips =
+{
+	{"Alabama", "01"}, {"Alaska", "02"}, {"Arizona", "04"}, {"Arkansas", "05"}, {"California", "06"},
+	{"Colorado", "08"}, {"Connecticut", "09"}, {"Delaware", "10"}, {"Florida", "12"}, {"Georgia", "13"},
+	{"Hawaii", "15"}, {"Idaho", "16"}, {"Illinois", "17"}, {"Indiana", "18"}, {"Iowa", "19"},
+	{"Kansas", "20"}, {"Kentucky", "21"}, {"Louisiana", "22"}, {"Maine", "23"}, {"Maryland", "24"},
+	{"Massachusetts", "25"}, {"Michigan", "26"}, {"Minnesota", "27"}, {"Mississippi", "28"}, {"Missouri", "29"},
+	{"Montana", "30"}, {"Nebraska", "31"}, {"Nevada", "32"}, {"New Hampshire", "33"}, {"New Jersey", "34"},
+	{"New Mexico", "35"}, {"New York", "36"}, {"North Carolina", "37"}, {"North Dakota", "38"}, {"Ohio", "39"},
+	{"Oklahoma", "40"}, {"Oregon", "41"}, {"Pennsylvania", "42"}, {"Rhode Island", "44"}, {"South Carolina", "45"},
+	{"South Dakota", "46"}, {"Tennessee", "47"}, {"Texas", "48"}, {"Utah", "49"}, {"Vermont", "50"},
+	{"Virginia", "51"}, {"Washington", "53"}, {"West Virginia", "54"}, {"Wisconsin", "55"}, {"Wyoming", "56"}
+};
+
+
+size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output)
+{
+	size_t total_size = size * nmemb;
+	output->append(static_cast<char*>(contents), total_size);
+	return total_size;
+}
+
+int GetPopulationDensity(const std::string& stateInput)
+{
+	std::string stateCode = stateInput;
+
+	std::string fipsCode = stateNamesToFips[stateCode];
+	std::cout << "FIPS Code: " << fipsCode << std::endl;
+
+	std::string apiUrl = "https://api.census.gov/data/2021/pep/population";
+	apiUrl += "?get=DENSITY_2021&for=state:" + fipsCode;
+	apiUrl += "&key=524561176e2df984395a9fd018bb8404b121986b";
+
+	CURL* curl = curl_easy_init();
+	if (curl)
+	{
+		std::string response_data;
+
+		curl_easy_setopt(curl, CURLOPT_URL, apiUrl.c_str());
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+		CURLcode res = curl_easy_perform(curl);
+
+		if (res == CURLcode::CURLE_OK)
+		{
+			try
+			{
+				std::cout << "API Response: " << response_data << std::endl;
+
+				nlohmann::json response_json = nlohmann::json::parse(response_data);
+
+
+				if (response_json.size() >= 2)
+				{
+					std::string density = response_json[1][0];
+					std::string stateCode = response_json[1][1];
+					std::cout << "Debug 1" << std::endl;
+
+					try
+					{
+						double populationDensity = std::stod(density);
+						std::cout << "Debug 2" << std::endl;
+						std::cout << "Population Density: " << populationDensity << std::endl;
+						std::cout << "Debug 3" << std::endl;
+						int roundedDensity = static_cast<int>(std::round(populationDensity));
+						std::cout << "Debug 4" << std::endl;
+						std::cout << "Population Density: " << roundedDensity << std::endl;
+						std::cout << "Debug 5" << std::endl;
+						return roundedDensity;
+					}
+
+					catch (const std::invalid_argument& e)
+					{
+						std::cerr << "Error: Unable to convert density to a double" << std::endl;
+						return -1;
+					}
+
+					catch (const std::out_of_range& e)
+					{
+						std::cerr << "Error: Value is out of range for a double" << std::endl;
+						return -1;
+					}
+
+					std::cout << "Population Density: " << density << std::endl;
+				}
+
+				else
+				{
+					std::cerr << "Error 1" << std::endl;
+					return -1;
+				}
+			}
+
+			catch (const std::exception& e)
+			{
+				std::cerr << "Error 2" << std::endl;
+				return -1;
+			}
+		}
+
+		else
+		{
+			std::cerr << "Error 3" << curl_easy_strerror(res) << std::endl;
+			return -1;
+		}
+
+		curl_easy_cleanup(curl);
+	}
+
+	else
+	{
+		std::cerr << "Error 4" << std::endl;
+		return -1;
+	}
+	
+	return 0;
 }
